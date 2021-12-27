@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -33,6 +34,8 @@ const (
 	awsRegionRegexpPattern            = "^" + awsRegionRegexpInternalPattern + "$"
 	awsProfile = "AWS_PROFILE"
 	awsSharedCredsFile = "AWS_SHARED_CREDENTIALS_FILE"
+	clumioApiToken = "CLUMIO_API_TOKEN"
+	clumioApiBaseUrl = "CLUMIO_API_BASE_URL"
 )
 
 var awsAccountIDRegexp = regexp.MustCompile(awsAccountIDRegexpPattern)
@@ -52,6 +55,8 @@ func New(isUnitTest bool) func() *schema.Provider {
 		p := &schema.Provider{
 			ResourcesMap: map[string]*schema.Resource{
 				"clumio_callback_resource": clumioCallback(),
+				"clumio_aws_connection": clumioAWSConnection(),
+				"clumio_post_process_aws_connection": clumioPostProcessAWSConnection(),
 			},
 		}
 		p.ConfigureContextFunc = configure(p, isUnitTest)
@@ -98,6 +103,18 @@ func New(isUnitTest bool) func() *schema.Provider {
 				Default:  "",
 				Description: "The path to the shared credentials file. If not set\n" +
 					"this defaults to ~/.aws/credentials.",
+			},
+			"clumio_api_token": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The API token required to invoke Clumio APIs.",
+			},
+			"clumio_api_base_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "https://api.clumio.com",
+				Description: "The base URL for Clumio APIs.",
 			},
 		}
 		return p
@@ -176,6 +193,7 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 type apiClient struct {
 	snsAPI SNSAPI
 	s3API  S3API
+	clumioConfig clumioConfig.Config
 }
 
 // configure is a factory method to configure the Provider.
@@ -188,6 +206,15 @@ func configure(_ *schema.Provider, isUnitTest bool) func(context.Context,
 				snsAPI: SNSClient{},
 				s3API:  S3Client{},
 			}, nil
+		}
+
+		apiToken := getStringValue(d, "clumio_api_token")
+		baseUrl := getStringValue(d, "clumio_api_base_url")
+		if apiToken == ""{
+			apiToken = os.Getenv(clumioApiToken)
+		}
+		if baseUrl == ""{
+			baseUrl = os.Getenv(clumioApiBaseUrl)
 		}
 
 		accessKey := getStringValue(d, "access_key")
@@ -259,6 +286,10 @@ func configure(_ *schema.Provider, isUnitTest bool) func(context.Context,
 		return &apiClient{
 			snsAPI: regionalSns,
 			s3API:  s3obj,
+			clumioConfig: clumioConfig.Config{
+				Token:   apiToken,
+				BaseUrl: baseUrl,
+			},
 		}, nil
 	}
 }

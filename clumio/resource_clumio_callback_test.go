@@ -48,7 +48,7 @@ func TestAccResourceClumioCallback(t *testing.T) {
 		accountId, topicArn, canonicalUser, err := setUpResources(t)
 		require.Nil(t, err)
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
+			PreCheck:          func() { testAccPreCheckAws(t) },
 			ProviderFactories: providerFactories,
 			Steps: []resource.TestStep{
 				{
@@ -85,7 +85,7 @@ func TestAccResourceClumioCallback(t *testing.T) {
 
 // setUpResources creates the AWS resources required for the acceptance test
 func setUpResources(t *testing.T) (string, string, string, error) {
-	testAccPreCheck(t)
+	testAccPreCheckAws(t)
 	log.Println("Creating acceptance test resources for clumio_callback_resource.")
 	ctx := context.TODO()
 	cfg, err := getAWSConfig(ctx)

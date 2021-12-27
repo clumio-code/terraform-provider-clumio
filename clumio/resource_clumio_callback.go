@@ -316,7 +316,10 @@ func clumioCallbackCommon(ctx context.Context, d *schema.ResourceData, meta inte
 		fmt.Sprintf("%v", d.Get("clumio_event_pub_id"))
 	resourceProperties[keyCanonicalUser] = fmt.Sprintf("%v", d.Get("canonical_user"))
 
-	templateConfigs := getTemplateConfiguration(d)
+	templateConfigs, err := getTemplateConfiguration(d, false)
+	if err != nil {
+		return diag.Errorf("Error forming template configuration. Error: %v", err)
+	}
 	resourceProperties[keyTemplateConfig] = templateConfigs
 	if val, ok := d.GetOk("properties"); ok && len(val.(map[string]interface{})) > 0 {
 		properties := val.(map[string]interface{})
@@ -414,50 +417,89 @@ type sourceConfigInfo struct {
 }
 
 // getTemplateConfiguration returns the template configuration.
-func getTemplateConfiguration(d *schema.ResourceData) map[string]interface{} {
+func getTemplateConfiguration(d *schema.ResourceData, isCamelCase bool) (
+	map[string]interface{}, error) {
 	templateConfigs := make(map[string]interface{})
-	configMap := getConfigMapForKey(d, "config_version", false)
+	configMap, err := getConfigMapForKey(d, "config_version", false)
+	if err != nil {
+		return nil, err
+	}
 	if configMap == nil {
-		return templateConfigs
+		return templateConfigs, nil
 	}
 	templateConfigs["config"] = configMap
-	discoverMap := getConfigMapForKey(d, "discover_version", true)
+	discoverMap, err := getConfigMapForKey(d, "discover_version", true)
+	if err != nil {
+		return nil, err
+	}
 	if discoverMap == nil {
-		return templateConfigs
+		return templateConfigs, nil
 	}
 	templateConfigs["discover"] = discoverMap
-	protectMap := getConfigMapForKey(d, "protect_config_version", true)
+	protectMap, err := getConfigMapForKey(d, "protect_config_version", true)
+	if err != nil {
+		return nil, err
+	}
 	if protectMap == nil {
-		return templateConfigs
+		return templateConfigs, nil
 	}
-	populateConfigMap(d, protectInfoMap, protectMap)
-
-	if protectWarmtierMap, ok := protectMap["warm_tier"]; ok {
-		populateConfigMap(d, warmtierInfoMap, protectWarmtierMap.(map[string]interface{}))
+	err = populateConfigMap(d, protectInfoMap, protectMap, isCamelCase)
+	if err != nil {
+		return nil, err
 	}
-	templateConfigs["protect"] = protectMap
-	return templateConfigs
-}
-
-func populateConfigMap(d *schema.ResourceData, configInfoMap map[string]sourceConfigInfo,
-	configMap map[string]interface{}) {
-	for source, sourceInfo := range configInfoMap {
-		protectSourceMap := getConfigMapForKey(d, sourceInfo.sourceKey, sourceInfo.isConfig)
-		if protectSourceMap != nil {
-			configMap[source] = protectSourceMap
+	warmTierKey := "warm_tier"
+	if isCamelCase {
+		warmTierKey = "warmTier"
+	}
+	if protectWarmtierMap, ok := protectMap[warmTierKey]; ok {
+		err = populateConfigMap(
+			d, warmtierInfoMap, protectWarmtierMap.(map[string]interface{}), isCamelCase)
+		if err != nil {
+			return nil, err
 		}
 	}
+	templateConfigs["protect"] = protectMap
+	return templateConfigs, nil
+}
+
+// populateConfigMap returns protect configuration information for the configs
+// in the configInfoMap.
+func populateConfigMap(d *schema.ResourceData, configInfoMap map[string]sourceConfigInfo,
+	configMap map[string]interface{}, isCamelCase bool) error {
+	for source, sourceInfo := range configInfoMap {
+		configMapKey := source
+		if isCamelCase {
+			configMapKey = snakeCaseToCamelCase(source)
+		}
+		protectSourceMap, err := getConfigMapForKey(
+			d, sourceInfo.sourceKey, sourceInfo.isConfig)
+		if err != nil {
+			return err
+		}
+		if protectSourceMap != nil {
+			configMap[configMapKey] = protectSourceMap
+		}
+	}
+	return nil
 }
 
 // getConfigMapForKey returns a config map for the key if it exists in ResourceData.
 func getConfigMapForKey(
-	d *schema.ResourceData, key string, isConfig bool) map[string]interface{} {
+	d *schema.ResourceData, key string, isConfig bool) (map[string]interface{}, error) {
 	var mapToReturn map[string]interface{}
 	if val, ok := d.GetOk(key); ok {
 		keyMap := make(map[string]interface{})
 		if keyVersion, ok := val.(string); ok {
+			majorVersion, minorVersion, err := parseVersion(keyVersion)
+			if err != nil {
+				return nil, err
+			}
 			keyMap["enabled"] = true
-			keyMap["version"] = keyVersion
+			keyMap["version"] = majorVersion
+			if minorVersion != "" {
+				keyMap["minorVersion"] = minorVersion
+			}
+
 		}
 		mapToReturn = keyMap
 		// If isConfig is true it wraps the keyMap with another map with "config" as the key.
@@ -467,7 +509,20 @@ func getConfigMapForKey(
 			mapToReturn = configMap
 		}
 	}
-	return mapToReturn
+	return mapToReturn, nil
+}
+
+// parseVersion parses the version and minorVersion given the version string.
+func parseVersion(version string) (string, string, error) {
+	splits := strings.Split(version, ".")
+	switch len(splits) {
+	case 1:
+		return version, "", nil
+	case 2:
+		return splits[0], splits[1], nil
+	default:
+		return "", "", errors.New(fmt.Sprintf("Invalid version: %v", version))
+	}
 }
 
 // processErrorMessage takes the failure reason and adds the potential cause for the

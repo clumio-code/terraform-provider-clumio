@@ -7,6 +7,7 @@ package clumio
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -19,6 +20,21 @@ func getStringValue(d *schema.ResourceData, key string) string {
 	}
 	return value
 }
+
+// getStringSlice returns the string slice of the key if present.
+func getStringSlice(d *schema.ResourceData, key string) []*string {
+	var value []*string
+	if d.Get(key) != nil {
+		value := make([]*string, 0)
+		valSlice :=  d.Get(key).([]interface{})
+		for _, val := range valSlice{
+			strVal := val.(string)
+			value = append(value, &strVal)
+		}
+	}
+	return value
+}
+
 
 //Utility function to return a string value from a map if the key exists
 func getStringValueFromMap(keyVals map[string]interface{}, key string) *string{
@@ -47,4 +63,17 @@ func RequireOneOf(names []string, usageMessage string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("at least one environment variable of %v must be set. Usage: %s", names, usageMessage)
+}
+
+// function to convert string in snake case to camel case
+func snakeCaseToCamelCase(key string)string{
+	newKey := key
+	if strings.Contains(key, "_"){
+		parts := strings.Split(key, "_")
+		newKey = parts[0]
+		for _, part := range parts[1:]{
+			newKey = newKey + strings.Title(part)
+		}
+	}
+	return newKey
 }

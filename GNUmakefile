@@ -2,7 +2,7 @@
 # Copyright 2021. Clumio, Inc.
 #
 
-VERSION=0.1.4
+VERSION=0.2.0
 OS_ARCH=darwin_amd64
 
 CLUMIO_PROVIDER_DIR=~/.terraform.d/plugins/clumio.com/providers/clumio/${VERSION}/${OS_ARCH}

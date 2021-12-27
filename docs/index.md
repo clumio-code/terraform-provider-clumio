@@ -14,6 +14,10 @@ description: |-
 
 ```terraform
 provider "clumio" {
+  // Alternative for the environment variable CLUMIO_API_TOKEN
+  clumio_api_token = "..."
+  // Alternative for the environment variable CLUMIO_API_BASE_URL
+  clumio_api_base_url = "..."
   // optional 
   clumio_region = "..."
   // Alternative for the environment variable AWS_ACCESS_KEY_ID.
@@ -33,7 +37,8 @@ provider "clumio" {
     role_arn = "..."
     exteral_id = "..."
     session_name = "..."
-    duration_seconds = ...
+    // Assume role duration in seconds.
+    duration_seconds = 1800
   }
 }
 ```
@@ -45,6 +50,8 @@ provider "clumio" {
 
 - **access_key** (String) AWS Access Key.
 - **assume_role** (Block List, Max: 1) (see [below for nested schema](#nestedblock--assume_role))
+- **clumio_api_base_url** (String) The base URL for Clumio APIs.
+- **clumio_api_token** (String) The API token required to invoke Clumio APIs.
 - **clumio_region** (String) Clumio Control Plane AWS Region.
 - **profile** (String) The profile for API operations. If not set, the default profile
 created with `aws configure` will be used.

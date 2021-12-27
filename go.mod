@@ -12,10 +12,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.6.0
 	github.com/aws/smithy-go v1.8.1
+	github.com/clumio-code/clumio-go-sdk v0.0.1-rc1
 	github.com/google/uuid v1.3.0
-	github.com/hashicorp/terraform-plugin-docs v0.4.0
-	github.com/hashicorp/terraform-plugin-sdk v1.17.2
+	github.com/hashicorp/terraform-plugin-docs v0.5.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
-	github.com/mitchellh/go-testing-interface v1.0.4 // indirect
 	github.com/stretchr/testify v1.7.0
 )

@@ -12,6 +12,8 @@ import (
 const (
 	awsAccessKeyId = "AWS_ACCESS_KEY_ID"
 	awsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	awsRegion = "AWS_REGION"
+	clumioTestAwsAccountId = "CLUMIO_TEST_AWS_ACCOUNT_ID"
 )
 // providerFactories are used to instantiate a provider during acceptance testing.
 // The factory function will be invoked for every Terraform CLI command executed
@@ -37,13 +39,22 @@ func TestProvider(t *testing.T) {
 //
 // These verifications and configuration are preferred at this level to prevent
 // provider developers from experiencing less clear errors for every test.
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheckAws(t *testing.T) {
 	testFailIfAllEmpty(t,
 		[]string{awsAccessKeyId, awsProfile, awsSharedCredsFile},
 		"One of AWS_ACCESS_KEY_ID, AWS_PROFILE or AWS_SHARED_CREDENTIALS_FILE must be set")
 	if os.Getenv(awsAccessKeyId) != ""{
 		testFailIfEmpty(t, awsSecretAccessKey, awsSecretAccessKey+" cannot be empty.")
 	}
+}
+
+// testAccPreCheckClumio validates that the required environment variables are set before
+// the acceptance test is executed.
+func testAccPreCheckClumio(t *testing.T) {
+	testFailIfEmpty(t, clumioTestAwsAccountId, clumioTestAwsAccountId+" cannot be empty")
+	testFailIfEmpty(t, clumioApiToken, clumioApiToken+" cannot be empty.")
+	testFailIfEmpty(t, clumioApiBaseUrl, clumioApiBaseUrl+" cannot be empty.")
+	testFailIfEmpty(t, awsRegion, awsRegion+" cannot be empty")
 }
 
 // TestFailIfAllEmpty verifies that at least one environment variable is non-empty or fails the test.

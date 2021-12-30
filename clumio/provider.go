@@ -58,6 +58,8 @@ func New(isUnitTest bool) func() *schema.Provider {
 				"clumio_aws_connection": clumioAWSConnection(),
 				"clumio_post_process_aws_connection": clumioPostProcessAWSConnection(),
 				"clumio_policy": clumioPolicy(),
+				"clumio_user": clumioUser(),
+				"clumio_organizational_unit": clumioOrganizationalUnit(),
 			},
 		}
 		p.ConfigureContextFunc = configure(p, isUnitTest)

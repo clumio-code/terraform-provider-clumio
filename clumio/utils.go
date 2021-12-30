@@ -25,7 +25,7 @@ func getStringValue(d *schema.ResourceData, key string) string {
 func getStringSlice(d *schema.ResourceData, key string) []*string {
 	var value []*string
 	if d.Get(key) != nil {
-		value := make([]*string, 0)
+		value = make([]*string, 0)
 		valSlice :=  d.Get(key).([]interface{})
 		for _, val := range valSlice{
 			strVal := val.(string)
@@ -76,4 +76,34 @@ func snakeCaseToCamelCase(key string)string{
 		}
 	}
 	return newKey
+}
+
+func sliceDifference(slice1 []interface{}, slice2 []interface{}) []interface{} {
+	var diff []interface{}
+
+	for _, s1 := range slice1 {
+		found := false
+		for _, s2 := range slice2 {
+			if s1 == s2 {
+				found = true
+				break
+			}
+		}
+		// String not found. We add it to return slice
+		if !found {
+			diff = append(diff, s1)
+		}
+	}
+
+	return diff
+}
+
+// getStringSliceFromInterfaceSlice returns the string slice from interface slice.
+func getStringSliceFromInterfaceSlice(input []interface{}) []*string {
+	strSlice := make([]*string, 0)
+	for _, val := range input{
+		strVal := val.(string)
+		strSlice = append(strSlice, &strVal)
+	}
+	return strSlice
 }

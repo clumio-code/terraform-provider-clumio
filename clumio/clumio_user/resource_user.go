@@ -20,7 +20,7 @@ import (
 func ClumioUser() *schema.Resource {
 	return &schema.Resource{
 		// This description is used by the documentation generator and the language server.
-		Description: "Clumio AWS Connection Resource used to connect AWS accounts to Clumio.",
+		Description: "Clumio User Resource to create and manage users in Clumio.",
 
 		CreateContext: clumioUserCreate,
 		ReadContext:   clumioUserRead,
@@ -61,7 +61,7 @@ func ClumioUser() *schema.Resource {
 					" to be assigned to the user. The Global Organizational Unit ID is " +
 					"\"00000000-0000-0000-0000-000000000000\"",
 				Type: schema.TypeSet,
-				Set: common.SchemaSetHashString,
+				Set:  common.SchemaSetHashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

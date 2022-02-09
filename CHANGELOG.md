@@ -1,3 +1,12 @@
+## 0.2.2
+Added support to specify organizational_unit_context in the provider.
+
+## 0.2.1
+Bug fix release.
+
+## 0.2.0
+New resources added for clumio users, organizational-units, policy, policy-rules and aws_connection.
+
 ## 0.1.4
 Schema changes to clumio_callback_resource
 

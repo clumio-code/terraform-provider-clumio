@@ -123,6 +123,14 @@ func New(isUnitTest bool) func() *schema.Provider {
 					"us-east: https://us-east-1.api.clumio.com\n\n\t\t" +
 					"canada:  https://ca-central-1.ca.api.clumio.com",
 			},
+			"clumio_organizational_unit_context": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Organizational Unit context in which to create the" +
+					" clumio resources. If not set, the resources will be created in" +
+					" the context of the Global Organizational Unit. The value should" +
+					" be the id of the Organizational Unit and not the name.",
+			},
 		}
 		return p
 	}
@@ -210,11 +218,16 @@ func configure(_ *schema.Provider, isUnitTest bool) func(context.Context,
 
 		apiToken := common.GetStringValue(d, "clumio_api_token")
 		baseUrl := common.GetStringValue(d, "clumio_api_base_url")
+		organizationalUnitContext :=
+			common.GetStringValue(d, "clumio_organizational_unit_context")
 		if apiToken == "" {
 			apiToken = os.Getenv(common.ClumioApiToken)
 		}
 		if baseUrl == "" {
 			baseUrl = os.Getenv(common.ClumioApiBaseUrl)
+		}
+		if organizationalUnitContext == "" {
+			organizationalUnitContext = os.Getenv(common.ClumioOrganizationalUnitContext)
 		}
 
 		accessKey := common.GetStringValue(d, "access_key")
@@ -287,8 +300,9 @@ func configure(_ *schema.Provider, isUnitTest bool) func(context.Context,
 			SnsAPI: regionalSns,
 			S3API:  s3obj,
 			ClumioConfig: clumioConfig.Config{
-				Token:   apiToken,
-				BaseUrl: baseUrl,
+				Token:                     apiToken,
+				BaseUrl:                   baseUrl,
+				OrganizationalUnitContext: organizationalUnitContext,
 			},
 		}, nil
 	}

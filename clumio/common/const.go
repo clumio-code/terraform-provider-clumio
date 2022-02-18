@@ -15,7 +15,8 @@ const (
 	TaskAborted = "aborted"
 	TaskFailed  = "failed"
 
-	ProtectService = "protect"
+	ProtectService       = "protect"
+	OrganizationalUnitId = "organizational_unit_id"
 
 	// Set attribute error format
 	SchemaAttributeSetError = "Error setting %s schema attribute. Error: %v"

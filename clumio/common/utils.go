@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/clumio-code/clumio-go-sdk/config"
 	tasks "github.com/clumio-code/clumio-go-sdk/controllers/tasks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -330,4 +331,19 @@ func PollTask(ctx context.Context, apiClient *ApiClient,
 			return errors.New("polling task timeout")
 		}
 	}
+}
+
+// GetClumioConfigForAPI returns the clumio config to be used for invoking APIs.
+func GetClumioConfigForAPI(
+	client *ApiClient, d *schema.ResourceData) config.Config {
+	clumioConfig := client.ClumioConfig
+	orgUnitId := GetStringValue(d, OrganizationalUnitId)
+	if orgUnitId != "" {
+		clumioConfig = config.Config{
+			Token:                     client.ClumioConfig.Token,
+			BaseUrl:                   client.ClumioConfig.BaseUrl,
+			OrganizationalUnitContext: orgUnitId,
+		}
+	}
+	return clumioConfig
 }

@@ -5,6 +5,8 @@ package clumio_policy
 
 import (
 	"context"
+	"fmt"
+
 	policyDefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
@@ -82,6 +84,95 @@ var (
 		},
 	}
 
+	resEC2MssqlDatabaseBackup = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			schemaAlternativeReplica: {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: fmt.Sprintf(alternativeReplicaDescFmt, "database"),
+			},
+			schemaPreferredReplica: {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: fmt.Sprintf(preferredReplicaDescFmt, "database"),
+			},
+		},
+	}
+
+	resEC2MssqlLogBackup = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			schemaAlternativeReplica: {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: fmt.Sprintf(alternativeReplicaDescFmt, "log"),
+			},
+			schemaPreferredReplica: {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: fmt.Sprintf(preferredReplicaDescFmt, "log"),
+			},
+		},
+	}
+
+	resProtectionGroupBackup = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			schemaBackupTier: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Backup tier to store the backup in. Valid values are:" +
+					" cold, frozen",
+			},
+		},
+	}
+
+	resAdvancedSettings = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			schemaEc2MssqlDatabaseBackup: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: mssqlDatabaseBackupDesc,
+				Set:         schema.HashResource(resEC2MssqlDatabaseBackup),
+				Elem:        resEC2MssqlDatabaseBackup,
+			},
+			schemaEc2MssqlLogBackup: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: mssqlLogBackupDesc,
+				Set:         schema.HashResource(resEC2MssqlLogBackup),
+				Elem:        resEC2MssqlLogBackup,
+			},
+			schemaMssqlDatabaseBackup: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: mssqlDatabaseBackupDesc,
+				Set:         schema.HashResource(resEC2MssqlDatabaseBackup),
+				Elem:        resEC2MssqlDatabaseBackup,
+			},
+			schemaMssqlLogBackup: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: mssqlLogBackupDesc,
+				Set:         schema.HashResource(resEC2MssqlLogBackup),
+				Elem:        resEC2MssqlLogBackup,
+			},
+			schemaProtectionGroupBackup: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Description: "Additional policy configuration settings for the" +
+					" protection_group_backup operation. If this operation is not of" +
+					" type protection_group_backup, then this field is omitted from" +
+					" the response.",
+				Set:  schema.HashResource(resProtectionGroupBackup),
+				Elem: resProtectionGroupBackup,
+			},
+		},
+	}
+
 	resOperation = &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			schemaActionSetting: {
@@ -116,6 +207,14 @@ var (
 					"and monthly backups for a year each.",
 				Set:  schema.HashResource(resSla),
 				Elem: resSla,
+			},
+			schemaAdvancedSettings: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Additional operation-specific policy settings.",
+				Set:         schema.HashResource(resAdvancedSettings),
+				Elem:        resAdvancedSettings,
 			},
 		},
 	}
@@ -309,6 +408,9 @@ func mapSchemaOperationsToClumioOperations(
 				StartTime: &schemaBackupWindowStartTime,
 			}
 		}
+		advancedSettings := getOperationAdvancedSettings(
+			operationAttrMap[schemaAdvancedSettings])
+
 		backupSLAs := make([]*models.BackupSLA, 0)
 		slasIface := operationAttrMap[schemaSlas]
 		schemaSlas := slasIface.(*schema.Set).List()
@@ -342,16 +444,19 @@ func mapSchemaOperationsToClumioOperations(
 		}
 
 		policyOperation := &models.PolicyOperation{
-			ActionSetting: &actionSetting,
-			BackupWindow:  backupWindow,
-			Slas:          backupSLAs,
-			ClumioType:    &operationType,
+			ActionSetting:    &actionSetting,
+			BackupWindow:     backupWindow,
+			Slas:             backupSLAs,
+			ClumioType:       &operationType,
+			AdvancedSettings: advancedSettings,
 		}
 		policyOperations = append(policyOperations, policyOperation)
 	}
 	return policyOperations, nil
 }
 
+// mapClumioOperationsToSchemaOperations maps the Operations from the API response to
+// the schema operations.
 func mapClumioOperationsToSchemaOperations(operations []*models.PolicyOperation) interface{} {
 	schemaOperations := &schema.Set{F: schema.HashResource(resOperation)}
 	for _, operation := range operations {
@@ -389,9 +494,160 @@ func mapClumioOperationsToSchemaOperations(operations []*models.PolicyOperation)
 			backupSlas.Add(backupSla)
 		}
 		operationAttrMap[schemaSlas] = backupSlas
-
+		if operation.AdvancedSettings != nil {
+			advancedSettingsMap := make(map[string]interface{})
+			if operation.AdvancedSettings.Ec2MssqlDatabaseBackup != nil {
+				ec2MssqlDatabaseBackupMap := make(map[string]interface{})
+				ec2MssqlDatabaseBackupMap[schemaAlternativeReplica] =
+					*operation.AdvancedSettings.Ec2MssqlDatabaseBackup.AlternativeReplica
+				ec2MssqlDatabaseBackupMap[schemaPreferredReplica] =
+					*operation.AdvancedSettings.Ec2MssqlDatabaseBackup.PreferredReplica
+				ec2MssqlDatabaseBackupSet := &schema.Set{
+					F: schema.HashResource(resEC2MssqlDatabaseBackup)}
+				ec2MssqlDatabaseBackupSet.Add(ec2MssqlDatabaseBackupMap)
+				advancedSettingsMap[schemaEc2MssqlDatabaseBackup] =
+					ec2MssqlDatabaseBackupSet
+			}
+			if operation.AdvancedSettings.Ec2MssqlLogBackup != nil {
+				ec2MssqlLogBackupMap := make(map[string]interface{})
+				ec2MssqlLogBackupMap[schemaAlternativeReplica] =
+					*operation.AdvancedSettings.Ec2MssqlLogBackup.AlternativeReplica
+				ec2MssqlLogBackupMap[schemaPreferredReplica] =
+					*operation.AdvancedSettings.Ec2MssqlLogBackup.PreferredReplica
+				ec2MssqlLogBackupSet := &schema.Set{
+					F: schema.HashResource(resEC2MssqlLogBackup)}
+				ec2MssqlLogBackupSet.Add(ec2MssqlLogBackupMap)
+				advancedSettingsMap[schemaEc2MssqlLogBackup] = ec2MssqlLogBackupSet
+			}
+			if operation.AdvancedSettings.MssqlDatabaseBackup != nil {
+				mssqlDatabaseBackupMap := make(map[string]interface{})
+				mssqlDatabaseBackupMap[schemaAlternativeReplica] =
+					*operation.AdvancedSettings.MssqlDatabaseBackup.AlternativeReplica
+				mssqlDatabaseBackupMap[schemaPreferredReplica] =
+					*operation.AdvancedSettings.MssqlDatabaseBackup.PreferredReplica
+				mssqlDatabaseBackupSet := &schema.Set{
+					F: schema.HashResource(resEC2MssqlDatabaseBackup)}
+				mssqlDatabaseBackupSet.Add(mssqlDatabaseBackupMap)
+				advancedSettingsMap[schemaMssqlDatabaseBackup] = mssqlDatabaseBackupSet
+			}
+			if operation.AdvancedSettings.MssqlLogBackup != nil {
+				mssqlLogBackupMap := make(map[string]interface{})
+				mssqlLogBackupMap[schemaAlternativeReplica] =
+					*operation.AdvancedSettings.MssqlLogBackup.AlternativeReplica
+				mssqlLogBackupMap[schemaPreferredReplica] =
+					*operation.AdvancedSettings.MssqlLogBackup.PreferredReplica
+				mssqlLogBackupSet := &schema.Set{
+					F: schema.HashResource(resEC2MssqlLogBackup)}
+				mssqlLogBackupSet.Add(mssqlLogBackupMap)
+				advancedSettingsMap[schemaMssqlLogBackup] = mssqlLogBackupSet
+			}
+			if operation.AdvancedSettings.ProtectionGroupBackup != nil {
+				protectionGroupBackupMap := make(map[string]interface{})
+				protectionGroupBackupMap[schemaBackupTier] =
+					*operation.AdvancedSettings.ProtectionGroupBackup.BackupTier
+				protectionGroupBackupSet := &schema.Set{
+					F: schema.HashResource(resProtectionGroupBackup)}
+				protectionGroupBackupSet.Add(protectionGroupBackupMap)
+				advancedSettingsMap[schemaProtectionGroupBackup] =
+					protectionGroupBackupSet
+			}
+			advancedSettingsSet := &schema.Set{
+				F: schema.HashResource(resAdvancedSettings)}
+			advancedSettingsSet.Add(advancedSettingsMap)
+			operationAttrMap[schemaAdvancedSettings] = advancedSettingsSet
+		}
 		schemaOperations.Add(operationAttrMap)
 	}
 
 	return schemaOperations
+}
+
+// getOperationAdvancedSettings returns the models.PolicyAdvancedSettings after parsing
+// the advanced_settings from the schema.
+func getOperationAdvancedSettings(
+	advancedSettingsIface interface{}) *models.PolicyAdvancedSettings {
+	var advancedSettings *models.PolicyAdvancedSettings
+	if advancedSettingsIface != nil {
+		advancedSettings = &models.PolicyAdvancedSettings{}
+		schemaAdvancedSettingsSlice := advancedSettingsIface.(*schema.Set).List()
+		if len(schemaAdvancedSettingsSlice) > 0 {
+			schemaAdvSettings := schemaAdvancedSettingsSlice[0].(map[string]interface{})
+			advancedSettings.Ec2MssqlDatabaseBackup =
+				getMSSQLDatabaseBackupAdvancedSetting(
+					schemaAdvSettings[schemaEc2MssqlDatabaseBackup])
+			advancedSettings.Ec2MssqlLogBackup = getMSSQLLogBackupAdvancedSetting(
+				schemaAdvSettings[schemaEc2MssqlLogBackup])
+			advancedSettings.MssqlDatabaseBackup =
+				getMSSQLDatabaseBackupAdvancedSetting(
+					schemaAdvSettings[schemaMssqlDatabaseBackup])
+			advancedSettings.MssqlLogBackup = getMSSQLLogBackupAdvancedSetting(
+				schemaAdvSettings[schemaMssqlLogBackup])
+			advancedSettings.ProtectionGroupBackup = getProtectionGroupAdvancedSetting(
+				schemaAdvSettings[schemaProtectionGroupBackup])
+		}
+	}
+	return advancedSettings
+}
+
+// getMSSQLDatabaseBackupAdvancedSetting returns the MSSQLDatabaseBackupAdvancedSetting
+// after parsing the information from the mssqlDatabaseBackupIface interface.
+func getMSSQLDatabaseBackupAdvancedSetting(
+	mssqlDatabaseBackupIface interface{}) *models.MSSQLDatabaseBackupAdvancedSetting {
+	var mssqlDatabaseBackup *models.MSSQLDatabaseBackupAdvancedSetting
+	if mssqlDatabaseBackupIface != nil {
+		mssqlDatabaseBackupSlice := mssqlDatabaseBackupIface.(*schema.Set).List()
+		if len(mssqlDatabaseBackupSlice) > 0 {
+			schemaEc2MssqlDatabaseBackupMap :=
+				mssqlDatabaseBackupSlice[0].(map[string]interface{})
+			schemaPreferredReplicaVal :=
+				schemaEc2MssqlDatabaseBackupMap[schemaPreferredReplica].(string)
+			schemaAlternativeReplicaVal :=
+				schemaEc2MssqlDatabaseBackupMap[schemaAlternativeReplica].(string)
+			mssqlDatabaseBackup = &models.MSSQLDatabaseBackupAdvancedSetting{
+				AlternativeReplica: &schemaAlternativeReplicaVal,
+				PreferredReplica:   &schemaPreferredReplicaVal,
+			}
+		}
+	}
+	return mssqlDatabaseBackup
+}
+
+// getMSSQLLogBackupAdvancedSetting returns the MSSQLLogBackupAdvancedSetting
+// after parsing the information from the mssqlLogBackupIface interface.
+func getMSSQLLogBackupAdvancedSetting(
+	mssqlLogBackupIface interface{}) *models.MSSQLLogBackupAdvancedSetting {
+	var mssqlLogBackup *models.MSSQLLogBackupAdvancedSetting
+	if mssqlLogBackupIface != nil {
+		mssqlLogBackupSlice := mssqlLogBackupIface.(*schema.Set).List()
+		if len(mssqlLogBackupSlice) > 0 {
+			mssqlDatabaseBackupMap := mssqlLogBackupSlice[0].(map[string]interface{})
+			schemaPreferredReplicaVal :=
+				mssqlDatabaseBackupMap[schemaPreferredReplica].(string)
+			schemaAlternativeReplicaVal :=
+				mssqlDatabaseBackupMap[schemaAlternativeReplica].(string)
+			mssqlLogBackup = &models.MSSQLLogBackupAdvancedSetting{
+				AlternativeReplica: &schemaAlternativeReplicaVal,
+				PreferredReplica:   &schemaPreferredReplicaVal,
+			}
+		}
+	}
+	return mssqlLogBackup
+}
+
+// getProtectionGroupAdvancedSetting returns the ProtectionGroupBackupAdvancedSetting
+// after parsing the information from the protectionGroupIface interface.
+func getProtectionGroupAdvancedSetting(
+	protectionGroupIface interface{}) *models.ProtectionGroupBackupAdvancedSetting {
+	var protectionGroupBackup *models.ProtectionGroupBackupAdvancedSetting
+	if protectionGroupIface != nil {
+		protectionGroupSlice := protectionGroupIface.(*schema.Set).List()
+		if len(protectionGroupSlice) > 0 {
+			protectionGroupBackupMap := protectionGroupSlice[0].(map[string]interface{})
+			schemaBackupTierVal := protectionGroupBackupMap[schemaBackupTier].(string)
+			protectionGroupBackup = &models.ProtectionGroupBackupAdvancedSetting{
+				BackupTier: &schemaBackupTierVal,
+			}
+		}
+	}
+	return protectionGroupBackup
 }

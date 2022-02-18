@@ -19,5 +19,10 @@ resource "clumio_policy" "example" {
         value = 1
       }
     }
+    advanced_settings {
+      protection_group_backup {
+        backup_tier = "cold"
+      }
+    }
   }
 }

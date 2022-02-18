@@ -34,6 +34,11 @@ resource "clumio_policy" "example" {
         value = 1
       }
     }
+    advanced_settings {
+      protection_group_backup {
+        backup_tier = "cold"
+      }
+    }
   }
 }
 ```
@@ -67,6 +72,7 @@ Required:
 
 Optional:
 
+- **advanced_settings** (Block Set, Max: 1) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
 - **backup_window** (Block Set, Max: 1) The start and end times for the customized backup window. (see [below for nested schema](#nestedblock--operations--backup_window))
 
 <a id="nestedblock--operations--slas"></a>
@@ -93,6 +99,62 @@ Required:
 
 - **unit** (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
 - **value** (Number) The measurement value of the SLA parameter.
+
+
+
+<a id="nestedblock--operations--advanced_settings"></a>
+### Nested Schema for `operations.advanced_settings`
+
+Optional:
+
+- **ec2_mssql_database_backup** (Block Set, Max: 1) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
+- **ec2_mssql_log_backup** (Block Set, Max: 1) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_log_backup))
+- **mssql_database_backup** (Block Set, Max: 1) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_database_backup))
+- **mssql_log_backup** (Block Set, Max: 1) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_log_backup))
+- **protection_group_backup** (Block Set, Max: 1) Additional policy configuration settings for the protection_group_backup operation. If this operation is not of type protection_group_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--protection_group_backup))
+
+<a id="nestedblock--operations--advanced_settings--ec2_mssql_database_backup"></a>
+### Nested Schema for `operations.advanced_settings.ec2_mssql_database_backup`
+
+Optional:
+
+- **alternative_replica** (String) The alternative replica for MSSQL database backups. This setting only applies to Availability Group databases. Possible values include "primary", "sync_secondary", and "stop". If "stop" is provided, then backups will not attempt to switch to a different replica when the preferred replica is unavailable. Otherwise, recurring backups will attempt to use either the primary replica or the secondary replica accordingly.
+- **preferred_replica** (String) The primary preferred replica for MSSQL database backups. This setting only applies to Availability Group databases. Possible values include "primary" and "sync_secondary". Recurring backup will first attempt to use either the primary replica or the secondary replica accordingly.
+
+
+<a id="nestedblock--operations--advanced_settings--ec2_mssql_log_backup"></a>
+### Nested Schema for `operations.advanced_settings.ec2_mssql_log_backup`
+
+Optional:
+
+- **alternative_replica** (String) The alternative replica for MSSQL log backups. This setting only applies to Availability Group databases. Possible values include "primary", "sync_secondary", and "stop". If "stop" is provided, then backups will not attempt to switch to a different replica when the preferred replica is unavailable. Otherwise, recurring backups will attempt to use either the primary replica or the secondary replica accordingly.
+- **preferred_replica** (String) The primary preferred replica for MSSQL log backups. This setting only applies to Availability Group databases. Possible values include "primary" and "sync_secondary". Recurring backup will first attempt to use either the primary replica or the secondary replica accordingly.
+
+
+<a id="nestedblock--operations--advanced_settings--mssql_database_backup"></a>
+### Nested Schema for `operations.advanced_settings.mssql_database_backup`
+
+Optional:
+
+- **alternative_replica** (String) The alternative replica for MSSQL database backups. This setting only applies to Availability Group databases. Possible values include "primary", "sync_secondary", and "stop". If "stop" is provided, then backups will not attempt to switch to a different replica when the preferred replica is unavailable. Otherwise, recurring backups will attempt to use either the primary replica or the secondary replica accordingly.
+- **preferred_replica** (String) The primary preferred replica for MSSQL database backups. This setting only applies to Availability Group databases. Possible values include "primary" and "sync_secondary". Recurring backup will first attempt to use either the primary replica or the secondary replica accordingly.
+
+
+<a id="nestedblock--operations--advanced_settings--mssql_log_backup"></a>
+### Nested Schema for `operations.advanced_settings.mssql_log_backup`
+
+Optional:
+
+- **alternative_replica** (String) The alternative replica for MSSQL log backups. This setting only applies to Availability Group databases. Possible values include "primary", "sync_secondary", and "stop". If "stop" is provided, then backups will not attempt to switch to a different replica when the preferred replica is unavailable. Otherwise, recurring backups will attempt to use either the primary replica or the secondary replica accordingly.
+- **preferred_replica** (String) The primary preferred replica for MSSQL log backups. This setting only applies to Availability Group databases. Possible values include "primary" and "sync_secondary". Recurring backup will first attempt to use either the primary replica or the secondary replica accordingly.
+
+
+<a id="nestedblock--operations--advanced_settings--protection_group_backup"></a>
+### Nested Schema for `operations.advanced_settings.protection_group_backup`
+
+Optional:
+
+- **backup_tier** (String) Backup tier to store the backup in. Valid values are: cold, frozen
 
 
 

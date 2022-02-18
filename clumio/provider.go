@@ -25,8 +25,10 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_callback"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_organizational_unit"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy_assignment"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy_rule"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_post_process_aws_connection"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_protection_group"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_role"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_user"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
@@ -57,6 +59,8 @@ func New(isUnitTest bool) func() *schema.Provider {
 				"clumio_user":                        clumio_user.ClumioUser(),
 				"clumio_organizational_unit":         clumio_organizational_unit.ClumioOrganizationalUnit(),
 				"clumio_policy_rule":                 clumio_policy_rule.ClumioPolicyRule(),
+				"clumio_protection_group":            clumio_protection_group.ClumioS3ProtectionGroup(),
+				"clumio_policy_assignment":           clumio_policy_assignment.ClumioPolicyAssignment(),
 			},
 			DataSourcesMap: map[string]*schema.Resource{
 				"clumio_role": clumio_role.DataSourceClumioRole(),
@@ -69,29 +73,39 @@ func New(isUnitTest bool) func() *schema.Provider {
 				Optional:    true,
 				Default:     "",
 				Description: "AWS Access Key.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"assume_role": assumeRoleSchema(),
 			"clumio_region": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Clumio Control Plane AWS Region.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"region": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Region.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"secret_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				Description: "AWS Secret Key.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"session_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				Description: "AWS Session Token.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"profile": {
 				Type:     schema.TypeString,
@@ -99,6 +113,8 @@ func New(isUnitTest bool) func() *schema.Provider {
 				Default:  "",
 				Description: "The profile for API operations. If not set, the default profile\n" +
 					"created with `aws configure` will be used.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"shared_credentials_file": {
 				Type:     schema.TypeString,
@@ -106,6 +122,8 @@ func New(isUnitTest bool) func() *schema.Provider {
 				Default:  "",
 				Description: "The path to the shared credentials file. If not set\n" +
 					"this defaults to ~/.aws/credentials.",
+				Deprecated: "This is no longer required as it was only required for the" +
+					" deprecated clumio_callback_resource.",
 			},
 			"clumio_api_token": {
 				Type:        schema.TypeString,
@@ -141,6 +159,8 @@ func assumeRoleSchema() *schema.Schema {
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
+		Deprecated: "This is no longer required as it was only required for the" +
+			" deprecated clumio_callback_resource.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration_seconds": {

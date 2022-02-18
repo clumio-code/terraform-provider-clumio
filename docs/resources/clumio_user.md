@@ -3,12 +3,12 @@
 page_title: "clumio_user Resource - terraform-provider-clumio-internal"
 subcategory: ""
 description: |-
-  Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
+  Clumio User Resource to create and manage users in Clumio.
 ---
 
 # clumio_user (Resource)
 
-Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
+Clumio User Resource to create and manage users in Clumio.
 
 ## Example Usage
 

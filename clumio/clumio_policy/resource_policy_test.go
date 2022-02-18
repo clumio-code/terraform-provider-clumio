@@ -46,7 +46,7 @@ resource "clumio_policy" "test_policy" {
   name = "%s"
   operations {
 	action_setting = "immediate"
-	type = "aws_ebs_volume_backup"
+	type = "protection_group_backup"
 	slas {
 		retention_duration {
 			unit = "days"
@@ -57,6 +57,11 @@ resource "clumio_policy" "test_policy" {
 			value = 2
 		}
 	}
+    advanced_settings {
+		protection_group_backup {
+			backup_tier = "cold"
+		}
+    }
   }
 }
 `

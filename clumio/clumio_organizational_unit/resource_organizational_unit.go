@@ -131,7 +131,7 @@ func clumioOrganizationalUnitRead(
 			return nil
 		}
 		return diag.Errorf(
-			"Error creating Clumio AWS Connection. Error: %v", string(apiErr.Response))
+			"Error reading Clumio Organizational Unit. Error: %v", string(apiErr.Response))
 
 	}
 	err := d.Set(schemaChildrenCount, int(*res.ChildrenCount))
@@ -227,5 +227,3 @@ func clumioOrganizationalUnitDelete(
 	}
 	return nil
 }
-
-

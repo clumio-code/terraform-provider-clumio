@@ -78,7 +78,8 @@ func ClumioCallback() *schema.Resource {
 			" The purpose of this resource is to send a SNS event with the necessary" +
 			" details of the AWS connection configuration done on the client AWS" +
 			" account so that necessary connection post processing can be done in Clumio.",
-
+		DeprecationMessage: "This resource is deprecated. " +
+			"Use clumio_post_process_aws_connection resource instead.",
 		CreateContext: clumioCallbackCreate,
 		ReadContext:   clumioCallbackRead,
 		UpdateContext: clumioCallbackUpdate,

@@ -31,6 +31,10 @@ resource "clumio_policy_rule" "example" {
 - **name** (String) The unique name of the policy rule.
 - **policy_id** (String) The policy ID of the policy to be applied to the assets.
 
+### Optional
+
+- **organizational_unit_id** (String) The Clumio-assigned ID of the organizational unit to be associated with the policy rule.
+
 ### Read-Only
 
 - **id** (String) Policy Rule Id.

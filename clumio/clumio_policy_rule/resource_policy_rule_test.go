@@ -88,14 +88,14 @@ resource "clumio_policy_rule" "test_policy_rule" {
   name = "%s"
   policy_id = clumio_policy.%s.id
   before_rule_id = ""
-  condition = "{\"entity_type\":{\"$in\":[\"aws_ebs_volume\",\"aws_ec2_instance\"]}}"
+  condition = "{\"entity_type\":{\"$in\":[\"aws_ebs_volume\",\"aws_ec2_instance\"]}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
 }
 
 resource "clumio_policy_rule" "test_policy_rule_2" {
   name = "%s"
   policy_id = clumio_policy.%s.id
   before_rule_id = clumio_policy_rule.test_policy_rule.id
-  condition = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}}"
+  condition = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
 }
 
 `

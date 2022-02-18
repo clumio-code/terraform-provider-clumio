@@ -14,11 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const clumioPolicyIdEnv = "CLUMIO_POLICY_ID"
-
 func testAccPreCheckClumio(t *testing.T) {
 	clumio.UtilTestAccPreCheckClumio(t)
-	clumio.UtilTestFailIfEmpty(t, clumioPolicyIdEnv, clumioPolicyIdEnv+" cannot be empty.")
 }
 
 func TestAccResourceClumioPolicyAssignment(t *testing.T) {
@@ -36,7 +33,7 @@ func TestAccResourceClumioPolicyAssignment(t *testing.T) {
 
 func getTestAccResourceClumioPolicyAssignment(policyId string) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	return fmt.Sprintf(testAccResourceClumioPolicyAssignment, baseUrl, policyId)
+	return fmt.Sprintf(testAccResourceClumioPolicyAssignment, baseUrl)
 }
 
 const testAccResourceClumioPolicyAssignment = `
@@ -52,9 +49,32 @@ resource "clumio_protection_group" "test_pg"{
   }
 }
 
+resource "clumio_policy" "test_policy" {
+  name = "acceptance-test-policy-1234"
+  operations {
+	action_setting = "immediate"
+	type = "protection_group_backup"
+	slas {
+		retention_duration {
+			unit = "days"
+			value = 4
+		}
+		rpo_frequency {
+			unit = "days"
+			value = 2
+		}
+	}
+    advanced_settings {
+		protection_group_backup {
+			backup_tier = "cold"
+		}
+    }
+  }
+}
+
 resource "clumio_policy_assignment" "test_policy_assignment" {
   entity_id = clumio_protection_group.test_pg.id
   entity_type = "protection_group"
-  policy_id = %s
+  policy_id = clumio_policy.test_policy.id
 }
 `

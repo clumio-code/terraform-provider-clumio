@@ -109,6 +109,15 @@ func ClumioPostProcessAWSConnection() *schema.Resource {
 				Description: "Clumio Event Pub SNS topic ID.",
 				Required:    true,
 			},
+			schemaProperties: {
+				Type: schema.TypeMap,
+				Description: "A map to pass in additional information to be consumed " +
+					"by Clumio Post Processing",
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -154,6 +163,16 @@ func clumioPostProcessAWSConnectionCommon(_ context.Context, d *schema.ResourceD
 	token := common.GetStringValue(d, schemaToken)
 	roleExternalId := common.GetStringValue(d, schemaRoleExternalId)
 	clumioEventPubId := common.GetStringValue(d, schemaClumioEventPubId)
+	schemaPropertiesIface, ok := d.GetOk(schemaProperties)
+	var propertiesMap map[string]*string
+	if ok {
+		schemaPropertiesMap := schemaPropertiesIface.(map[string]interface{})
+		propertiesMap = make(map[string]*string)
+		for key, val := range schemaPropertiesMap {
+			valStr := val.(string)
+			propertiesMap[key] = &valStr
+		}
+	}
 
 	templateConfig, err := common.GetTemplateConfiguration(d, true)
 	if err != nil {
@@ -176,6 +195,7 @@ func clumioPostProcessAWSConnectionCommon(_ context.Context, d *schema.ResourceD
 			RoleExternalId:   &roleExternalId,
 			Token:            &token,
 			ClumioEventPubId: &clumioEventPubId,
+			Properties:       propertiesMap,
 		})
 	if apiErr != nil {
 		return diag.Errorf(

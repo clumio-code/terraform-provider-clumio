@@ -80,6 +80,10 @@ resource "clumio_post_process_aws_connection" "test" {
   protect_warm_tier_dynamodb_version = "2.1"
   protect_dynamodb_version = "1.1"
   protect_s3_version = "2.1"
+  properties = {
+	key1 = "val1"
+	key2 = "val2"
+  }
 }
 `
 

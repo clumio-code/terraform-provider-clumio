@@ -7,7 +7,10 @@ package clumio_policy_assignment
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	policyAssignments "github.com/clumio-code/clumio-go-sdk/controllers/policy_assignments"
+	protectionGroups "github.com/clumio-code/clumio-go-sdk/controllers/protection_groups"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 	"github.com/hashicorp/go-cty/cty"
@@ -27,6 +30,10 @@ func ClumioPolicyAssignment() *schema.Resource {
 		UpdateContext: clumioPolicyAssignmentCreateUpdate,
 		ReadContext:   clumioPolicyAssignmentRead,
 		DeleteContext: clumioPolicyAssignmentDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			schemaEntityId: {
@@ -105,6 +112,49 @@ func clumioPolicyAssignmentDelete(
 // clumioPolicyAssignmentRead handles the Read action for the Clumio Policy Assignment Resource.
 func clumioPolicyAssignmentRead(
 	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*common.ApiClient)
+	clumioConfig := common.GetClumioConfigForAPI(client, d)
+	idSplits := strings.Split(d.Id(), "_")
+	if len(idSplits) < 3 {
+		return diag.Errorf("Invalid id for policy_assignment", d.Id())
+	}
+	policyId, entityId, entityType := idSplits[0], idSplits[1], strings.Join(idSplits[2:], "_")
+	switch entityType {
+	case entityTypeProtectionGroup:
+		protectionGroup := protectionGroups.NewProtectionGroupsV1(clumioConfig)
+		readResponse, apiErr := protectionGroup.ReadProtectionGroup(entityId)
+		if apiErr != nil{
+			return diag.Errorf("Error creating Protection Group %v. Error: %v",
+				entityId, string(apiErr.Response))
+		}
+		if *readResponse.ProtectionInfo.PolicyId != policyId {
+			diag.Errorf(
+				"Protection group with id: %s does not have policy %s applied",
+				entityId, policyId)
+		}
+		err := d.Set(schemaPolicyId, policyId)
+		if err != nil {
+			return diag.Errorf(
+				common.SchemaAttributeSetError, schemaPolicyId, err)
+		}
+		err = d.Set(schemaEntityId, entityId)
+		if err != nil {
+			return diag.Errorf(
+				common.SchemaAttributeSetError, schemaEntityId, err)
+		}
+		err = d.Set(schemaEntityType, entityType)
+		if err != nil {
+			return diag.Errorf(
+				common.SchemaAttributeSetError, schemaEntityType, err)
+		}
+		err = d.Set(schemaOrganizationalUnitId, *readResponse.OrganizationalUnitId)
+		if err != nil {
+			return diag.Errorf(
+				common.SchemaAttributeSetError, schemaOrganizationalUnitId, err)
+		}
+	default:
+		return diag.Errorf("Invalid entityType: %v", entityType)
+	}
 	return nil
 }
 

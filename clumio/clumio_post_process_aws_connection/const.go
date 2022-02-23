@@ -19,4 +19,5 @@ const (
 	schemaProtectWarmTierDynamodbVersion = "protect_warm_tier_dynamodb_version"
 	schemaProtectEc2MssqlVersion         = "protect_ec2_mssql_version"
 	schemaClumioEventPubId               = "clumio_event_pub_id"
+	schemaProperties                     = "properties"
 )

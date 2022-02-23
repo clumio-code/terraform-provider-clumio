@@ -6,7 +6,6 @@ package clumio_policy_rule
 import (
 	"context"
 
-	"github.com/clumio-code/clumio-go-sdk/config"
 	policyRules "github.com/clumio-code/clumio-go-sdk/controllers/policy_rules"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
@@ -77,15 +76,7 @@ func ClumioPolicyRule() *schema.Resource {
 func clumioPolicyRuleCreate(
 	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
-	orgUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
-	clumioConfig := client.ClumioConfig
-	if orgUnitId != "" {
-		clumioConfig = config.Config{
-			Token:                     client.ClumioConfig.Token,
-			BaseUrl:                   client.ClumioConfig.BaseUrl,
-			OrganizationalUnitContext: orgUnitId,
-		}
-	}
+	clumioConfig := common.GetClumioConfigForAPI(client, d)
 	pr := policyRules.NewPolicyRulesV1(clumioConfig)
 	condition := common.GetStringValue(d, schemaCondition)
 	name := common.GetStringValue(d, schemaName)
@@ -124,15 +115,7 @@ func clumioPolicyRuleCreate(
 func clumioPolicyRuleUpdate(
 	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
-	orgUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
-	clumioConfig := client.ClumioConfig
-	if orgUnitId != "" {
-		clumioConfig = config.Config{
-			Token:                     client.ClumioConfig.Token,
-			BaseUrl:                   client.ClumioConfig.BaseUrl,
-			OrganizationalUnitContext: orgUnitId,
-		}
-	}
+	clumioConfig := common.GetClumioConfigForAPI(client, d)
 	pr := policyRules.NewPolicyRulesV1(clumioConfig)
 	condition := common.GetStringValue(d, schemaCondition)
 	name := common.GetStringValue(d, schemaName)
@@ -170,15 +153,7 @@ func clumioPolicyRuleUpdate(
 func clumioPolicyRuleRead(
 	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
-	orgUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
-	clumioConfig := client.ClumioConfig
-	if orgUnitId != "" {
-		clumioConfig = config.Config{
-			Token:                     client.ClumioConfig.Token,
-			BaseUrl:                   client.ClumioConfig.BaseUrl,
-			OrganizationalUnitContext: orgUnitId,
-		}
-	}
+	clumioConfig := common.GetClumioConfigForAPI(client, d)
 	pr := policyRules.NewPolicyRulesV1(clumioConfig)
 
 	res, apiErr := pr.ReadPolicyRule(d.Id())
@@ -204,6 +179,11 @@ func clumioPolicyRuleRead(
 	if err != nil {
 		return diag.Errorf(common.SchemaAttributeSetError, schemaPolicyId, err)
 	}
+	err = d.Set(schemaOrganizationalUnitId, *res.OrganizationalUnitId)
+	if err != nil {
+		return diag.Errorf(
+			common.SchemaAttributeSetError, schemaOrganizationalUnitId, err)
+	}
 	return nil
 }
 
@@ -211,15 +191,7 @@ func clumioPolicyRuleRead(
 func clumioPolicyRuleDelete(
 	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
-	orgUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
-	clumioConfig := client.ClumioConfig
-	if orgUnitId != "" {
-		clumioConfig = config.Config{
-			Token:                     client.ClumioConfig.Token,
-			BaseUrl:                   client.ClumioConfig.BaseUrl,
-			OrganizationalUnitContext: orgUnitId,
-		}
-	}
+	clumioConfig := common.GetClumioConfigForAPI(client, d)
 	pr := policyRules.NewPolicyRulesV1(clumioConfig)
 	res, apiErr := pr.DeletePolicyRule(d.Id())
 	if apiErr != nil {

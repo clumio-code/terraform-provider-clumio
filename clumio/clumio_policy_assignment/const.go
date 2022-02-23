@@ -7,6 +7,8 @@ const (
 	schemaEntityType           = "entity_type"
 	schemaPolicyId             = "policy_id"
 	schemaOrganizationalUnitId = "organizational_unit_id"
+
+	entityTypeProtectionGroup = "protection_group"
 )
 
 var (

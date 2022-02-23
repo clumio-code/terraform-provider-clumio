@@ -79,6 +79,10 @@ func ClumioS3ProtectionGroup() *schema.Resource {
 		UpdateContext: clumioProtectionGroupUpdate,
 		DeleteContext: clumioProtectionGroupDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			schemaDescription: {
 				Type:        schema.TypeString,

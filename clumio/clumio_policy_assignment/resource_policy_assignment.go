@@ -70,6 +70,7 @@ func ClumioPolicyAssignment() *schema.Resource {
 				Description: "The Clumio-assigned ID of the organizational unit" +
 					" to use as the context for assigning the policy.",
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -88,7 +89,8 @@ func clumioPolicyAssignmentCreateUpdate(
 		return diag.Errorf("Error assigning policy %v to entity %v. Error: %v",
 			*assignment.PolicyId, *assignment.Entity.Id, string(apiErr.Response))
 	}
-	id := fmt.Sprintf("%s_%s", *assignment.PolicyId, *assignment.Entity.Id)
+	entityType := common.GetStringValue(d, schemaEntityType)
+	id := fmt.Sprintf("%s_%s_%s", *assignment.PolicyId, *assignment.Entity.Id, entityType)
 	d.SetId(id)
 	return nil
 }
@@ -116,14 +118,14 @@ func clumioPolicyAssignmentRead(
 	clumioConfig := common.GetClumioConfigForAPI(client, d)
 	idSplits := strings.Split(d.Id(), "_")
 	if len(idSplits) < 3 {
-		return diag.Errorf("Invalid id for policy_assignment", d.Id())
+		return diag.Errorf("Invalid id %s for policy_assignment", d.Id())
 	}
 	policyId, entityId, entityType := idSplits[0], idSplits[1], strings.Join(idSplits[2:], "_")
 	switch entityType {
 	case entityTypeProtectionGroup:
 		protectionGroup := protectionGroups.NewProtectionGroupsV1(clumioConfig)
 		readResponse, apiErr := protectionGroup.ReadProtectionGroup(entityId)
-		if apiErr != nil{
+		if apiErr != nil {
 			return diag.Errorf("Error creating Protection Group %v. Error: %v",
 				entityId, string(apiErr.Response))
 		}

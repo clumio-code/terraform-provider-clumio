@@ -4,7 +4,7 @@ resource "clumio_policy" "example" {
   activation_status      = "activated"
   operations {
     action_setting = "window"
-    type           = "aws_ebs_volume_backup"
+    type           = "protection_group_backup"
     backup_window {
       start_time = "08:00"
       end_time   = "20:00"

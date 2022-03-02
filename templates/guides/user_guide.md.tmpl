@@ -1,0 +1,130 @@
+#### [ Pre-requisites for using clumio provider](#pre-requisites)
+#### [Example 1: Basic Install](#example1)
+#### [Example 2: Cross-Region Install](#example2)
+#### [Example 3: Cross-Account Install with Assume Role](#example3)
+#### [Example 4: Cross-Account Install with Profiles](#example4)
+#### [Example 5: Cross-Account Install with Static Credentials](#example5)
+#### [Example 6: Importing Resources](#example6)
+#### [Example 7: Instantiate the Clumio Provider in the Context of an OU](#example7)
+#### [Example 8: Instantiate an S3 Protection Group and Assign a Policy](#example8)
+<a name="pre-requisites"></a>
+## Pre-requisites for using Clumio Provider
+### Obtain a Clumio API Key:
+API Token(personal or service token) can be generated from Settings->Access Management->API Tokens section in ClumioUI.
+### Prepare your environment
+- These credentials will be used by the AWS Terraform provider to provision resources required by Clumio in the target AWS account (see Example 1 or Example 2 below). If resources must be created in a cross-AWS-account, these credentials will need the ability to assume a role there (see Example 3 below).
+- NOTE: For Example 4 and Example 5 credentials are provided in a different manner to the AWS Terraform provider and thus this step should not be required.
+```shell
+$ export AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+$ export AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
+
+# If a session token is required ...
+$ export AWS_SESSION_TOKEN=<AWS_SESSION_TOKEN>
+```
+### Instantiate Custom Clumio Resources and the Clumio Module for Protect
+- NOTE: In all examples, replace <clumio_api_token> and <clumio_api_base_url> with the appropriate values. The clumio_api_token should be set to the token obtained in the first step. <clumio_api_base_url>  should be one of the following depending on the Clumio portal in-use:
+    - https://us-west-2.api.clumio.com
+        - portal: https://west.portal.clumio.com/
+    - https://us-east-1.api.clumio.com
+        - portal: https://east.portal.clumio.com/
+    - https://ca-central-1.ca.api.clumio.com
+        - portal: https://canada.portal.clumio.com/
+
+### Set up data group if required
+- When a new organization is being used, a data group needs to be created from the Clumio UI before clumio_organizational_unit resource could be used.
+    - DataGroup can be created from Settings->Organizational Units->Set up data groups
+
+<a name="example1"></a>
+## Example 1: Basic Install
+The following:
+- Downloads the latest Clumio Provider and instantiates it.
+- Creates a clumio_aws_connection and installs the Clumio module for Protect onto it.
+- Creates several additional, custom Clumio resources including:
+    - clumio_policy
+    - clumio_policy_rule
+    - clumio_organizational_unit
+    - clumio_user
+{{ tffile "examples/guides/example1.tf" }}
+<a name="example2"></a>
+## Example 2: Cross-Region Install
+The following:
+- Downloads the latest Clumio Provider and instantiates it.
+- Instantiates two AWS Providers where the attributes for each denote two different AWS regions.
+- Creates two instances of clumio_aws_connection and installs the Clumio module for Protect onto both.
+{{ tffile "examples/guides/example2.tf" }}
+<a name="example3"></a>
+## Example 3: Cross-Account Install with Assume Role
+The following:
+- Downloads the latest Clumio Provider and instantiates it.
+- Instantiates two AWS Providers where the attributes for each denote the cross-account role to assume on two different AWS accounts.
+- Creates two instances of clumio_aws_connection and installs the Clumio module for Protect onto both.
+- NOTE: Replace <assume_role_arn_1>, <assume_role_external_id_1>, <assume_role_arn_2>, and <assume_role_external_id_2> with the appropriate values to assume a cross-account role on the two different AWS accounts.
+{{ tffile "examples/guides/example3.tf" }}
+<a name="example4"></a>
+## Example 4: Cross-Account Install with Profiles
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs#shared-credentials-file
+- Similar to Example 3, but appropriate values for the profile attribute must be given (it is assumed that default values for shared_config_files and shared_credentials_files are okay). For example:
+{{ tffile "examples/guides/example4.tf" }}
+<a name="example5"></a>
+## Example 5: Cross-Account Install with Static Credentials
+- NOTE: Hard-coded credentials are not recommended in any Terraform configuration.
+- https://registry.terraform.io/providers/hashicorp/aws/latest/docs#static-credentials.
+- Similar to Example 3, but appropriate values for the access_key and secret_key attributes must be given. For example:
+{{ tffile "examples/guides/example5.tf" }}
+<a name="example6"></a>
+## Example 6: Importing Resources
+- Specify an empty custom resource in the Terraform file for the Clumio resource to be imported:
+{{ tffile "examples/guides/example6.tf" }}
+- Then run the terraform import command. For example:
+```shell
+$ terraform import clumio_policy.policy <clumio_policy_id>
+```
+- where <clumio_policy_id> is replaced with the appropriate Clumio policy ID to import
+- Once complete, the Terraform file should be populated with the details of the imported resource. This can be obtained using the terraform state show command:
+```shell
+$ terraform state show clumio_policy.policy
+
+# clumio_policy.policy:
+resource "clumio_policy" "policy" {
+    activation_status      = "activated"
+    id                     = "a44a4d91-c50c-4a61-bd4d-c46cf1c4427a"
+    lock_status            = "unlocked"
+    name                   = "demo"
+    organizational_unit_id = "00000000-0000-0000-0000-000000000000"
+
+    operations {
+        action_setting = "immediate"
+        type           = "aws_ebs_volume_backup"
+
+        slas {
+            retention_duration {
+                unit  = "days"
+                value = 14
+            }
+
+            rpo_frequency {
+                unit  = "days"
+                value = 1
+            }
+        }
+        slas {
+            retention_duration {
+                unit  = "days"
+                value = 7
+            }
+
+            rpo_frequency {
+                unit  = "on_demand"
+                value = 0
+            }
+        }
+    }
+}
+```
+<a name="example7"></a>
+## Example7: Instantiate the Clumio Provider in the Context of an OU
+{{ tffile "examples/guides/example7.tf" }}
+where <clumio_ou_id> is replaced with the ID of an existing organizational unit.
+<a name="example8"></a>
+## Instantiate an S3 Protection Group and Assign a Policy
+{{ tffile "examples/guides/example8.tf" }}

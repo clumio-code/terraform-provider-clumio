@@ -49,8 +49,8 @@ resource "clumio_policy" "test_policy" {
 	type = "protection_group_backup"
 	slas {
 		retention_duration {
-			unit = "days"
-			value = 4
+			unit = "months"
+			value = 3
 		}
 		rpo_frequency {
 			unit = "days"

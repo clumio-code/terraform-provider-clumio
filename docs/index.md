@@ -10,6 +10,8 @@ description: |-
 
 # Clumio Provider
 
+NOTE: 0.1.x versions have been deprecated.
+
 ## Example Usage
 
 ```terraform

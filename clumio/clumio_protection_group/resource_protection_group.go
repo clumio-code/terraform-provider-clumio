@@ -84,6 +84,13 @@ func ClumioS3ProtectionGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			schemaBucketRule: {
+				Type: schema.TypeString,
+				Description: "Describes the possible conditions for a bucket to be " +
+					"automatically added to a protection group. For example: " +
+					"{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}",
+				Optional: true,
+			},
 			schemaDescription: {
 				Type:        schema.TypeString,
 				Description: "The user-assigned description of the protection group.",
@@ -160,6 +167,7 @@ func clumioProtectionGroupCreate(
 	protectionGroup := protectionGroups.NewProtectionGroupsV1(clumioConfig)
 	name := common.GetStringValue(d, schemaName)
 	description := common.GetStringValue(d, schemaDescription)
+	bucketRule := common.GetStringValue(d, schemaBucketRule)
 	objectFilterIface, ok := d.GetOk(schemaObjectFilter)
 	if !ok {
 		return diag.Errorf("Required attribute object_filter is not present.")
@@ -167,6 +175,7 @@ func clumioProtectionGroupCreate(
 	objectFilter := mapSchemaObjectFilterToClumioObjectFilter(objectFilterIface)
 	response, apiErr := protectionGroup.CreateProtectionGroup(
 		models.CreateProtectionGroupV1Request{
+			BucketRule:   &bucketRule,
 			Description:  &description,
 			Name:         &name,
 			ObjectFilter: objectFilter,
@@ -193,6 +202,7 @@ func clumioProtectionGroupUpdate(
 	protectionGroup := protectionGroups.NewProtectionGroupsV1(clumioConfig)
 	name := common.GetStringValue(d, schemaName)
 	description := common.GetStringValue(d, schemaDescription)
+	bucketRule := common.GetStringValue(d, schemaBucketRule)
 	objectFilterIface, ok := d.GetOk(schemaObjectFilter)
 	if !ok {
 		return diag.Errorf("Required attribute object_filter is not present.")
@@ -200,6 +210,7 @@ func clumioProtectionGroupUpdate(
 	objectFilter := mapSchemaObjectFilterToClumioObjectFilter(objectFilterIface)
 	response, apiErr := protectionGroup.UpdateProtectionGroup(d.Id(),
 		&models.UpdateProtectionGroupV1Request{
+			BucketRule:   &bucketRule,
 			Description:  &description,
 			Name:         &name,
 			ObjectFilter: objectFilter,
@@ -232,6 +243,10 @@ func clumioProtectionGroupRead(
 	err := d.Set(schemaDescription, *readResponse.Description)
 	if err != nil {
 		return diag.Errorf(common.SchemaAttributeSetError, schemaDescription, err)
+	}
+	err = d.Set(schemaBucketRule, *readResponse.BucketRule)
+	if err != nil {
+		return diag.Errorf(common.SchemaAttributeSetError, schemaBucketRule, err)
 	}
 	err = d.Set(schemaName, *readResponse.Name)
 	if err != nil {

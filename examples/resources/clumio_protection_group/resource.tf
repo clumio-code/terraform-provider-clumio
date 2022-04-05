@@ -2,6 +2,7 @@ resource "clumio_protection_group" "example" {
   name                   = "example-protection_group"
   description            = "example protection group"
   organizational_unit_id = "organizational_unit_id"
+  bucket_rule            = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   object_filter {
     latest_version_only = false
     prefix_filters {

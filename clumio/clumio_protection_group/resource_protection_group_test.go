@@ -53,6 +53,7 @@ provider clumio{
 }
 
 resource "clumio_protection_group" "test_pg"{
+  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   name = "test_pg_1"
   description = "%s"
   object_filter {
@@ -104,6 +105,7 @@ resource "clumio_organizational_unit" "test_ou2" {
 }
 
 resource "clumio_protection_group" "test_pg"{
+  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   name = "test_pg_1"
   description = "%s"
   organizational_unit_id = clumio_organizational_unit.test_ou2.id

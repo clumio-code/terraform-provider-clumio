@@ -4,7 +4,7 @@ terraform {
       source  = "clumio-code/clumio"
       version = "~> 0.2.2"
     }
-    aws    = {}
+    aws = {}
   }
 }
 
@@ -18,6 +18,7 @@ provider "clumio" {
 provider "aws" {
   region = "us-west-2"
 }
+
 provider "aws" {
   alias  = "east"
   region = "us-east-1"
@@ -46,7 +47,7 @@ resource "clumio_aws_connection" "connection_east" {
 
 # Install the Clumio Protect template onto the registered connection for West
 module "clumio_protect_west" {
-  providers             = {
+  providers = {
     clumio = clumio
     aws    = aws
   }
@@ -58,17 +59,16 @@ module "clumio_protect_west" {
   clumio_aws_account_id = clumio_aws_connection.connection_west.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled               = contains(clumio_aws_connection.connection_west.protect_asset_types_enabled, "EBS")
-  is_rds_enabled               = contains(clumio_aws_connection.connection_west.protect_asset_types_enabled, "RDS")
-  is_ec2_mssql_enabled         = contains(clumio_aws_connection.connection_west.protect_asset_types_enabled, "EC2MSSQL")
-  is_warmtier_enabled          = contains(clumio_aws_connection.connection_west.protect_asset_types_enabled, "DynamoDB")
-  is_warmtier_dynamodb_enabled = contains(clumio_aws_connection.connection_west.protect_asset_types_enabled, "DynamoDB")
-  is_s3_enabled                = contains(clumio_aws_connection.connection_west.protect_asset_types_enabled, "S3")
+  is_ebs_enabled       = true
+  is_rds_enabled       = true
+  is_ec2_mssql_enabled = true
+  is_dynamodb_enabled  = true
+  is_s3_enabled        = true
 }
 
 # Install the Clumio Protect template onto the registered connection for East
 module "clumio_protect_east" {
-  providers             = {
+  providers = {
     clumio = clumio
     aws    = aws.east
   }
@@ -80,10 +80,9 @@ module "clumio_protect_east" {
   clumio_aws_account_id = clumio_aws_connection.connection_east.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled               = contains(clumio_aws_connection.connection_east.protect_asset_types_enabled, "EBS")
-  is_rds_enabled               = contains(clumio_aws_connection.connection_east.protect_asset_types_enabled, "RDS")
-  is_ec2_mssql_enabled         = contains(clumio_aws_connection.connection_east.protect_asset_types_enabled, "EC2MSSQL")
-  is_warmtier_enabled          = contains(clumio_aws_connection.connection_east.protect_asset_types_enabled, "DynamoDB")
-  is_warmtier_dynamodb_enabled = contains(clumio_aws_connection.connection_east.protect_asset_types_enabled, "DynamoDB")
-  is_s3_enabled                = contains(clumio_aws_connection.connection_east.protect_asset_types_enabled, "S3")
+  is_ebs_enabled       = true
+  is_rds_enabled       = true
+  is_ec2_mssql_enabled = true
+  is_dynamodb_enabled  = true
+  is_s3_enabled        = true
 }

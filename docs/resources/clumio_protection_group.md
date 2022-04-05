@@ -17,6 +17,7 @@ resource "clumio_protection_group" "example" {
   name                   = "example-protection_group"
   description            = "example protection group"
   organizational_unit_id = "organizational_unit_id"
+  bucket_rule            = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   object_filter {
     latest_version_only = false
     prefix_filters {
@@ -41,6 +42,7 @@ resource "clumio_protection_group" "example" {
 
 ### Optional
 
+- **bucket_rule** (String) Describes the possible conditions for a bucket to be automatically added to a protection group. For example: {"aws_tag":{"$eq":{"key":"Environment", "value":"Prod"}}}
 - **description** (String) The user-assigned description of the protection group.
 - **organizational_unit_id** (String) The Clumio-assigned ID of the organizational unit associated with the protection group.
 

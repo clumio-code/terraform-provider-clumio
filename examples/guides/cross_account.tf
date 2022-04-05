@@ -4,7 +4,7 @@ terraform {
       source  = "clumio-code/clumio"
       version = "~> 0.2.2"
     }
-    aws    = {}
+    aws = {}
   }
 }
 
@@ -59,7 +59,7 @@ resource "clumio_aws_connection" "connection_account_2_east" {
 # Install the Clumio Protect template onto the registered connection for the
 # first AWS account ID on West
 module "clumio_protect_account_1_west" {
-  providers             = {
+  providers = {
     clumio = clumio
     aws    = aws
   }
@@ -82,7 +82,7 @@ module "clumio_protect_account_1_west" {
 # Install the Clumio Protect template onto the registered connection for the
 # second AWS account ID on East
 module "clumio_protect_account_2_east" {
-  providers             = {
+  providers = {
     clumio = clumio
     aws    = aws.account_2_east
   }

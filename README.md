@@ -3,6 +3,8 @@
 The Terraform Clumio provider is a plugin for Terraform that allows for the full lifecycle
 management of Clumio resources.
 
+NOTE: 0.1.x versions have been deprecated.
+
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.14.x
@@ -25,10 +27,4 @@ terraform {
     }
   }
 }
-```
-
-For versions older than v0.1.3, install the provider using the following command:
-
-```sh
-$ curl https://raw.githubusercontent.com/clumio-code/terraform-provider-clumio/main/installer.sh | bash -s -- v0.1.2
 ```

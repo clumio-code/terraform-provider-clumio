@@ -1,3 +1,6 @@
+## 0.2.3
+Added support for bucket_rules in clumio_protection_group resource.
+
 ## 0.2.2
 
 Added support to specify organizational_unit_context in the provider and added

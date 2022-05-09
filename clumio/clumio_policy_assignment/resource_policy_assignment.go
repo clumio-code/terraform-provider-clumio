@@ -7,6 +7,7 @@ package clumio_policy_assignment
 import (
 	"context"
 	"fmt"
+	policyDefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
 	"strings"
 
 	policyAssignments "github.com/clumio-code/clumio-go-sdk/controllers/policy_assignments"
@@ -82,6 +83,25 @@ func clumioPolicyAssignmentCreateUpdate(
 	client := meta.(*common.ApiClient)
 	clumioConfig := common.GetClumioConfigForAPI(client, d)
 	pa := policyAssignments.NewPolicyAssignmentsV1(clumioConfig)
+	// Validation to check if the policy id mentioned supports protection_group_backup operation.
+	pdv1 := policyDefinitions.NewPolicyDefinitionsV1(clumioConfig)
+	policyId := common.GetStringValue(d, schemaPolicyId)
+	policy, cerr := pdv1.ReadPolicyDefinition(policyId, nil)
+	if cerr != nil {
+		return diag.Errorf("Error reading the policy with id : %v", policyId)
+	}
+	correctPolicyType := false
+	for _, operation := range policy.Operations {
+		if *operation.ClumioType == protectionGroupBackup {
+			correctPolicyType = true
+		}
+	}
+	if !correctPolicyType {
+		return diag.Errorf(
+			"Policy id %s does not contain support protection_group_backup operation",
+			policyId)
+	}
+
 	paRequest := mapSchemaPolicyAssignmentToClumioPolicyAssignment(d, false)
 	_, apiErr := pa.SetPolicyAssignments(paRequest)
 	assignment := paRequest.Items[0]

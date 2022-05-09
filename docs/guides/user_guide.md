@@ -81,11 +81,9 @@ data "aws_region" "current" {}
 
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = data.aws_region.current.name
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = data.aws_region.current.name
+  description       = "My Clumio Connection"
 }
 
 # Install the Clumio Protect template onto the registered connection
@@ -218,11 +216,9 @@ data "aws_region" "current" {}
 
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = data.aws_region.current.name
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = data.aws_region.current.name
+  description       = "My Clumio Connection"
 }
 
 # Install the Clumio Protect template onto the registered connection
@@ -284,20 +280,16 @@ data "aws_caller_identity" "current" {}
 
 # Register a new Clumio connection on us-west-2 for the effective AWS account ID
 resource "clumio_aws_connection" "connection_west" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = "us-west-2"
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection West"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = "us-west-2"
+  description       = "My Clumio Connection West"
 }
 
 # Register a new Clumio connection on us-east-1 for the effective AWS account ID
 resource "clumio_aws_connection" "connection_east" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = "us-east-1"
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection East"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = "us-east-1"
+  description       = "My Clumio Connection East"
 }
 
 # Install the Clumio Protect template onto the registered connection for West
@@ -395,20 +387,16 @@ data "aws_caller_identity" "account_2" {
 
 # Register a new Clumio connection on us-west-2 for the first AWS account ID
 resource "clumio_aws_connection" "connection_account_1_west" {
-  account_native_id           = data.aws_caller_identity.account_1.account_id
-  aws_region                  = "us-west-2"
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection Account 1 West"
+  account_native_id = data.aws_caller_identity.account_1.account_id
+  aws_region        = "us-west-2"
+  description       = "My Clumio Connection Account 1 West"
 }
 
 # Register a new Clumio connection on us-east-1 for the second AWS account ID
 resource "clumio_aws_connection" "connection_account_2_east" {
-  account_native_id           = data.aws_caller_identity.account_2.account_id
-  aws_region                  = "us-east-1"
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection Account 2 East"
+  account_native_id = data.aws_caller_identity.account_2.account_id
+  aws_region        = "us-east-1"
+  description       = "My Clumio Connection Account 2 East"
 }
 
 # Install the Clumio Protect template onto the registered connection for the
@@ -426,12 +414,12 @@ module "clumio_protect_account_1_west" {
   clumio_aws_account_id = clumio_aws_connection.connection_account_1_west.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled               = contains(clumio_aws_connection.connection_account_1_west.protect_asset_types_enabled, "EBS")
-  is_rds_enabled               = contains(clumio_aws_connection.connection_account_1_west.protect_asset_types_enabled, "RDS")
-  is_ec2_mssql_enabled         = contains(clumio_aws_connection.connection_account_1_west.protect_asset_types_enabled, "EC2MSSQL")
-  is_warmtier_enabled          = contains(clumio_aws_connection.connection_account_1_west.protect_asset_types_enabled, "DynamoDB")
-  is_warmtier_dynamodb_enabled = contains(clumio_aws_connection.connection_account_1_west.protect_asset_types_enabled, "DynamoDB")
-  is_s3_enabled                = contains(clumio_aws_connection.connection_account_1_west.protect_asset_types_enabled, "S3")
+  is_ebs_enabled               = true
+  is_rds_enabled               = true
+  is_ec2_mssql_enabled         = true
+  is_warmtier_enabled          = true
+  is_warmtier_dynamodb_enabled = true
+  is_s3_enabled                = true
 }
 
 # Install the Clumio Protect template onto the registered connection for the
@@ -449,12 +437,12 @@ module "clumio_protect_account_2_east" {
   clumio_aws_account_id = clumio_aws_connection.connection_account_2_east.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled               = contains(clumio_aws_connection.connection_account_2_east.protect_asset_types_enabled, "EBS")
-  is_rds_enabled               = contains(clumio_aws_connection.connection_account_2_east.protect_asset_types_enabled, "RDS")
-  is_ec2_mssql_enabled         = contains(clumio_aws_connection.connection_account_2_east.protect_asset_types_enabled, "EC2MSSQL")
-  is_warmtier_enabled          = contains(clumio_aws_connection.connection_account_2_east.protect_asset_types_enabled, "DynamoDB")
-  is_warmtier_dynamodb_enabled = contains(clumio_aws_connection.connection_account_2_east.protect_asset_types_enabled, "DynamoDB")
-  is_s3_enabled                = contains(clumio_aws_connection.connection_account_2_east.protect_asset_types_enabled, "S3")
+  is_ebs_enabled               = true
+  is_rds_enabled               = true
+  is_ec2_mssql_enabled         = true
+  is_warmtier_enabled          = true
+  is_warmtier_dynamodb_enabled = true
+  is_s3_enabled                = true
 }
 ```
 

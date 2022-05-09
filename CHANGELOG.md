@@ -1,4 +1,9 @@
+## 0.2.4
+
+Validations and bug fixes added for resources.
+
 ## 0.2.3
+
 Added support for bucket_rules in clumio_protection_group resource.
 
 ## 0.2.2

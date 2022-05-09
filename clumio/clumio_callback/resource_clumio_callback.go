@@ -271,7 +271,7 @@ func clumioCallbackCommon(ctx context.Context, d *schema.ResourceData, meta inte
 		fmt.Sprintf("%v", d.Get("clumio_event_pub_id"))
 	resourceProperties[keyCanonicalUser] = fmt.Sprintf("%v", d.Get("canonical_user"))
 
-	templateConfigs, err := common.GetTemplateConfiguration(d, false)
+	templateConfigs, err := common.GetTemplateConfiguration(d, false, false)
 	if err != nil {
 		return diag.Errorf("Error forming template configuration. Error: %v", err)
 	}

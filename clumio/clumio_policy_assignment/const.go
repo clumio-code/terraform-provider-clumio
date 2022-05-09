@@ -9,6 +9,7 @@ const (
 	schemaOrganizationalUnitId = "organizational_unit_id"
 
 	entityTypeProtectionGroup = "protection_group"
+	protectionGroupBackup     = "protection_group_backup"
 )
 
 var (

@@ -198,7 +198,7 @@ var (
 )
 
 // GetTemplateConfiguration returns the template configuration.
-func GetTemplateConfiguration(d *schema.ResourceData, isCamelCase bool) (
+func GetTemplateConfiguration(d *schema.ResourceData, isCamelCase bool, isConsolidated bool) (
 	map[string]interface{}, error) {
 	templateConfigs := make(map[string]interface{})
 	configMap, err := getConfigMapForKey(d, "config_version", false)
@@ -209,14 +209,17 @@ func GetTemplateConfiguration(d *schema.ResourceData, isCamelCase bool) (
 		return templateConfigs, nil
 	}
 	templateConfigs["config"] = configMap
-	discoverMap, err := getConfigMapForKey(d, "discover_version", true)
-	if err != nil {
-		return nil, err
+	if !isConsolidated {
+		discoverMap, err := getConfigMapForKey(d, "discover_version", true)
+		if err != nil {
+			return nil, err
+		}
+		if discoverMap == nil {
+			return templateConfigs, nil
+		}
+		templateConfigs["discover"] = discoverMap
 	}
-	if discoverMap == nil {
-		return templateConfigs, nil
-	}
-	templateConfigs["discover"] = discoverMap
+
 	protectMap, err := getConfigMapForKey(d, "protect_config_version", true)
 	if err != nil {
 		return nil, err
@@ -239,7 +242,11 @@ func GetTemplateConfiguration(d *schema.ResourceData, isCamelCase bool) (
 			return nil, err
 		}
 	}
-	templateConfigs["protect"] = protectMap
+	if isConsolidated {
+		templateConfigs["consolidated"] = protectMap
+	} else {
+		templateConfigs["protect"] = protectMap
+	}
 	return templateConfigs, nil
 }
 

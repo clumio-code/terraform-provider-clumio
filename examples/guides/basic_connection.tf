@@ -25,11 +25,9 @@ data "aws_region" "current" {}
 
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = data.aws_region.current.name
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = data.aws_region.current.name
+  description       = "My Clumio Connection"
 }
 
 # Install the Clumio Protect template onto the registered connection

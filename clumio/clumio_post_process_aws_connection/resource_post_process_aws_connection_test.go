@@ -59,8 +59,6 @@ resource "clumio_aws_connection" "test_conn" {
   account_native_id = %s
   aws_region = "%s"
   description = "%s"
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  services_enabled = ["discover", "protect"]
 }
 
 resource "clumio_post_process_aws_connection" "test" {

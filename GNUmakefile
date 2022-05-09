@@ -2,8 +2,10 @@
 # Copyright 2021. Clumio, Inc.
 #
 
-VERSION=0.2.3
+VERSION=0.2.4
+ifndef OS_ARCH
 OS_ARCH=darwin_amd64
+endif
 
 CLUMIO_PROVIDER_DIR=~/.terraform.d/plugins/clumio.com/providers/clumio/${VERSION}/${OS_ARCH}
 SWEEP?=us-east-1,us-east-2,us-west-2

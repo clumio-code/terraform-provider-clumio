@@ -14,12 +14,10 @@ Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
 
 ```terraform
 resource "clumio_aws_connection" "example" {
-  account_native_id           = "aws_account_id"
-  aws_region                  = "aws_region"
-  description                 = "description"
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  services_enabled            = ["discover", "protect"]
-  organizational_unit_id      = "organizational_unit_id"
+  account_native_id      = "aws_account_id"
+  aws_region             = "aws_region"
+  description            = "description"
+  organizational_unit_id = "organizational_unit_id"
 }
 ```
 
@@ -30,13 +28,13 @@ resource "clumio_aws_connection" "example" {
 
 - **account_native_id** (String) AWS Account Id to connect to Clumio.
 - **aws_region** (String) AWS Region of account.
-- **services_enabled** (Set of String) The services to be enabled for this configuration. Valid values are [discover], [discover, protect]. This is only set when the registration is created, the enabled services are obtained directly from the installed template after that.
 
 ### Optional
 
 - **description** (String) Clumio AWS Connection Description.
 - **organizational_unit_id** (String) Clumio Organizational Unit Id.
-- **protect_asset_types_enabled** (Set of String) The asset types enabled for protect. This is only populated if protect is enabled. Valid values are any of [EBS, RDS, DynamoDB, EC2MSSQL, S3].
+- **protect_asset_types_enabled** (Set of String, Deprecated) The asset types enabled for protect. This is only populated if protect is enabled. Valid values are any of [EBS, RDS, DynamoDB, EC2MSSQL, S3].
+- **services_enabled** (Set of String, Deprecated) The services to be enabled for this configuration. Valid values are [discover], [discover, protect]. This is only set when the registration is created, the enabled services are obtained directly from the installed template after that.
 
 ### Read-Only
 

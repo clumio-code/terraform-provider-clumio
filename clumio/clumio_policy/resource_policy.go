@@ -6,7 +6,6 @@ package clumio_policy
 import (
 	"context"
 	"fmt"
-
 	policyDefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
@@ -186,7 +185,9 @@ var (
 			schemaOperationType: {
 				Type: schema.TypeString,
 				Description: "The operation to be performed for this SLA set." +
-					"Each SLA set corresponds to one and only one operation.",
+					"Each SLA set corresponds to one and only one operation. " +
+					"Depending on the operation selected, advanced settings " +
+					"may need to be set.",
 				Required: true,
 			},
 			schemaBackupWindow: {

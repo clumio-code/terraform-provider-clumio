@@ -29,20 +29,16 @@ data "aws_caller_identity" "current" {}
 
 # Register a new Clumio connection on us-west-2 for the effective AWS account ID
 resource "clumio_aws_connection" "connection_west" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = "us-west-2"
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection West"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = "us-west-2"
+  description       = "My Clumio Connection West"
 }
 
 # Register a new Clumio connection on us-east-1 for the effective AWS account ID
 resource "clumio_aws_connection" "connection_east" {
-  account_native_id           = data.aws_caller_identity.current.account_id
-  aws_region                  = "us-east-1"
-  services_enabled            = ["discover", "protect"]
-  protect_asset_types_enabled = ["EBS", "RDS", "DynamoDB", "EC2MSSQL", "S3"]
-  description                 = "My Clumio Connection East"
+  account_native_id = data.aws_caller_identity.current.account_id
+  aws_region        = "us-east-1"
+  description       = "My Clumio Connection East"
 }
 
 # Install the Clumio Protect template onto the registered connection for West

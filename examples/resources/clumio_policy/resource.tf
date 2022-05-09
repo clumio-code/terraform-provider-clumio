@@ -5,10 +5,6 @@ resource "clumio_policy" "example" {
   operations {
     action_setting = "window"
     type           = "protection_group_backup"
-    backup_window {
-      start_time = "08:00"
-      end_time   = "20:00"
-    }
     slas {
       retention_duration {
         unit  = "months"

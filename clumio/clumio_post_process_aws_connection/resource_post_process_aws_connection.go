@@ -62,7 +62,7 @@ func ClumioPostProcessAWSConnection() *schema.Resource {
 			schemaDiscoverVersion: {
 				Type:        schema.TypeString,
 				Description: "Clumio Discover version.",
-				Required:    true,
+				Optional:    true,
 			},
 			schemaProtectConfigVersion: {
 				Type:        schema.TypeString,
@@ -174,7 +174,7 @@ func clumioPostProcessAWSConnectionCommon(_ context.Context, d *schema.ResourceD
 		}
 	}
 
-	templateConfig, err := common.GetTemplateConfiguration(d, true)
+	templateConfig, err := common.GetTemplateConfiguration(d, true, true)
 	if err != nil {
 		return diag.Errorf("Error forming template configuration. Error: %v", err)
 	}

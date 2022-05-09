@@ -99,5 +99,3 @@ resource "clumio_policy_rule" "test_policy_rule_2" {
 }
 
 `
-
-

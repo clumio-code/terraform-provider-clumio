@@ -65,12 +65,14 @@ func ClumioAWSConnection() *schema.Resource {
 					" populated if protect is enabled. Valid values are any of" +
 					" [EBS, RDS, DynamoDB, EC2MSSQL, S3].",
 				Type: schema.TypeSet,
-				Set: common.SchemaSetHashString,
+				Set:  common.SchemaSetHashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
-				ForceNew: true,
+				Deprecated: "This is no longer required as the asset types to be" +
+					"enabled are based on the variables passed to the " +
+					"clumio_terraform_aws_template module.",
 			},
 			schemaServicesEnabled: {
 				Description: "The services to be enabled for this configuration." +
@@ -78,12 +80,13 @@ func ClumioAWSConnection() *schema.Resource {
 					" when the registration is created, the enabled services are" +
 					" obtained directly from the installed template after that.",
 				Type: schema.TypeSet,
-				Set: common.SchemaSetHashString,
+				Set:  common.SchemaSetHashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Required: true,
-				ForceNew: true,
+				Optional: true,
+				Deprecated: "This is no longer required as by default discover and" +
+					" protect are enabled.",
 			},
 			schemaConnectionStatus: {
 				Description: "The status of the connection. Possible values include " +
@@ -124,31 +127,11 @@ func clumioAWSConnectionCreate(
 	awsRegion := common.GetStringValue(d, schemaAwsRegion)
 	description := common.GetStringValue(d, schemaDescription)
 	organizationalUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
-	servicesEnabled := common.GetStringSliceFromSet(d, schemaServicesEnabled)
-	if len(servicesEnabled) == 0 {
-		return diag.Errorf(common.SchemaEmptyParameterError, schemaServicesEnabled)
-	}
-	protectEnabled := false
-	for _, service := range servicesEnabled{
-		if *service == common.ProtectService {
-			protectEnabled = true
-			break
-		}
-	}
-	protectAssetTypesEnabled := common.GetStringSliceFromSet(d, schemaProtectAssetTypesEnabled)
-	if !protectEnabled && len(protectAssetTypesEnabled) > 0 {
-		return diag.Errorf("%s should only be declared if protect is enabled", schemaProtectAssetTypesEnabled)
-	}
-	if protectEnabled && len(protectAssetTypesEnabled) == 0 {
-		return diag.Errorf("%s has to be declared if protect is enabled", schemaProtectAssetTypesEnabled)
-	}
 	res, apiErr := awsConnection.CreateAwsConnection(&models.CreateAwsConnectionV1Request{
-		AccountNativeId:          &accountNativeId,
-		AwsRegion:                &awsRegion,
-		Description:              &description,
-		OrganizationalUnitId:     &organizationalUnitId,
-		ProtectAssetTypesEnabled: protectAssetTypesEnabled,
-		ServicesEnabled:          servicesEnabled,
+		AccountNativeId:      &accountNativeId,
+		AwsRegion:            &awsRegion,
+		Description:          &description,
+		OrganizationalUnitId: &organizationalUnitId,
 	})
 	if apiErr != nil {
 		return diag.Errorf(
@@ -213,30 +196,6 @@ func clumioAWSConnectionRead(
 		if err != nil {
 			return diag.Errorf(common.SchemaAttributeSetError, schemaOrganizationalUnitId, err)
 		}
-	}
-	var protectAssetTypesEnabled *schema.Set
-	if res.ProtectAssetTypesEnabled != nil {
-		protectAssetTypesEnabled = &schema.Set{F: common.SchemaSetHashString}
-		for _, assetType := range res.ProtectAssetTypesEnabled {
-			if common.Contains(common.ProtectAssetTypes, *assetType) {
-				protectAssetTypesEnabled.Add(*assetType)
-			}
-		}
-	}
-	err = d.Set(schemaProtectAssetTypesEnabled, protectAssetTypesEnabled)
-	if err != nil {
-		return diag.Errorf(common.SchemaAttributeSetError, schemaProtectAssetTypesEnabled, err)
-	}
-	var servicesEnabled *schema.Set
-	if res.ServicesEnabled != nil {
-		servicesEnabled = &schema.Set{F: common.SchemaSetHashString}
-		for _, service := range res.ServicesEnabled {
-			servicesEnabled.Add(*service)
-		}
-	}
-	err = d.Set(schemaServicesEnabled, servicesEnabled)
-	if err != nil {
-		return diag.Errorf(common.SchemaAttributeSetError, schemaServicesEnabled, err)
 	}
 	return nil
 }

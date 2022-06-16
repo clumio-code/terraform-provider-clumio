@@ -1,3 +1,7 @@
+## 0.2.5
+
+Changes to allow updating organizational_unit_id in clumio_aws_connection resource.
+
 ## 0.2.4
 
 Validations and bug fixes added for resources.

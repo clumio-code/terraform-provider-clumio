@@ -26,18 +26,18 @@ resource "clumio_policy_rule" "example" {
 
 ### Required
 
-- **before_rule_id** (String) The policy rule ID before which this policy rule should be inserted. An empty value will set the rule to have lowest priority. Maintain the correct ordering of rule IDs by creating the rules bottom-up.
-- **condition** (String) The condition of the policy rule. Possible conditions are: entity_type (required): $eq and $in. aws_account_native_id (optional): $eq and $in. aws_region (optional): $eq and $in. aws_tag (optional): $eq, $in, $all, and $contains.
-- **name** (String) The unique name of the policy rule.
-- **policy_id** (String) The policy ID of the policy to be applied to the assets.
+- `before_rule_id` (String) The policy rule ID before which this policy rule should be inserted. An empty value will set the rule to have lowest priority. Maintain the correct ordering of rule IDs by creating the rules bottom-up.
+- `condition` (String) The condition of the policy rule. Possible conditions are: entity_type (required): $eq and $in. aws_account_native_id (optional): $eq and $in. aws_region (optional): $eq and $in. aws_tag (optional): $eq, $in, $all, and $contains.
+- `name` (String) The unique name of the policy rule.
+- `policy_id` (String) The policy ID of the policy to be applied to the assets.
 
 ### Optional
 
-- **organizational_unit_id** (String) The Clumio-assigned ID of the organizational unit to be associated with the policy rule.
+- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit to be associated with the policy rule.
 
 ### Read-Only
 
-- **id** (String) Policy Rule Id.
+- `id` (String) Policy Rule Id.
 
 ## Import
 

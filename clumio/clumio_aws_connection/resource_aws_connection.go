@@ -6,9 +6,12 @@ package clumio_aws_connection
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	aws_connections "github.com/clumio-code/clumio-go-sdk/controllers/aws_connections"
+	awsEnvs "github.com/clumio-code/clumio-go-sdk/controllers/aws_environments"
+	orgUnits "github.com/clumio-code/clumio-go-sdk/controllers/organizational_units"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -58,7 +61,6 @@ func ClumioAWSConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				ForceNew:    true,
 			},
 			schemaProtectAssetTypesEnabled: {
 				Description: "The asset types enabled for protect. This is only" +
@@ -202,10 +204,14 @@ func clumioAWSConnectionRead(
 
 func clumioAWSConnectionUpdate(
 	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*common.ApiClient)
+	diagnostics := updateOUForConnectionIfNeeded(client, d)
+	if diagnostics != nil {
+		return diagnostics
+	}
 	if !d.HasChange(schemaDescription) {
 		return nil
 	}
-	client := meta.(*common.ApiClient)
 	awsConnection := aws_connections.NewAwsConnectionsV1(client.ClumioConfig)
 	description := common.GetStringValue(d, schemaDescription)
 	_, apiErr := awsConnection.UpdateAwsConnection(d.Id(),
@@ -220,6 +226,61 @@ func clumioAWSConnectionUpdate(
 	return clumioAWSConnectionRead(ctx, d, meta)
 }
 
+// updateOUForConnectionIfNeeded updates the OU for the connection if the new OU provided
+// is either the parent of the current OU or one of its immediate descendant.
+func updateOUForConnectionIfNeeded(
+	client *common.ApiClient, d *schema.ResourceData) diag.Diagnostics {
+	if d.HasChange(schemaOrganizationalUnitId) {
+		connectionStatus := d.Get(schemaConnectionStatus)
+		if connectionStatus != nil && connectionStatus.(string) != statusConnected {
+			diag.Errorf("Connection status is %v. Updating organizational_unit_id"+
+				" is allowed only if the connection status in \"connected\". To make the"+
+				" connection status as connected, install the clumio terraform aws"+
+				" template module.",
+				connectionStatus.(string))
+		}
+		envId, diagnostics := GetEnvironmentId(client, d)
+		if diagnostics != nil {
+			return diagnostics
+		}
+		ouIdStr, isNewOUCurrentOUParent, diagnostics :=
+			validateAndGetOUIDToPatch(client, d)
+		if diagnostics != nil {
+			return diagnostics
+		}
+		var removeEntityModels []*models.EntityModel
+		var addEntityModels []*models.EntityModel
+		awsEnv := awsEnvironment
+		entityModels := []*models.EntityModel{
+			{
+				PrimaryEntity: &models.OrganizationalUnitPrimaryEntity{
+					Id:         &envId,
+					ClumioType: &awsEnv,
+				},
+			},
+		}
+		if isNewOUCurrentOUParent {
+			removeEntityModels = entityModels
+		} else {
+			addEntityModels = entityModels
+		}
+		ouUpdateRequest := &models.PatchOrganizationalUnitV1Request{
+			Entities: &models.UpdateEntities{
+				Add:    addEntityModels,
+				Remove: removeEntityModels,
+			},
+		}
+		orgUnitsAPI := orgUnits.NewOrganizationalUnitsV1(client.ClumioConfig)
+		_, apiErr := orgUnitsAPI.PatchOrganizationalUnit(ouIdStr, nil, ouUpdateRequest)
+		if apiErr != nil {
+			diag.Errorf("Error updating the Organizational Unit for the"+
+				" connection. Error: %v", apiErr)
+		}
+	}
+
+	return nil
+}
+
 func clumioAWSConnectionDelete(
 	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
@@ -231,4 +292,74 @@ func clumioAWSConnectionDelete(
 			d.Id(), string(apiErr.Response))
 	}
 	return nil
+}
+
+// GetEnvironmentId returns the Environment ID corresponding to the AWS connection
+func GetEnvironmentId(client *common.ApiClient, d *schema.ResourceData) (
+	string, diag.Diagnostics) {
+	awsEnvironmentsAPI := awsEnvs.NewAwsEnvironmentsV1(client.ClumioConfig)
+	accountNativeId := d.Get(schemaAccountNativeId)
+	awsRegion := d.Get(schemaAwsRegion)
+	limit := int64(1)
+	filterStr := fmt.Sprintf(
+		"{\"account_native_id\":{\"$eq\":\"%v\"}, \"aws_region\":{\"$eq\":\"%v\"}}",
+		accountNativeId.(string), awsRegion.(string))
+	embed := "read-organizational-unit"
+	envs, apiErr := awsEnvironmentsAPI.ListAwsEnvironments(
+		&limit, nil, &filterStr, &embed)
+	if apiErr != nil {
+		return "", diag.Errorf(
+			"Error retrieving AWS Environment corresponding to "+
+				"Account ID: %v and AWS Region: %v. Error: %v",
+			accountNativeId, awsRegion, apiErr)
+	}
+	if *envs.CurrentCount > 1 {
+		return "", diag.Errorf(
+			"Expected only one environment but found %v", *envs.CurrentCount)
+	}
+	envId := *envs.Embedded.Items[0].Id
+	return envId, nil
+}
+
+// validateAndGetOUIDToPatch validates the new organizational_unit_id and returns the
+// organizational_unit_id to update.
+func validateAndGetOUIDToPatch(client *common.ApiClient, d *schema.ResourceData) (
+	string, bool, diag.Diagnostics) {
+	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV1(client.ClumioConfig)
+	oldOUId, newOUId := d.GetChange(schemaOrganizationalUnitId)
+	isValidNewOU := false
+	isNewOUCurrentOUParent := false
+	oldOU, apiErr := orgUnitsAPI.ReadOrganizationalUnit(oldOUId.(string))
+	if apiErr != nil {
+		return "", false, diag.Errorf(
+			"Error retrieving current OU: %v", oldOUId.(string))
+	}
+	newOUIdStr := newOUId.(string)
+	ouIdStr := newOUIdStr
+	if oldOU.ParentId != nil && *oldOU.ParentId == newOUIdStr {
+		isValidNewOU = true
+		isNewOUCurrentOUParent = true
+		ouIdStr = oldOUId.(string)
+	}
+	filterStr := fmt.Sprintf("{\"parent_id\": {\"$eq\": \"%v\"}}", oldOUId.(string))
+	listRes, apiErr := orgUnitsAPI.ListOrganizationalUnits(nil, nil, &filterStr)
+	if apiErr != nil {
+		return "", false, diag.Errorf(
+			"Error retrieving child OUs of current OU: %v", oldOUId.(string))
+	}
+	if listRes != nil && listRes.Embedded != nil && len(listRes.Embedded.Items) > 0 {
+		for _, ouObj := range listRes.Embedded.Items {
+			if *ouObj.Id == newOUIdStr {
+				isValidNewOU = true
+				break
+			}
+		}
+	}
+	if !isValidNewOU {
+		return "", false, diag.Errorf("Invalid Organizational Unit ID: %v specified."+
+			" The Organizational Unit should either be a parent of the current"+
+			" Organizational Unit or its immediate descendant.",
+			newOUId)
+	}
+	return ouIdStr, isNewOUCurrentOUParent, nil
 }

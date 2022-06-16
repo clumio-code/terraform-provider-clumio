@@ -28,14 +28,17 @@ resource "clumio_policy_assignment" "example" {
 
 ### Required
 
-- **entity_id** (String) The entity id.
-- **entity_type** (String) The entity type. The supported entity type is"protection_group".
-- **policy_id** (String) The Clumio-assigned ID of the policy.
+- `entity_id` (String) The entity id.
+- `entity_type` (String) The entity type. The supported entity type is"protection_group".
+- `policy_id` (String) The Clumio-assigned ID of the policy.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **organizational_unit_id** (String) The Clumio-assigned ID of the organizational unit to use as the context for assigning the policy.
+- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit to use as the context for assigning the policy.
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 ## Import
 

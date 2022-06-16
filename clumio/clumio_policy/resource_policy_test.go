@@ -63,5 +63,33 @@ resource "clumio_policy" "test_policy" {
 		}
     }
   }
+  operations {
+    action_setting = "immediate"
+    type           = "aws_rds_resource_granular_backup"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 31
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 7
+      }
+    }
+  }
+  operations {
+    action_setting = "immediate"
+    type           = "aws_rds_resource_aws_snapshot"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 7
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+  }
 }
 `

@@ -15,4 +15,7 @@ const (
 	schemaNamespace                = "namespace"
 	schemaClumioAwsAccountId       = "clumio_aws_account_id"
 	schemaClumioAwsRegion          = "clumio_aws_region"
+
+	awsEnvironment  = "aws_environment"
+	statusConnected = "connected"
 )

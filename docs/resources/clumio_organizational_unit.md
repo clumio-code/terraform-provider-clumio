@@ -25,21 +25,21 @@ resource "clumio_organizational_unit" "example" {
 
 ### Required
 
-- **name** (String) Unique name assigned to the organizational unit.
+- `name` (String) Unique name assigned to the organizational unit.
 
 ### Optional
 
-- **description** (String) A description of the organizational unit.
-- **parent_id** (String) The Clumio-assigned ID of the parent organizational unit under which the new organizational unit is to be created.
+- `description` (String) A description of the organizational unit.
+- `parent_id` (String) The Clumio-assigned ID of the parent organizational unit under which the new organizational unit is to be created.
 
 ### Read-Only
 
-- **children_count** (Number) Number of immediate children of the organizational unit.
-- **configured_datasource_types** (List of String) Datasource types configured in this organizational unit. Possible values include aws, microsoft365, vmware, or mssql.
-- **descendant_ids** (List of String) List of all recursive descendant organizational units of this OU.
-- **id** (String) OrganizationalUnit Id.
-- **user_count** (Number) Number of users to whom this organizational unit or any of its descendants have been assigned.
-- **users** (List of String) List of user ids to assign this organizational unit.
+- `children_count` (Number) Number of immediate children of the organizational unit.
+- `configured_datasource_types` (List of String) Datasource types configured in this organizational unit. Possible values include aws, microsoft365, vmware, or mssql.
+- `descendant_ids` (List of String) List of all recursive descendant organizational units of this OU.
+- `id` (String) OrganizationalUnit Id.
+- `user_count` (Number) Number of users to whom this organizational unit or any of its descendants have been assigned.
+- `users` (List of String) List of user ids to assign this organizational unit.
 
 ## Import
 

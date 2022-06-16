@@ -1,12 +1,12 @@
 # Using the Clumio Terraform Provider
-- #### [ Pre-requisites for using clumio provider](#pre-requisites)
-- #### [Sample configuration](#sample-configuration)
-- #### [Clumio AWS connections](#clumio-aws-connections)
-    - #### [Basic Clumio AWS connection](#basic-connection)
-    - #### [Cross-region AWS connections](#cross-region)
-    - #### [Cross-account AWS connections](#cross-account)
-- #### [Import resources](#import)
-- #### [Link the Clumio Provider to an OU](#ou)
+- [ Pre-requisites for using clumio provider](#pre-requisites)
+- [Sample configuration](#sample-configuration)
+- [Clumio AWS connections](#clumio-aws-connections)
+    - [Basic Clumio AWS connection](#basic-connection)
+    - [Cross-region AWS connections](#cross-region)
+    - [Cross-account AWS connections](#cross-account)
+- [Import resources](#import)
+- [Link the Clumio Provider to an OU](#ou)
 
 <a name="pre-requisites"></a>
 ## Pre-requisites for using Clumio Provider

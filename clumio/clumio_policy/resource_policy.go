@@ -292,7 +292,7 @@ func clumioPolicyCreate(
 	if !ok {
 		return diag.Errorf("Operations is a required attribute")
 	}
-	policyOperations, _ := mapSchemaOperationsToClumioOperations(operationsVal)
+	policyOperations := mapSchemaOperationsToClumioOperations(operationsVal)
 	orgUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
 	pdRequest := &models.CreatePolicyDefinitionV1Request{
 		ActivationStatus:     &activationStatus,
@@ -357,7 +357,7 @@ func clumioPolicyUpdate(
 	if !ok {
 		return diag.Errorf("Operations is a required attribute")
 	}
-	policyOperations, _ := mapSchemaOperationsToClumioOperations(operationsVal)
+	policyOperations := mapSchemaOperationsToClumioOperations(operationsVal)
 	orgUnitId := common.GetStringValue(d, schemaOrganizationalUnitId)
 	pdRequest := &models.UpdatePolicyDefinitionV1Request{
 		ActivationStatus:     &activationStatus,
@@ -365,12 +365,11 @@ func clumioPolicyUpdate(
 		Operations:           policyOperations,
 		OrganizationalUnitId: &orgUnitId,
 	}
-	res, apiErr := pd.UpdatePolicyDefinition(d.Id(), nil, pdRequest)
+	_, apiErr := pd.UpdatePolicyDefinition(d.Id(), nil, pdRequest)
 	if apiErr != nil {
-		diag.Errorf("Error updating Policy Definition %v. Error: %v",
+		return diag.Errorf("Error updating Policy Definition %v. Error: %v",
 			d.Id(), string(apiErr.Response))
 	}
-	d.SetId(*res.Id)
 	return nil
 }
 
@@ -390,7 +389,7 @@ func clumioPolicyDelete(
 // mapSchemaOperationsToClumioOperations maps the schema operations to the Clumio API
 // request operations.
 func mapSchemaOperationsToClumioOperations(
-	operations interface{}) ([]*models.PolicyOperation, error) {
+	operations interface{}) []*models.PolicyOperation {
 	operationsSlice := operations.(*schema.Set).List()
 	policyOperations := make([]*models.PolicyOperation, 0)
 	for _, operation := range operationsSlice {
@@ -453,7 +452,7 @@ func mapSchemaOperationsToClumioOperations(
 		}
 		policyOperations = append(policyOperations, policyOperation)
 	}
-	return policyOperations, nil
+	return policyOperations
 }
 
 // mapClumioOperationsToSchemaOperations maps the Operations from the API response to
@@ -569,9 +568,9 @@ func getOperationAdvancedSettings(
 	advancedSettingsIface interface{}) *models.PolicyAdvancedSettings {
 	var advancedSettings *models.PolicyAdvancedSettings
 	if advancedSettingsIface != nil {
-		advancedSettings = &models.PolicyAdvancedSettings{}
 		schemaAdvancedSettingsSlice := advancedSettingsIface.(*schema.Set).List()
 		if len(schemaAdvancedSettingsSlice) > 0 {
+			advancedSettings = &models.PolicyAdvancedSettings{}
 			schemaAdvSettings := schemaAdvancedSettingsSlice[0].(map[string]interface{})
 			advancedSettings.Ec2MssqlDatabaseBackup =
 				getMSSQLDatabaseBackupAdvancedSetting(

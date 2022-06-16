@@ -26,24 +26,24 @@ resource "clumio_aws_connection" "example" {
 
 ### Required
 
-- **account_native_id** (String) AWS Account Id to connect to Clumio.
-- **aws_region** (String) AWS Region of account.
+- `account_native_id` (String) AWS Account Id to connect to Clumio.
+- `aws_region` (String) AWS Region of account.
 
 ### Optional
 
-- **description** (String) Clumio AWS Connection Description.
-- **organizational_unit_id** (String) Clumio Organizational Unit Id.
-- **protect_asset_types_enabled** (Set of String, Deprecated) The asset types enabled for protect. This is only populated if protect is enabled. Valid values are any of [EBS, RDS, DynamoDB, EC2MSSQL, S3].
-- **services_enabled** (Set of String, Deprecated) The services to be enabled for this configuration. Valid values are [discover], [discover, protect]. This is only set when the registration is created, the enabled services are obtained directly from the installed template after that.
+- `description` (String) Clumio AWS Connection Description.
+- `organizational_unit_id` (String) Clumio Organizational Unit Id.
+- `protect_asset_types_enabled` (Set of String, Deprecated) The asset types enabled for protect. This is only populated if protect is enabled. Valid values are any of [EBS, RDS, DynamoDB, EC2MSSQL, S3].
+- `services_enabled` (Set of String, Deprecated) The services to be enabled for this configuration. Valid values are [discover], [discover, protect]. This is only set when the registration is created, the enabled services are obtained directly from the installed template after that.
 
 ### Read-Only
 
-- **clumio_aws_account_id** (String) Clumio AWS AccountId.
-- **clumio_aws_region** (String) Clumio AWS Region.
-- **connection_status** (String) The status of the connection. Possible values include connecting, connected and unlinked.
-- **id** (String) Clumio AWS Connection Id.
-- **namespace** (String) K8S Namespace.
-- **token** (String) The 36-character Clumio AWS integration ID token used to identify the installation of the Terraform template on the account.
+- `clumio_aws_account_id` (String) Clumio AWS AccountId.
+- `clumio_aws_region` (String) Clumio AWS Region.
+- `connection_status` (String) The status of the connection. Possible values include connecting, connected and unlinked.
+- `id` (String) Clumio AWS Connection Id.
+- `namespace` (String) K8S Namespace.
+- `token` (String) The 36-character Clumio AWS integration ID token used to identify the installation of the Terraform template on the account.
 
 ## Import
 

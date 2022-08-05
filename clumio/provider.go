@@ -28,9 +28,11 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy_assignment"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy_rule"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_post_process_aws_connection"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_post_process_kms"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_protection_group"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_role"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_user"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_wallet"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -61,6 +63,8 @@ func New(isUnitTest bool) func() *schema.Provider {
 				"clumio_policy_rule":                 clumio_policy_rule.ClumioPolicyRule(),
 				"clumio_protection_group":            clumio_protection_group.ClumioS3ProtectionGroup(),
 				"clumio_policy_assignment":           clumio_policy_assignment.ClumioPolicyAssignment(),
+				"clumio_wallet":                      clumio_wallet.ClumioWallet(),
+				"clumio_post_process_kms":            clumio_post_process_kms.ClumioPostProcessKMS(),
 			},
 			DataSourcesMap: map[string]*schema.Resource{
 				"clumio_role": clumio_role.DataSourceClumioRole(),

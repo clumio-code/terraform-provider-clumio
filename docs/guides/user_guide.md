@@ -1,5 +1,9 @@
-# Using the Clumio Terraform Provider
-- [ Pre-requisites for using clumio provider](#pre-requisites)
+---
+page_title: "Getting Started with the Provider and Protect"
+---
+
+# Getting Started with the Provider and Protect
+- [Prerequisites](#prerequisites)
 - [Sample configuration](#sample-configuration)
 - [Clumio AWS connections](#clumio-aws-connections)
     - [Basic Clumio AWS connection](#basic-connection)
@@ -8,10 +12,10 @@
 - [Import resources](#import)
 - [Link the Clumio Provider to an OU](#ou)
 
-<a name="pre-requisites"></a>
-## Pre-requisites for using Clumio Provider
+<a name="prerequisites"></a>
+## Prerequisites
 ### Obtain a Clumio API Key:
-API Token(personal or service token) can be generated from Settings->Access Management->API Tokens section in ClumioUI.
+API Token (personal or service token) can be generated from Settings->Access Management->API Tokens on the Clumio portal.
 ### Prepare your environment
 - These credentials will be used by the AWS Terraform provider to provision resources required by Clumio in the target AWS account (see Example 1 or Example 2 below). If resources must be created in a cross-AWS-account, these credentials will need the ability to assume a role there (see Example 3 below).
 - NOTE: For Example 4 and Example 5 credentials are provided in a different manner to the AWS Terraform provider and thus this step should not be required.
@@ -22,7 +26,7 @@ $ export AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
 # If a session token is required ...
 $ export AWS_SESSION_TOKEN=<AWS_SESSION_TOKEN>
 ```
-### Instantiate Custom Clumio Resources and the Clumio Module for Protect
+### Connect to Clumio
 - NOTE: In all examples, replace <clumio_api_token> and <clumio_api_base_url> with the appropriate values. The clumio_api_token should be set to the token obtained in the first step. <clumio_api_base_url>  should be one of the following depending on the Clumio portal in-use:
     - https://us-west-2.api.clumio.com
         - portal: https://west.portal.clumio.com/
@@ -36,8 +40,8 @@ $ export AWS_SESSION_TOKEN=<AWS_SESSION_TOKEN>
     - DataGroup can be created from Settings->Organizational Units->Set up data groups
 
 <a name="sample-configuration"></a>
-## Sample Configuration
-This sample Terraform configuration uses every resource in the Clumio Terraform Provider.
+## Sample configuration
+This sample Terraform configuration highlights several resources in the Clumio Terraform Provider.
 - Downloads and instantiates the Clumio Provider and AWS Provider.
 - Creates a connection with AWS (clumio_aws_connection) and installs the Clumio module for Protect onto it.
 - Creates custom Clumio resources, including:
@@ -48,17 +52,12 @@ This sample Terraform configuration uses every resource in the Clumio Terraform 
     - clumio_protection_group
     - clumio_policy_assignment
 
-In this Terraform config, replace <clumio_api_token> and <clumio_api_base_url> with the appropriate values. The  clumio_api_token is the token generated as a prerequisite. For the  <clumio_api_base_url> value, choose the Clumio portal you use:
-- https://us-west-2.api.clumio.com - portal https://west.portal.clumio.com/
-- https://us-east-1.api.clumio.com - portal https://east.portal.clumio.com/
-- https://ca-central-1.ca.api.clumio.com - portal: https://canada.portal.clumio.com/
-
 ```terraform
 terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.2.3"
+      version = "~>0.3.0"
     }
     aws = {}
   }
@@ -178,11 +177,6 @@ The clumio_aws_connection resource connects AWS accounts to Clumio. Once the con
 
 The Clumio API token and the AWS credentials are required.
 
-In the following examples, replace <clumio_api_token> and <clumio_api_base_url> with the appropriate values. The  clumio_api_token is the token generated as a prerequisite. For the  <clumio_api_base_url> value, choose the Clumio portal you use:
-- https://us-west-2.api.clumio.com - portal https://west.portal.clumio.com/
-- https://us-east-1.api.clumio.com - portal https://east.portal.clumio.com/
-- https://ca-central-1.ca.api.clumio.com - portal: https://canada.portal.clumio.com/
-
 <a name="basic-connection"></a>
 ### Basic Clumio AWS connection
 The following:
@@ -193,7 +187,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.2.3"
+      version = "~>0.3.0"
     }
     aws = {}
   }
@@ -253,7 +247,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~> 0.2.2"
+      version = "~> 0.3.0"
     }
     aws = {}
   }
@@ -349,7 +343,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~> 0.2.2"
+      version = "~> 0.3.0"
     }
     aws = {}
   }
@@ -455,7 +449,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio.com/providers/clumio"
-      version = "~>0.2.2"
+      version = "~>0.3.0"
     }
   }
 }
@@ -524,7 +518,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio.com/providers/clumio"
-      version = "~>0.2.2"
+      version = "~>0.3.0"
     }
   }
 }

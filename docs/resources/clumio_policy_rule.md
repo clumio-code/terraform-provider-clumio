@@ -13,11 +13,18 @@ Clumio Policy Rule Resource used to determine how a policy should be assigned to
 ## Example Usage
 
 ```terraform
-resource "clumio_policy_rule" "example" {
-  name           = "example-policy-rule"
+resource "clumio_policy_rule" "example_1" {
+  name           = "example-policy-rule-1"
   policy_id      = "policy_id"
-  before_rule_id = "rule_id"
-  condition      = "{\"aws_account_native_id\":{\"$in\":[\"aws_account_id\", \"aws_account_id_2\"]}, \"aws_tag\":{\"$eq\":{\"key\":\"aws_tag_key\", \"value\":\"aws_tag_value\"}}}"
+  before_rule_id = clumio_policy_rule.example_2.id
+  condition      = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_account_native_id\":{\"$in\":[\"aws_account_id_1\", \"aws_account_id_2\"]}, \"aws_tag\":{\"$eq\":{\"key\":\"aws_tag_key\", \"value\":\"aws_tag_value\"}}}"
+}
+
+resource "clumio_policy_rule" "example_2" {
+  name           = "example-policy-rule-2"
+  policy_id      = "policy_id"
+  before_rule_id = ""
+  condition      = "{\"entity_type\":{\"$eq\":\"aws_ec2_instance\"}, \"aws_account_native_id\":{\"$eq\":\"aws_account_id_1\"}, \"aws_region\":{\"$eq\":\"us-west-2\"}, \"aws_tag\":{\"$contains\":{\"key\":\"aws_tag_key_substr\", \"value\":\"aws_tag_value_substr\"}}}"
 }
 ```
 
@@ -26,9 +33,9 @@ resource "clumio_policy_rule" "example" {
 
 ### Required
 
-- `before_rule_id` (String) The policy rule ID before which this policy rule should be inserted. An empty value will set the rule to have lowest priority. Maintain the correct ordering of rule IDs by creating the rules bottom-up.
-- `condition` (String) The condition of the policy rule. Possible conditions are: entity_type (required): $eq and $in. aws_account_native_id (optional): $eq and $in. aws_region (optional): $eq and $in. aws_tag (optional): $eq, $in, $all, and $contains.
-- `name` (String) The unique name of the policy rule.
+- `before_rule_id` (String) The policy rule ID before which this policy rule should be inserted. An empty value will set the rule to have lowest priority. NOTE: If in the Global Organizational Unit, rules can also be prioritized against two virtual rules maintained by the system: `asset-level-rule` and `child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct Assignments (when a policy is applied directly to an asset) whereas `child-ou-rule` corresponds to the priority of rules created by child organizational units.
+- `condition` (String) The condition of the policy rule. Possible conditions include: 1) `entity_type` is required and supports `$eq` and `$in` filters. 2) `aws_account_native_id` and `aws_region` are optional and both support `$eq` and `$in` filters. 3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` filters.
+- `name` (String) The name of the policy rule.
 - `policy_id` (String) The policy ID of the policy to be applied to the assets.
 
 ### Optional

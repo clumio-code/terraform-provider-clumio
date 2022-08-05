@@ -36,24 +36,30 @@ func ClumioPolicyRule() *schema.Resource {
 				Computed:    true,
 			},
 			schemaName: {
-				Description: "The unique name of the policy rule.",
+				Description: "The name of the policy rule.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			schemaCondition: {
-				Description: "The condition of the policy rule. Possible conditions are: " +
-					"entity_type (required): $eq and $in. " +
-					"aws_account_native_id (optional): $eq and $in. " +
-					"aws_region (optional): $eq and $in. " +
-					"aws_tag (optional): $eq, $in, $all, and $contains. ",
+				Description: "The condition of the policy rule. Possible conditions include: " +
+					"1) `entity_type` is required and supports `$eq` and `$in` filters. " +
+					"2) `aws_account_native_id` and `aws_region` are optional and both support " +
+					"`$eq` and `$in` filters. " +
+					"3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` " +
+					"filters.",
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			schemaBeforeRuleId: {
 				Type: schema.TypeString,
-				Description: "The policy rule ID before which this policy rule should be inserted. " +
-					"An empty value will set the rule to have lowest priority. Maintain the correct " +
-					"ordering of rule IDs by creating the rules bottom-up.",
+				Description: "The policy rule ID before which this policy rule should be " +
+					"inserted. An empty value will set the rule to have lowest priority. " +
+					"NOTE: If in the Global Organizational Unit, rules can also be prioritized " +
+					"against two virtual rules maintained by the system: `asset-level-rule` and " +
+					"`child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct " +
+					"Assignments (when a policy is applied directly to an asset) whereas " +
+					"`child-ou-rule` corresponds to the priority of rules created by child " +
+					"organizational units.",
 				Required: true,
 			},
 			schemaPolicyId: {

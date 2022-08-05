@@ -1,3 +1,7 @@
+## 0.3.0
+
+Changes to include support for creating Clumio Wallet and related resources.
+
 ## 0.2.5
 
 Changes to allow updating organizational_unit_id in clumio_aws_connection resource.

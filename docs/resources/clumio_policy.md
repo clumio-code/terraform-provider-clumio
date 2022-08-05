@@ -44,8 +44,8 @@ resource "clumio_policy" "example" {
 
 ### Required
 
-- `name` (String) The unique name of the policy.
-- `operations` (Block Set, Min: 1) (see [below for nested schema](#nestedblock--operations))
+- `name` (String) The name of the policy.
+- `operations` (Block Set, Min: 1) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
 
 ### Optional
 
@@ -64,7 +64,7 @@ Required:
 
 - `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values:immediate: to start backup process immediatelywindow: to start backup in the specified window
 - `slas` (Block Set, Min: 1) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
-- `type` (String) The operation to be performed for this SLA set.Each SLA set corresponds to one and only one operation. Depending on the operation selected, advanced settings may need to be set.
+- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the API Documentation for "List policies" for more information about the supported types.
 
 Optional:
 

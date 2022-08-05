@@ -52,4 +52,7 @@ const (
 		" mssql_log_backup operation. If this operation is not of" +
 		" type mssql_log_backup, then this field is omitted from the" +
 		" response."
+
+	timeoutInSec  = 3600
+	intervalInSec = 5
 )

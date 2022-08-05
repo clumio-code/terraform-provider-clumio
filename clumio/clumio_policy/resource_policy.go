@@ -6,6 +6,7 @@ package clumio_policy
 import (
 	"context"
 	"fmt"
+
 	policyDefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
@@ -184,10 +185,10 @@ var (
 			},
 			schemaOperationType: {
 				Type: schema.TypeString,
-				Description: "The operation to be performed for this SLA set." +
-					"Each SLA set corresponds to one and only one operation. " +
-					"Depending on the operation selected, advanced settings " +
-					"may need to be set.",
+				Description: "The type of operation to be performed. Depending on the type " +
+					"selected, `advanced_settings` may also be required. See the API " +
+					"Documentation for \"List policies\" for more information about the " +
+					"supported types.",
 				Required: true,
 			},
 			schemaBackupWindow: {
@@ -250,7 +251,7 @@ func ClumioPolicy() *schema.Resource {
 				Computed:    true,
 			},
 			schemaName: {
-				Description: "The unique name of the policy.",
+				Description: "The name of the policy.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -272,7 +273,11 @@ func ClumioPolicy() *schema.Resource {
 				Computed: true,
 			},
 			schemaOperations: {
-				Type:     schema.TypeSet,
+				Type: schema.TypeSet,
+				Description: "Each data source to be protected should have details provided in " +
+					"the list of operations. These details include information such as how often " +
+					"to protect the data source, whether a backup window is desired, which type " +
+					"of protection to perform, etc.",
 				Required: true,
 				Set:      schema.HashResource(resOperation),
 				Elem:     resOperation,
@@ -283,7 +288,7 @@ func ClumioPolicy() *schema.Resource {
 
 // clumioPolicyCreate handles the Create action for the Clumio Policy Resource.
 func clumioPolicyCreate(
-	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
 	pd := policyDefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
 	activationStatus := common.GetStringValue(d, schemaActivationStatus)
@@ -348,7 +353,7 @@ func clumioPolicyRead(
 
 // clumioPolicyUpdate handles the Update action for the Clumio Policy Resource.
 func clumioPolicyUpdate(
-	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
 	pd := policyDefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
 	activationStatus := common.GetStringValue(d, schemaActivationStatus)
@@ -365,23 +370,33 @@ func clumioPolicyUpdate(
 		Operations:           policyOperations,
 		OrganizationalUnitId: &orgUnitId,
 	}
-	_, apiErr := pd.UpdatePolicyDefinition(d.Id(), nil, pdRequest)
+	res, apiErr := pd.UpdatePolicyDefinition(d.Id(), nil, pdRequest)
 	if apiErr != nil {
 		return diag.Errorf("Error updating Policy Definition %v. Error: %v",
 			d.Id(), string(apiErr.Response))
+	}
+	err := common.PollTask(ctx, client, *res.TaskId, timeoutInSec, intervalInSec)
+	if err != nil {
+		return diag.Errorf("Error updating policy %v. Error: %v",
+			d.Id(), err.Error())
 	}
 	return nil
 }
 
 // clumioPolicyDelete handles the Delete action for the Clumio Policy Resource.
 func clumioPolicyDelete(
-	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
 	pd := policyDefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
-	_, apiErr := pd.DeletePolicyDefinition(d.Id())
+	res, apiErr := pd.DeletePolicyDefinition(d.Id())
 	if apiErr != nil {
 		return diag.Errorf("Error deleting policy definition %v. Error: %v",
 			d.Id(), string(apiErr.Response))
+	}
+	err := common.PollTask(ctx, client, *res.TaskId, timeoutInSec, intervalInSec)
+	if err != nil {
+		return diag.Errorf("Error deleting policy %v. Error: %v",
+			d.Id(), err.Error())
 	}
 	return nil
 }

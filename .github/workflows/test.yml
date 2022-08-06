@@ -16,7 +16,7 @@ on:
   # schedule:
   #   - cron: '0 13 * * *'
 env:
-  GO_VERSION: 1.17
+  GO_VERSION: 1.18
 jobs:
   # ensure the code builds...
   build:

@@ -79,6 +79,8 @@ Optional:
 
 Read-Only:
 
+- `inheriting_entity_id` (String)
+- `inheriting_entity_type` (String)
 - `policy_id` (String)
 
 ## Import

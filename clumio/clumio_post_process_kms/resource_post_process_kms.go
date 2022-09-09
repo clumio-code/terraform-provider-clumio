@@ -41,23 +41,30 @@ func ClumioPostProcessKMS() *schema.Resource {
 				Description: "The AWS Region.",
 				Required:    true,
 			},
+			schemaRoleId: {
+				Type:        schema.TypeString,
+				Description: "The ID of the IAM role to manage the CMK.",
+				Required:    true,
+			},
+			schemaRoleArn: {
+				Type:        schema.TypeString,
+				Description: "The ARN of the IAM role to manage the CMK.",
+				Required:    true,
+			},
+			schemaRoleExternalId: {
+				Type:        schema.TypeString,
+				Description: "The external ID to use when assuming the IAM role.",
+				Required:    true,
+			},
+			schemaCreatedMultiRegionCMK: {
+				Type:        schema.TypeBool,
+				Description: "Whether a new CMK was created.",
+				Required:    true,
+			},
 			schemaMultiRegionCMKKeyID: {
 				Type:        schema.TypeString,
 				Description: "Multi Region CMK Key ID.",
 				Required:    true,
-			},
-			schemaStackSetID: {
-				Type: schema.TypeString,
-				Description: "Stack Set ID of the stack set for creating " +
-					"Replica Keys.",
-				Optional: true,
-			},
-			schemaOtherRegions: {
-				Type: schema.TypeString,
-				Description: "Regions where the replica keys will have to be created." +
-					" This is a comma separated string if there are more than one region." +
-					" For example, \"us-west1, us-east1\"",
-				Optional: true,
 			},
 		},
 	}
@@ -98,18 +105,21 @@ func clumioPostProcessKMSCommon(_ context.Context, d *schema.ResourceData,
 	awsRegion := common.GetStringValue(d, schemaRegion)
 	multiRegionCMKKeyID := common.GetStringValue(d, schemaMultiRegionCMKKeyID)
 	token := common.GetStringValue(d, schemaToken)
-	stackSetID := common.GetStringValue(d, schemaStackSetID)
-	otherRegions := common.GetStringValue(d, schemaOtherRegions)
-
+	roleId := common.GetStringValue(d, schemaRoleId)
+	roleArn := common.GetStringValue(d, schemaRoleArn)
+	roleExternalId := common.GetStringValue(d, schemaRoleExternalId)
+	createdMrCmk := common.GetBoolValueWithDefault(d, schemaCreatedMultiRegionCMK, true)
 	_, apiErr := postProcessAwsKMS.PostProcessKms(
 		&models.PostProcessKmsV1Request{
-			AccountNativeId:     &accountId,
-			AwsRegion:           &awsRegion,
-			RequestType:         &eventType,
-			Token:               &token,
-			MultiRegionCmkKeyId: &multiRegionCMKKeyID,
-			StackSetId:          &stackSetID,
-			OtherRegions:        &otherRegions,
+			AccountNativeId:       &accountId,
+			AwsRegion:             &awsRegion,
+			RequestType:           &eventType,
+			Token:                 &token,
+			MultiRegionCmkKeyId:   &multiRegionCMKKeyID,
+			RoleId:                &roleId,
+			RoleArn:               &roleArn,
+			RoleExternalId:        &roleExternalId,
+			CreatedMultiRegionCmk: &createdMrCmk,
 		})
 	if apiErr != nil {
 		return diag.Errorf(

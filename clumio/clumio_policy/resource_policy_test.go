@@ -19,22 +19,59 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 		ProviderFactories: clumio.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getTestAccResourceClumioPolicy(false),
+				Config: getTestAccResourceClumioPolicyWindow(false),
 			},
 			{
-				Config: getTestAccResourceClumioPolicy(true),
+				Config: getTestAccResourceClumioPolicyWindow(true),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyFixedStart(false),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyFixedStart(true),
 			},
 		},
 	})
 }
 
-func getTestAccResourceClumioPolicy(update bool) string {
+func getTestAccResourceClumioPolicyWindow(update bool) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	name := "acceptance-test-policy344542"
+	name := "acceptance-test-policy-1234"
+	timezone := "UTC"
+	window := `
+    backup_window_tz {
+	    start_time = "01:00"
+	    end_time = "05:00"
+	}`
 	if update {
-		name = "acceptance-test-policy-2344542"
+		name = "acceptance-test-policy-4321"
+		timezone = "US/Pacific"
+		window = `
+		backup_window_tz {
+			start_time = "03:00"
+			end_time = "07:00"
+		}`
 	}
-	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name)
+	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
+}
+
+func getTestAccResourceClumioPolicyFixedStart(update bool) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "acceptance-test-policy-1234"
+	timezone := "UTC"
+	window := `
+    backup_window_tz {
+	    start_time = "01:00"
+	}`
+	if update {
+		name = "acceptance-test-policy-4321"
+		timezone = "US/Pacific"
+		window = `
+		backup_window_tz {
+			start_time = "05:00"
+		}`
+	}
+	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
 }
 
 const testAccResourceClumioPolicy = `
@@ -44,6 +81,22 @@ provider clumio{
 
 resource "clumio_policy" "test_policy" {
   name = "%s"
+  timezone = "%s"
+  operations {
+	action_setting = "immediate"
+	type = "aws_ebs_volume_backup"
+	slas {
+		retention_duration {
+			unit = "days"
+			value = 5
+		}
+		rpo_frequency {
+			unit = "days"
+			value = 1
+		}
+	}
+	%s
+  }
   operations {
 	action_setting = "immediate"
 	type = "protection_group_backup"

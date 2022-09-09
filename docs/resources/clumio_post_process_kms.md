@@ -30,14 +30,13 @@ resource "clumio_post_process_kms" "example" {
 ### Required
 
 - `account_id` (String) The AWS Customer Account ID.
+- `created_multi_region_cmk` (Boolean) Whether a new CMK was created.
 - `multi_region_cmk_key_id` (String) Multi Region CMK Key ID.
 - `region` (String) The AWS Region.
+- `role_arn` (String) The ARN of the IAM role to manage the CMK.
+- `role_external_id` (String) The external ID to use when assuming the IAM role.
+- `role_id` (String) The ID of the IAM role to manage the CMK.
 - `token` (String) The AWS integration ID token.
-
-### Optional
-
-- `other_regions` (String) Regions where the replica keys will have to be created. This is a comma separated string if there are more than one region. For example, "us-west1, us-east1"
-- `stack_set_id` (String) Stack Set ID of the stack set for creating Replica Keys.
 
 ### Read-Only
 

@@ -5,11 +5,12 @@ package clumio_policy
 const (
 	schemaActivationStatus       = "activation_status"
 	schemaName                   = "name"
+	schemaTimezone               = "timezone"
 	schemaOperations             = "operations"
 	schemaOrganizationalUnitId   = "organizational_unit_id"
 	schemaActionSetting          = "action_setting"
 	schemaOperationType          = "type"
-	schemaBackupWindow           = "backup_window"
+	schemaBackupWindowTz         = "backup_window_tz"
 	schemaSlas                   = "slas"
 	schemaStartTime              = "start_time"
 	schemaEndTime                = "end_time"

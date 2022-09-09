@@ -57,32 +57,9 @@ func ClumioWallet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			schemaInstalledRegions: {
-				Type:     schema.TypeSet,
-				Set:      common.SchemaSetHashString,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Description: "The regions where the wallet is installed.",
-			},
-			schemaSupportedRegions: {
-				Type:     schema.TypeSet,
-				Set:      common.SchemaSetHashString,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Description: "The supported regions for the wallet.",
-			},
 			schemaClumioAccountId: {
 				Type:        schema.TypeString,
 				Description: "Clumio Account ID.",
-				Computed:    true,
-			},
-			schemaClumioControlPlaneAccountId: {
-				Type:        schema.TypeString,
-				Description: "Clumio Control Plane Account ID.",
 				Computed:    true,
 			},
 		},
@@ -126,31 +103,6 @@ func clumioWalletRead(
 	if err != nil {
 		return diag.Errorf(
 			common.SchemaAttributeSetError, schemaClumioAccountId, err)
-	}
-	err = d.Set(schemaClumioControlPlaneAccountId, *apiRes.ClumioControlPlaneAwsAccountId)
-	if err != nil {
-		return diag.Errorf(
-			common.SchemaAttributeSetError, schemaClumioControlPlaneAccountId, err)
-	}
-	if apiRes.InstalledRegions != nil && len(apiRes.InstalledRegions) > 0 {
-		installedRegions := make([]string, 0)
-		for _, installedRegion := range apiRes.InstalledRegions {
-			installedRegions = append(installedRegions, *installedRegion)
-		}
-		err = d.Set(schemaInstalledRegions, installedRegions)
-		if err != nil {
-			return diag.Errorf(common.SchemaAttributeSetError, schemaInstalledRegions, err)
-		}
-	}
-	if apiRes.SupportedRegions != nil && len(apiRes.SupportedRegions) > 0 {
-		SupportedRegions := make([]string, 0)
-		for _, installedRegion := range apiRes.SupportedRegions {
-			SupportedRegions = append(SupportedRegions, *installedRegion)
-		}
-		err = d.Set(schemaSupportedRegions, SupportedRegions)
-		if err != nil {
-			return diag.Errorf(common.SchemaAttributeSetError, schemaSupportedRegions, err)
-		}
 	}
 	return nil
 }

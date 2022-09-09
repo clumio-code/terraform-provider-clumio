@@ -51,6 +51,7 @@ resource "clumio_policy" "example" {
 
 - `activation_status` (String) The status of the policy. Valid values are:activated: Backups will take place regularly according to the policy SLA.deactivated: Backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
 - `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit associated with the policy.
+- `timezone` (String) The timezone of the policy.
 
 ### Read-Only
 
@@ -69,7 +70,7 @@ Required:
 Optional:
 
 - `advanced_settings` (Block Set, Max: 1) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
-- `backup_window` (Block Set, Max: 1) The start and end times for the customized backup window. (see [below for nested schema](#nestedblock--operations--backup_window))
+- `backup_window_tz` (Block Set, Max: 1) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
 
 <a id="nestedblock--operations--slas"></a>
 ### Nested Schema for `operations.slas`
@@ -154,13 +155,16 @@ Optional:
 
 
 
-<a id="nestedblock--operations--backup_window"></a>
-### Nested Schema for `operations.backup_window`
+<a id="nestedblock--operations--backup_window_tz"></a>
+### Nested Schema for `operations.backup_window_tz`
 
 Required:
 
-- `end_time` (String) The time when the backup window closes. Specify the end time in the format hh:mm, where hh represents the hour of the day and mm represents the minute of the day based on the 24 hour clock.
 - `start_time` (String) The time when the backup window opens. Specify the start time in the format hh:mm, where hh represents the hour of the day and mm represents the minute of the day based on the 24 hour clock.
+
+Optional:
+
+- `end_time` (String) The time when the backup window closes. Specify the end time in the format hh:mm, where hh represents the hour of the day and mm represents the minute of the day based on the 24 hour clock.
 
 ## Import
 

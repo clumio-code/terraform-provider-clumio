@@ -33,7 +33,7 @@ var (
 					" where hh represents the hour of the day and" +
 					" mm represents the minute of the day based on" +
 					" the 24 hour clock.",
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -191,12 +191,12 @@ var (
 					"supported types.",
 				Required: true,
 			},
-			schemaBackupWindow: {
+			schemaBackupWindowTz: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
 				Description: "The start and end times for the customized" +
-					" backup window.",
+					" backup window that reflects the user-defined timezone.",
 				Set:  schema.HashResource(resBackupWindow),
 				Elem: resBackupWindow,
 			},
@@ -255,6 +255,12 @@ func ClumioPolicy() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			schemaTimezone: {
+				Description: "The timezone of the policy.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
 			schemaActivationStatus: {
 				Type: schema.TypeString,
 				Description: "The status of the policy. Valid values are:" +
@@ -293,6 +299,7 @@ func clumioPolicyCreate(
 	pd := policyDefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
 	activationStatus := common.GetStringValue(d, schemaActivationStatus)
 	name := common.GetStringValue(d, schemaName)
+	timezone := common.GetStringValue(d, schemaTimezone)
 	operationsVal, ok := d.GetOk(schemaOperations)
 	if !ok {
 		return diag.Errorf("Operations is a required attribute")
@@ -302,6 +309,7 @@ func clumioPolicyCreate(
 	pdRequest := &models.CreatePolicyDefinitionV1Request{
 		ActivationStatus:     &activationStatus,
 		Name:                 &name,
+		Timezone:             &timezone,
 		Operations:           policyOperations,
 		OrganizationalUnitId: &orgUnitId,
 	}
@@ -311,7 +319,7 @@ func clumioPolicyCreate(
 			d.Id(), string(apiErr.Response))
 	}
 	d.SetId(*res.Id)
-	return nil
+	return clumioPolicyRead(ctx, d, meta)
 }
 
 // clumioPolicyRead handles the Read action for the Clumio Policy Resource.
@@ -331,6 +339,10 @@ func clumioPolicyRead(
 	err = d.Set(schemaName, *res.Name)
 	if err != nil {
 		return diag.Errorf(common.SchemaAttributeSetError, schemaName, err)
+	}
+	err = d.Set(schemaTimezone, *res.Timezone)
+	if err != nil {
+		return diag.Errorf(common.SchemaAttributeSetError, schemaTimezone, err)
 	}
 	if res.ActivationStatus != nil {
 		err = d.Set(schemaActivationStatus, *res.ActivationStatus)
@@ -358,6 +370,7 @@ func clumioPolicyUpdate(
 	pd := policyDefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
 	activationStatus := common.GetStringValue(d, schemaActivationStatus)
 	name := common.GetStringValue(d, schemaName)
+	timezone := common.GetStringValue(d, schemaTimezone)
 	operationsVal, ok := d.GetOk(schemaOperations)
 	if !ok {
 		return diag.Errorf("Operations is a required attribute")
@@ -367,6 +380,7 @@ func clumioPolicyUpdate(
 	pdRequest := &models.UpdatePolicyDefinitionV1Request{
 		ActivationStatus:     &activationStatus,
 		Name:                 &name,
+		Timezone:             &timezone,
 		Operations:           policyOperations,
 		OrganizationalUnitId: &orgUnitId,
 	}
@@ -380,7 +394,7 @@ func clumioPolicyUpdate(
 		return diag.Errorf("Error updating policy %v. Error: %v",
 			d.Id(), err.Error())
 	}
-	return nil
+	return clumioPolicyRead(ctx, d, meta)
 }
 
 // clumioPolicyDelete handles the Delete action for the Clumio Policy Resource.
@@ -411,16 +425,16 @@ func mapSchemaOperationsToClumioOperations(
 		operationAttrMap := operation.(map[string]interface{})
 		actionSetting := operationAttrMap[schemaActionSetting].(string)
 		operationType := operationAttrMap[schemaOperationType].(string)
-		backupWindowIface, ok := operationAttrMap[schemaBackupWindow]
-		var backupWindow *models.BackupWindow
-		schemaBackupWindowSlice := backupWindowIface.(*schema.Set).List()
-		if ok && len(schemaBackupWindowSlice) > 0 {
-			schemaBackupWindow := schemaBackupWindowSlice[0].(map[string]interface{})
-			schemaBackupWindowStartTime := schemaBackupWindow[schemaStartTime].(string)
-			schemaBackupWindowEndTime := schemaBackupWindow[schemaEndTime].(string)
-			backupWindow = &models.BackupWindow{
-				EndTime:   &schemaBackupWindowEndTime,
-				StartTime: &schemaBackupWindowStartTime,
+		backupWindowTzIface, ok := operationAttrMap[schemaBackupWindowTz]
+		var backupWindowTz *models.BackupWindow
+		schemaBackupWindowTzSlice := backupWindowTzIface.(*schema.Set).List()
+		if ok && len(schemaBackupWindowTzSlice) > 0 {
+			schemaBackupWindowTz := schemaBackupWindowTzSlice[0].(map[string]interface{})
+			schemaBackupWindowTzStartTime := schemaBackupWindowTz[schemaStartTime].(string)
+			schemaBackupWindowTzEndTime := schemaBackupWindowTz[schemaEndTime].(string)
+			backupWindowTz = &models.BackupWindow{
+				EndTime:   &schemaBackupWindowTzEndTime,
+				StartTime: &schemaBackupWindowTzStartTime,
 			}
 		}
 		advancedSettings := getOperationAdvancedSettings(
@@ -460,7 +474,7 @@ func mapSchemaOperationsToClumioOperations(
 
 		policyOperation := &models.PolicyOperation{
 			ActionSetting:    &actionSetting,
-			BackupWindow:     backupWindow,
+			BackupWindowTz:   backupWindowTz,
 			Slas:             backupSLAs,
 			ClumioType:       &operationType,
 			AdvancedSettings: advancedSettings,
@@ -479,13 +493,13 @@ func mapClumioOperationsToSchemaOperations(operations []*models.PolicyOperation)
 		operationAttrMap[schemaActionSetting] = *operation.ActionSetting
 		operationAttrMap[schemaOperationType] = *operation.ClumioType
 
-		if operation.BackupWindow != nil {
+		if operation.BackupWindowTz != nil {
 			backupWindowMap := make(map[string]interface{})
-			backupWindowMap[schemaStartTime] = *operation.BackupWindow.StartTime
-			backupWindowMap[schemaEndTime] = *operation.BackupWindow.EndTime
+			backupWindowMap[schemaStartTime] = *operation.BackupWindowTz.StartTime
+			backupWindowMap[schemaEndTime] = *operation.BackupWindowTz.EndTime
 			backupWindowSet := &schema.Set{F: schema.HashResource(resBackupWindow)}
 			backupWindowSet.Add(backupWindowMap)
-			operationAttrMap[schemaBackupWindow] = backupWindowSet
+			operationAttrMap[schemaBackupWindowTz] = backupWindowSet
 		}
 
 		backupSlas := &schema.Set{F: schema.HashResource(resSla)}

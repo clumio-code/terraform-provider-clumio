@@ -57,7 +57,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.3.0"
+      version = "~>0.4.0"
     }
     aws = {}
   }
@@ -187,7 +187,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.3.0"
+      version = "~>0.4.0"
     }
     aws = {}
   }
@@ -247,7 +247,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~> 0.3.0"
+      version = "~> 0.4.0"
     }
     aws = {}
   }
@@ -343,7 +343,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~> 0.3.0"
+      version = "~> 0.4.0"
     }
     aws = {}
   }
@@ -449,7 +449,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio.com/providers/clumio"
-      version = "~>0.3.0"
+      version = "~>0.4.0"
     }
   }
 }
@@ -517,8 +517,8 @@ You can instantiate the Clumio Terraform provider with an existing organizationa
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio.com/providers/clumio"
-      version = "~>0.3.0"
+      source  = "clumio-code/clumio"
+      version = "~>0.4.0"
     }
   }
 }

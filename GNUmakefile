@@ -2,7 +2,7 @@
 # Copyright 2021. Clumio, Inc.
 #
 
-VERSION=0.4.0
+VERSION=0.4.1
 ifndef OS_ARCH
 OS_ARCH=darwin_amd64
 endif

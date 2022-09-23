@@ -36,6 +36,19 @@ func GetBoolValueWithDefault(d *schema.ResourceData, key string, defaultVal bool
 	return val.(bool)
 }
 
+// GetIntValueWithDefault returns the int64 value of the key if present,
+// otherwise a default value.
+func GetIntValueWithDefault(d *schema.ResourceData, key string, defaultVal int64) int64 {
+	val := d.Get(key)
+	if val == nil {
+		return defaultVal
+	}
+	if ival, ok := val.(int64); ok {
+		return ival
+	}
+	return defaultVal
+}
+
 // GetStringSlice returns the string slice of the key if present.
 func GetStringSlice(d *schema.ResourceData, key string) []*string {
 	var value []*string

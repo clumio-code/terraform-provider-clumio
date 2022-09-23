@@ -1,3 +1,19 @@
+---
+page_title: "Sample Configuration"
+---
+
+# Sample Configuration
+The following sample Terraform configuration highlights several resources in the provider. This
+includes:
+* `clumio_aws_connection` (as well as installation of the [Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest))
+* `clumio_protection_group`
+* `clumio_policy`
+* `clumio_policy_assignment`
+* `clumio_policy_rule`
+* `clumio_organizational_unit`
+* `clumio_user`
+
+```terraform
 terraform {
   required_providers {
     clumio = {
@@ -138,3 +154,4 @@ resource "clumio_user" "user" {
   assigned_role           = data.clumio_role.ou_admin.id
   organizational_unit_ids = [clumio_organizational_unit.ou.id]
 }
+```

@@ -1,3 +1,9 @@
+variable "existing_cmk_id" {
+  description = "An existing CMK (if any) to use."
+  type        = string
+  default     = ""
+}
+
 terraform {
   required_providers {
     clumio = {
@@ -42,6 +48,6 @@ module "clumio_byok" {
   account_native_id = clumio_wallet.wallet.account_native_id
   token             = clumio_wallet.wallet.token
   clumio_account_id = clumio_wallet.wallet.clumio_account_id
-  external_id       = var.external_id != "" ? var.external_id : random_uuid.external_id.id
+  external_id       = random_uuid.external_id.id
   existing_cmk_id   = var.existing_cmk_id
 }

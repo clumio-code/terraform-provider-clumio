@@ -1,3 +1,9 @@
+## 0.4.1
+Minor update to clumio_post_process_kms resource and documentation changes.
+
+## 0.4.0
+Changes to the Clumio Wallet and Policy resources
+
 ## 0.3.0
 
 Changes to include support for creating Clumio Wallet and related resources.

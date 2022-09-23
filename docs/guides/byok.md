@@ -1,21 +1,37 @@
 ---
-page_title: "Using a Wallet and BYOK"
+page_title: "Using Wallet and the BYOK Module"
 ---
 
-# Using a Wallet and BYOK
-- [Prerequisites](#prerequisites)
-- [Sample configuration](#sample-configuration)
+# Using Wallet and the BYOK Module
+- [Preparation](#preparation)
+- [Sample Configuration](#sample)
 
-<a name="prerequisites"></a>
-## Prerequisites
-At least one AWS account must be connected prior to using a Wallet and BYOK.
+The following is an example of how to instantiate a Clumio wallet and install the
+[Clumio BYOK module](https://registry.terraform.io/modules/clumio-code/byok-template/clumio/latest)
+to an AWS account. NOTE that the AWS account used does not have to be the same as an AWS account to
+be protected. However, at least one AWS account must be connected with the
+[Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest)
+prior to setting up a Clumio wallet and BYOK. The subsequent steps assume that such an AWS account
+has already been setup.
 
-<a name="sample-configuration"></a>
-## Sample configuration
-This sample Terraform configuration highlights the creation of a Wallet resource and the
-installation of the BYOK module.
+<a name="preparation"></a>
+## Preparation
+Please see the "Getting Started" guide for notes about setting up a Clumio API key as well as
+setting up AWS environment variables.
+
+<a name="sample"></a>
+## Sample Configuration
+This sample configuration highlights the creation of a Clumio wallet and the installation of the
+[Clumio BYOK module](https://registry.terraform.io/modules/clumio-code/byok-template/clumio/latest).
+NOTE that if desired, an existing Multi-Region AWS CMK ID can be given.
 
 ```terraform
+variable "existing_cmk_id" {
+  description = "An existing CMK (if any) to use."
+  type        = string
+  default     = ""
+}
+
 terraform {
   required_providers {
     clumio = {
@@ -60,7 +76,7 @@ module "clumio_byok" {
   account_native_id = clumio_wallet.wallet.account_native_id
   token             = clumio_wallet.wallet.token
   clumio_account_id = clumio_wallet.wallet.clumio_account_id
-  external_id       = var.external_id != "" ? var.external_id : random_uuid.external_id.id
+  external_id       = random_uuid.external_id.id
   existing_cmk_id   = var.existing_cmk_id
 }
 ```

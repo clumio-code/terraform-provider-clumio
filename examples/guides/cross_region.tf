@@ -41,7 +41,7 @@ resource "clumio_aws_connection" "connection_east" {
   description       = "My Clumio Connection East"
 }
 
-# Install the Clumio Protect template onto the registered connection for West
+# Install the Clumio AWS template onto the registered connection for West
 module "clumio_protect_west" {
   providers = {
     clumio = clumio
@@ -62,7 +62,7 @@ module "clumio_protect_west" {
   is_s3_enabled        = true
 }
 
-# Install the Clumio Protect template onto the registered connection for East
+# Install the Clumio AWS template onto the registered connection for East
 module "clumio_protect_east" {
   providers = {
     clumio = clumio

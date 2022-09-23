@@ -43,7 +43,7 @@ module "clumio_protect" {
   aws_region            = clumio_aws_connection.connection.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id
 
-  # Enablement of datasources in the module are based on the registered connection
+  # Enable protection of all data sources.
   is_ebs_enabled       = true
   is_rds_enabled       = true
   is_ec2_mssql_enabled = true
@@ -60,9 +60,9 @@ resource "clumio_protection_group" "protection_group" {
   }
 }
 
-# Create a Clumio policy with support for S3 and EBS
+# Create a Clumio policy for protection groups with a 7-day RPO and 3-month retention
 resource "clumio_policy" "policy" {
-  name = "Gold"
+  name = "S3 Gold"
   operations {
     action_setting = "immediate"
     type           = "protection_group_backup"
@@ -82,20 +82,6 @@ resource "clumio_policy" "policy" {
       }
     }
   }
-  operations {
-    action_setting = "immediate"
-    type           = "aws_ebs_volume_backup"
-    slas {
-      retention_duration {
-        unit  = "months"
-        value = 1
-      }
-      rpo_frequency {
-        unit  = "days"
-        value = 1
-      }
-    }
-  }
 }
 
 # Assign the policy to the protection group
@@ -103,38 +89,4 @@ resource "clumio_policy_assignment" "assignment" {
   entity_id   = clumio_protection_group.protection_group.id
   entity_type = "protection_group"
   policy_id   = clumio_policy.policy.id
-}
-
-# Create a Clumio policy rule and associate it with the policy
-resource "clumio_policy_rule" "rule_1" {
-  name           = "First Rule"
-  policy_id      = clumio_policy.policy.id
-  condition      = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_tag\":{\"$eq\":{\"key\":\"clumio\", \"value\":\"demo\"}}}"
-  before_rule_id = clumio_policy_rule.rule_2.id
-}
-
-# Create a second Clumio policy rule, prioritized after "rule_1", and associate it with the policy
-resource "clumio_policy_rule" "rule_2" {
-  name           = "Second Rule"
-  policy_id      = clumio_policy.policy.id
-  condition      = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_tag\":{\"$eq\":{\"key\":\"clumio\", \"value\":\"example\"}}}"
-  before_rule_id = ""
-}
-
-# Retrive the role for OU Admin
-data "clumio_role" "ou_admin" {
-  name = "Organizational Unit Admin"
-}
-
-# Create a new OU
-resource "clumio_organizational_unit" "ou" {
-  name = "My OU"
-}
-
-# Create a user for the OU
-resource "clumio_user" "user" {
-  full_name               = "Foo Bar"
-  email                   = "foobar@clumio.com"
-  assigned_role           = data.clumio_role.ou_admin.id
-  organizational_unit_ids = [clumio_organizational_unit.ou.id]
 }

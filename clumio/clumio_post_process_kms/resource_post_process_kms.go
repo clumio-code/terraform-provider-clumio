@@ -14,6 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	minTemplateVersion = 10
+)
+
 // ClumioPostProcessKMS does the post-processing for Clumio AWS Connection.
 func ClumioPostProcessKMS() *schema.Resource {
 	return &schema.Resource{
@@ -66,6 +70,11 @@ func ClumioPostProcessKMS() *schema.Resource {
 				Description: "Multi Region CMK Key ID.",
 				Required:    true,
 			},
+			schemaTemplateVersion: {
+				Type:        schema.TypeInt,
+				Description: "Template version",
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -109,6 +118,8 @@ func clumioPostProcessKMSCommon(_ context.Context, d *schema.ResourceData,
 	roleArn := common.GetStringValue(d, schemaRoleArn)
 	roleExternalId := common.GetStringValue(d, schemaRoleExternalId)
 	createdMrCmk := common.GetBoolValueWithDefault(d, schemaCreatedMultiRegionCMK, true)
+	version := uint64(common.GetIntValueWithDefault(d, schemaTemplateVersion, minTemplateVersion))
+
 	_, apiErr := postProcessAwsKMS.PostProcessKms(
 		&models.PostProcessKmsV1Request{
 			AccountNativeId:       &accountId,
@@ -120,6 +131,7 @@ func clumioPostProcessKMSCommon(_ context.Context, d *schema.ResourceData,
 			RoleArn:               &roleArn,
 			RoleExternalId:        &roleExternalId,
 			CreatedMultiRegionCmk: &createdMrCmk,
+			Version:               &version,
 		})
 	if apiErr != nil {
 		return diag.Errorf(

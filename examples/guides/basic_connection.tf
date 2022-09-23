@@ -30,7 +30,7 @@ resource "clumio_aws_connection" "connection" {
   description       = "My Clumio Connection"
 }
 
-# Install the Clumio Protect template onto the registered connection
+# Install the Clumio AWS template onto the registered connection
 module "clumio_protect" {
   providers = {
     clumio = clumio

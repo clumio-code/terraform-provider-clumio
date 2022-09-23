@@ -1,0 +1,46 @@
+---
+page_title: "Using Connections and the AWS Module"
+---
+
+# Using Connections and the AWS Module
+- [Preparation](#preparation)
+- [Basic, One Connection](#basic)
+- [Cross-Region, Two Connections](#cross-region)
+- [Cross-Account, Role Assumption, Two Connections](#cross-account)
+
+The following are examples of various ways to instantiate Clumio connections and install the
+[Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest) to
+one or more AWS accounts and regions to be protected.
+
+<a name="preparation"></a>
+## Preparation
+Please see the "Getting Started" guide for notes about setting up a Clumio API key as well as
+setting up AWS environment variables.
+
+<a name="basic"></a>
+## Basic, One Connection
+The following configuration sets up a single Clumio connection and installs the
+[Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest) to
+the AWS account and region to be protected.
+
+{{ tffile "examples/guides/basic_connection.tf" }}
+
+<a name="cross-region"></a>
+## Cross-Region, Two Connections
+The following configuration sets up two Clumio connections, one on us-west-2 and another on
+us-east-1. The [Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest)
+is installed onto both regions of the same AWS account.
+
+{{ tffile "examples/guides/cross_region.tf" }}
+
+<a name="cross-account"></a>
+## Cross-Account, Role-Assumption, Two Connections
+The following configuration sets up two Clumio connections to two different AWS accounts. The
+[Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest)
+is subsequently installed onto us-west-2 for one of the accounts and us-east-1 for the other.
+
+In addition, IAM role assumption is used to provision AWS resources onto one of the accounts. See
+[Assuming an IAM Role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#assuming-an-iam-role)
+for additional details.
+
+{{ tffile "examples/guides/cross_account.tf" }}

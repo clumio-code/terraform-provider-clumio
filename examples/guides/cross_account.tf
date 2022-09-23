@@ -14,26 +14,24 @@ provider "clumio" {
   clumio_api_base_url = "<clumio_api_base_url>"
 }
 
-# Instantiate two AWS providers with different regions and roles to assume in
-# order to access different AWS accounts
+# Instantiate two AWS providers with different regions. One of the providers is additionally
+# associated with a different AWS account and thus requires role assumption
 provider "aws" {
   region = "us-west-2"
-  assume_role {
-    role_arn    = "<assume_role_arn_1>"
-    external_id = "<assume_role_external_id_1>"
-  }
 }
+
 provider "aws" {
   alias  = "account_2_east"
   region = "us-east-1"
   assume_role {
-    role_arn    = "<assume_role_arn_2>"
-    external_id = "<assume_role_external_id_2>"
+    role_arn    = "<assume_role_arn>"
+    external_id = "<assume_role_external_id>"
   }
 }
 
 # Retrieve the effective AWS account IDs for the different AWS accounts
 data "aws_caller_identity" "account_1" {}
+
 data "aws_caller_identity" "account_2" {
   provider = aws.account_2_east
 }
@@ -52,8 +50,8 @@ resource "clumio_aws_connection" "connection_account_2_east" {
   description       = "My Clumio Connection Account 2 East"
 }
 
-# Install the Clumio Protect template onto the registered connection for the
-# first AWS account ID on West
+# Install the Clumio AWS template onto the registered connection for the first AWS account ID
+# on West
 module "clumio_protect_account_1_west" {
   providers = {
     clumio = clumio
@@ -67,16 +65,15 @@ module "clumio_protect_account_1_west" {
   clumio_aws_account_id = clumio_aws_connection.connection_account_1_west.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled               = true
-  is_rds_enabled               = true
-  is_ec2_mssql_enabled         = true
-  is_warmtier_enabled          = true
-  is_warmtier_dynamodb_enabled = true
-  is_s3_enabled                = true
+  is_ebs_enabled       = true
+  is_rds_enabled       = true
+  is_ec2_mssql_enabled = true
+  is_dynamodb_enabled  = true
+  is_s3_enabled        = true
 }
 
-# Install the Clumio Protect template onto the registered connection for the
-# second AWS account ID on East
+# Install the Clumio AWS template onto the registered connection for the second AWS account ID
+# on East
 module "clumio_protect_account_2_east" {
   providers = {
     clumio = clumio
@@ -90,10 +87,9 @@ module "clumio_protect_account_2_east" {
   clumio_aws_account_id = clumio_aws_connection.connection_account_2_east.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled               = true
-  is_rds_enabled               = true
-  is_ec2_mssql_enabled         = true
-  is_warmtier_enabled          = true
-  is_warmtier_dynamodb_enabled = true
-  is_s3_enabled                = true
+  is_ebs_enabled       = true
+  is_rds_enabled       = true
+  is_ec2_mssql_enabled = true
+  is_dynamodb_enabled  = true
+  is_s3_enabled        = true
 }

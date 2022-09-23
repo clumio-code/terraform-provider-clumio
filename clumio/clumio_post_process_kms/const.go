@@ -11,4 +11,5 @@ const (
 	schemaRoleExternalId        = "role_external_id"
 	schemaCreatedMultiRegionCMK = "created_multi_region_cmk"
 	schemaMultiRegionCMKKeyID   = "multi_region_cmk_key_id"
+	schemaTemplateVersion       = "template_version"
 )

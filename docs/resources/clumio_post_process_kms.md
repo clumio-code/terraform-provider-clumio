@@ -38,6 +38,10 @@ resource "clumio_post_process_kms" "example" {
 - `role_id` (String) The ID of the IAM role to manage the CMK.
 - `token` (String) The AWS integration ID token.
 
+### Optional
+
+- `template_version` (Number) Template version
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.

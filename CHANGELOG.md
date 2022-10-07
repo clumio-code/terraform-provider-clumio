@@ -1,3 +1,6 @@
+## 0.4.2
+Minor updates to documentation of policy and organizatonal_unit resource.
+
 ## 0.4.1
 Minor update to clumio_post_process_kms resource and documentation changes.
 

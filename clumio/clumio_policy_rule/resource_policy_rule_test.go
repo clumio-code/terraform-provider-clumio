@@ -5,11 +5,12 @@ package clumio_policy_rule_test
 
 import (
 	"fmt"
-	"github.com/clumio-code/terraform-provider-clumio/clumio"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 	"os"
 	"regexp"
 	"testing"
+
+	"github.com/clumio-code/terraform-provider-clumio/clumio"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -67,7 +68,7 @@ resource "clumio_policy" "%s" {
  operations {
 	action_setting = "window"
 	type = "aws_ebs_volume_backup"
-	backup_window {
+	backup_window_tz {
 		start_time = "08:00"
 		end_time = "20:00"
 	}

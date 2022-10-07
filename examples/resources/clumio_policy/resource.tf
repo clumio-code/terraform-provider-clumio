@@ -1,9 +1,8 @@
-resource "clumio_policy" "example" {
-  name                   = "example-policy"
-  organizational_unit_id = "organizational_unit_id"
-  activation_status      = "activated"
+resource "clumio_policy" "example_1" {
+  name              = "example-policy-1"
+  activation_status = "activated"
   operations {
-    action_setting = "window"
+    action_setting = "immediate"
     type           = "protection_group_backup"
     slas {
       retention_duration {
@@ -19,6 +18,30 @@ resource "clumio_policy" "example" {
       protection_group_backup {
         backup_tier = "cold"
       }
+    }
+  }
+}
+
+resource "clumio_policy" "example_2" {
+  name              = "example-policy-2"
+  activation_status = "activated"
+  timezone          = "America/Los_Angeles"
+  operations {
+    action_setting = "window"
+    type           = "aws_ebs_volume_backup"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 30
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    backup_window_tz {
+      start_time = "05:00"
+      end_time   = "07:00"
     }
   }
 }

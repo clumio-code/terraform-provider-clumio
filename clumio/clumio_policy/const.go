@@ -29,6 +29,8 @@ const (
 	schemaMssqlLogBackup         = "mssql_log_backup"
 	schemaProtectionGroupBackup  = "protection_group_backup"
 	schemaBackupTier             = "backup_tier"
+	schemaEBSVolumeBackup        = "aws_ebs_volume_backup"
+	schemaEC2InstanceBackup      = "aws_ec2_instance_backup"
 
 	alternativeReplicaDescFmt = "The alternative replica for MSSQL %s backups. This" +
 		" setting only applies to Availability Group databases. Possible" +
@@ -53,6 +55,13 @@ const (
 		" mssql_log_backup operation. If this operation is not of" +
 		" type mssql_log_backup, then this field is omitted from the" +
 		" response."
+
+	ebsBackupDesc = "Optional configuration settings for the aws_ebs_volume_backup operation."
+
+	eC2BackupDesc = "Optional configuration settings for the aws_ec2_instance_backup operation."
+
+	secureVaultLiteDescFmt = "Backup tier to store the SecureVault Lite backup in." +
+		" Valid values are: `standard` and `lite`. If not provided, the default is `standard`."
 
 	timeoutInSec  = 3600
 	intervalInSec = 5

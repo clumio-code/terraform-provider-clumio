@@ -19,7 +19,7 @@ import (
 func ClumioOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		// This description is used by the documentation generator and the language server.
-		Description: "Clumio AWS Connection Resource used to connect AWS accounts to Clumio.",
+		Description: "Resource for creating and managing Organizational Unit in Clumio.",
 
 		CreateContext: clumioOrganizationalUnitCreate,
 		ReadContext:   clumioOrganizationalUnitRead,

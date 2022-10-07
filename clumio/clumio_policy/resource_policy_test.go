@@ -30,6 +30,12 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 			{
 				Config: getTestAccResourceClumioPolicyFixedStart(true),
 			},
+			{
+				Config: getTestAccResourceClumioPolicySecureVaultLite(false),
+			},
+			{
+				Config: getTestAccResourceClumioPolicySecureVaultLite(true),
+			},
 		},
 	})
 }
@@ -72,6 +78,26 @@ func getTestAccResourceClumioPolicyFixedStart(update bool) string {
 		}`
 	}
 	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
+}
+
+func getTestAccResourceClumioPolicySecureVaultLite(update bool) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "SecureVaultLite Test"
+	sla := ``
+	if update {
+		sla = `
+		slas {
+		  retention_duration {
+			unit = "months"
+			value = 3
+		  }
+		  rpo_frequency {
+			unit = "months"
+			value = 1
+		  }
+		}`
+	}
+	return fmt.Sprintf(testAccResourceClumioPolicyVaultLite, baseUrl, name, sla, sla)
 }
 
 const testAccResourceClumioPolicy = `
@@ -141,6 +167,56 @@ resource "clumio_policy" "test_policy" {
       rpo_frequency {
         unit  = "days"
         value = 1
+      }
+    }
+  }
+}
+`
+
+const testAccResourceClumioPolicyVaultLite = `
+provider clumio{
+  clumio_api_base_url = "%s"
+}
+
+resource "clumio_policy" "secure_vault_lite_success" {
+  name = "%s"
+  operations {
+    action_setting = "immediate"
+    type = "aws_ebs_volume_backup"
+    slas {
+      retention_duration {
+        unit = "days"
+        value = 30
+      }
+      rpo_frequency {
+        unit = "days"
+        value = 1
+      }
+    }
+	%s
+    advanced_settings {
+      aws_ebs_volume_backup {
+        backup_tier = "lite"
+      }
+    }
+  }
+  operations {
+    action_setting = "immediate"
+    type = "aws_ec2_instance_backup"
+    slas {
+	  retention_duration {
+        unit = "days"
+        value = 30
+      }
+      rpo_frequency {
+        unit = "days"
+        value = 1
+      }
+    }
+	%s
+    advanced_settings {
+      aws_ec2_instance_backup {
+        backup_tier = "lite"
       }
     }
   }

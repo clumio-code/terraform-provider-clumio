@@ -103,8 +103,8 @@ resource "clumio_policy" "policy" {
     type           = "aws_ebs_volume_backup"
     slas {
       retention_duration {
-        unit  = "months"
-        value = 1
+        unit  = "days"
+        value = 30
       }
       rpo_frequency {
         unit  = "days"

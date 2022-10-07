@@ -20,19 +20,23 @@ var (
 			schemaStartTime: {
 				Type: schema.TypeString,
 				Description: "The time when the backup window opens." +
-					" Specify the start time in the format hh:mm," +
-					" where hh represents the hour of the day and" +
-					" mm represents the minute of the day based on" +
+					" Specify the start time in the format `hh:mm`," +
+					" where `hh` represents the hour of the day and" +
+					" `mm` represents the minute of the day based on" +
 					" the 24 hour clock.",
 				Required: true,
 			},
 			schemaEndTime: {
 				Type: schema.TypeString,
 				Description: "The time when the backup window closes." +
-					" Specify the end time in the format hh:mm," +
-					" where hh represents the hour of the day and" +
-					" mm represents the minute of the day based on" +
-					" the 24 hour clock.",
+					" Specify the end time in the format `hh:mm`," +
+					" where `hh` represents the hour of the day and" +
+					" `mm` represents the minute of the day based on" +
+					" the 24 hour clock. Leave empty if you do not want" +
+					" to specify an end time. If the backup window closes" +
+					" while a backup is in progress, the entire backup process" +
+					" is aborted. The next backup will be performed when the " +
+					" backup window re-opens.",
 				Optional: true,
 			},
 		},
@@ -125,6 +129,26 @@ var (
 		},
 	}
 
+	resEBSVolumeBackup = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			schemaBackupTier: {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: secureVaultLiteDescFmt,
+			},
+		},
+	}
+
+	resEC2InstanceBackup = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			schemaBackupTier: {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: secureVaultLiteDescFmt,
+			},
+		},
+	}
+
 	resAdvancedSettings = &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			schemaEc2MssqlDatabaseBackup: {
@@ -169,6 +193,22 @@ var (
 					" the response.",
 				Set:  schema.HashResource(resProtectionGroupBackup),
 				Elem: resProtectionGroupBackup,
+			},
+			schemaEBSVolumeBackup: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: ebsBackupDesc,
+				Set:         schema.HashResource(resEBSVolumeBackup),
+				Elem:        resEBSVolumeBackup,
+			},
+			schemaEC2InstanceBackup: {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: eC2BackupDesc,
+				Set:         schema.HashResource(resEC2InstanceBackup),
+				Elem:        resEC2InstanceBackup,
 			},
 		},
 	}
@@ -256,10 +296,13 @@ func ClumioPolicy() *schema.Resource {
 				Required:    true,
 			},
 			schemaTimezone: {
-				Description: "The timezone of the policy.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Description: "The time zone for the policy, in IANA format. For example: " +
+					"`America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. " +
+					"For more information, see the Time Zone Database " +
+					"(https://www.iana.org/time-zones) on the IANA website.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			schemaActivationStatus: {
 				Type: schema.TypeString,
@@ -455,6 +498,7 @@ func mapSchemaOperationsToClumioOperations(
 				Unit:  &unit,
 				Value: &value,
 			}
+
 			var rpoFrequency *models.RPOBackupSLAParam
 			rpoFrequencyIface := schemaSla[schemaRpoFrequency]
 			schemaRpoFrequencySlice := rpoFrequencyIface.(*schema.Set).List()
@@ -580,6 +624,26 @@ func mapClumioOperationsToSchemaOperations(operations []*models.PolicyOperation)
 				advancedSettingsMap[schemaProtectionGroupBackup] =
 					protectionGroupBackupSet
 			}
+			if operation.AdvancedSettings.AwsEbsVolumeBackup != nil {
+				ebsVolumeBackupMap := make(map[string]interface{})
+				ebsVolumeBackupMap[schemaBackupTier] =
+					*operation.AdvancedSettings.AwsEbsVolumeBackup.BackupTier
+				ebsVolumeBackupSet := &schema.Set{
+					F: schema.HashResource(resEBSVolumeBackup)}
+				ebsVolumeBackupSet.Add(ebsVolumeBackupMap)
+				advancedSettingsMap[schemaEBSVolumeBackup] =
+					ebsVolumeBackupSet
+			}
+			if operation.AdvancedSettings.AwsEc2InstanceBackup != nil {
+				ec2InstanceBackupMap := make(map[string]interface{})
+				ec2InstanceBackupMap[schemaBackupTier] =
+					*operation.AdvancedSettings.AwsEc2InstanceBackup.BackupTier
+				ec2InstanceBackupSet := &schema.Set{
+					F: schema.HashResource(resEC2InstanceBackup)}
+				ec2InstanceBackupSet.Add(ec2InstanceBackupMap)
+				advancedSettingsMap[schemaEC2InstanceBackup] =
+					ec2InstanceBackupSet
+			}
 			advancedSettingsSet := &schema.Set{
 				F: schema.HashResource(resAdvancedSettings)}
 			advancedSettingsSet.Add(advancedSettingsMap)
@@ -613,6 +677,10 @@ func getOperationAdvancedSettings(
 				schemaAdvSettings[schemaMssqlLogBackup])
 			advancedSettings.ProtectionGroupBackup = getProtectionGroupAdvancedSetting(
 				schemaAdvSettings[schemaProtectionGroupBackup])
+			advancedSettings.AwsEbsVolumeBackup = getEBSAdvancedSetting(
+				schemaAdvSettings[schemaEBSVolumeBackup])
+			advancedSettings.AwsEc2InstanceBackup = getEC2AdvancedSetting(
+				schemaAdvSettings[schemaEC2InstanceBackup])
 		}
 	}
 	return advancedSettings
@@ -679,4 +747,40 @@ func getProtectionGroupAdvancedSetting(
 		}
 	}
 	return protectionGroupBackup
+}
+
+// getEBSAdvancedSetting returns the EBSAdvancedSetting
+// after parsing the information from the ebsIface interface.
+func getEBSAdvancedSetting(
+	ebsIface interface{}) *models.EBSBackupAdvancedSetting {
+	var ebsBackup *models.EBSBackupAdvancedSetting
+	if ebsIface != nil {
+		ebsSlice := ebsIface.(*schema.Set).List()
+		if len(ebsSlice) > 0 {
+			ebsBackupMap := ebsSlice[0].(map[string]interface{})
+			schemaBackupTierVal := ebsBackupMap[schemaBackupTier].(string)
+			ebsBackup = &models.EBSBackupAdvancedSetting{
+				BackupTier: &schemaBackupTierVal,
+			}
+		}
+	}
+	return ebsBackup
+}
+
+// getEC2AdvancedSetting returns the EC2AdvancedSetting
+// after parsing the information from the ec2Iface interface.
+func getEC2AdvancedSetting(
+	ec2Iface interface{}) *models.EC2BackupAdvancedSetting {
+	var ec2Backup *models.EC2BackupAdvancedSetting
+	if ec2Iface != nil {
+		ec2Slice := ec2Iface.(*schema.Set).List()
+		if len(ec2Slice) > 0 {
+			ec2BackupMap := ec2Slice[0].(map[string]interface{})
+			schemaBackupTierVal := ec2BackupMap[schemaBackupTier].(string)
+			ec2Backup = &models.EC2BackupAdvancedSetting{
+				BackupTier: &schemaBackupTierVal,
+			}
+		}
+	}
+	return ec2Backup
 }

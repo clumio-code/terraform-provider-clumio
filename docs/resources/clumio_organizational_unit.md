@@ -3,12 +3,12 @@
 page_title: "clumio_organizational_unit Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
+  Resource for creating and managing Organizational Unit in Clumio.
 ---
 
 # clumio_organizational_unit (Resource)
 
-Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
+Resource for creating and managing Organizational Unit in Clumio.
 
 ## Example Usage
 

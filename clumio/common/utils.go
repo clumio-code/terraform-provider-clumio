@@ -89,7 +89,7 @@ func Contains(s []string, str string) bool {
 	return false
 }
 
-//Utility function to return a string value from a map if the key exists
+// Utility function to return a string value from a map if the key exists
 func GetStringValueFromMap(keyVals map[string]interface{}, key string) *string {
 	if v, ok := keyVals[key].(string); ok && v != "" {
 		return &v
@@ -363,6 +363,9 @@ func GetClumioConfigForAPI(
 			Token:                     client.ClumioConfig.Token,
 			BaseUrl:                   client.ClumioConfig.BaseUrl,
 			OrganizationalUnitContext: orgUnitId,
+			CustomHeaders: map[string]string{
+				clumioTfProviderVersionKey: clumioTfProviderVersionValue,
+			},
 		}
 	}
 	return clumioConfig

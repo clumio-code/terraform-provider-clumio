@@ -23,6 +23,11 @@ const (
 
 	// Empty parameter error format
 	SchemaEmptyParameterError = "Empty %s is invalid if specified."
+
+	// Provider version key and value
+	clumioTfProviderVersionKey = "CLUMIO_TERRAFORM_PROVIDER_VERSION"
+	// If the version is being changed here, it must also be changed in the GNUmakefile.
+	clumioTfProviderVersionValue = "0.4.4"
 )
 
 var (

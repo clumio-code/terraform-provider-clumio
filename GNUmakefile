@@ -2,7 +2,9 @@
 # Copyright 2021. Clumio, Inc.
 #
 
-VERSION=0.4.3
+# If the version is being changed here, it should also be changed for the variable
+# clumioTfProviderVersionValue in the file clumio/common/const.go.
+VERSION=0.4.4
 ifndef OS_ARCH
 OS_ARCH=darwin_amd64
 endif

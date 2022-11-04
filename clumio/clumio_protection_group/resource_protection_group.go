@@ -56,8 +56,7 @@ var (
 				Description: "Storage class to include in the backup. If not specified," +
 					" then all objects across all storage classes will be backed up." +
 					" Valid values are: S3 Standard, S3 Standard-IA," +
-					" S3 Intelligent-Tiering, S3 One Zone-IA, S3 Glacier and" +
-					" S3 Glacier Deep Archive.",
+					" S3 Intelligent-Tiering, and S3 One Zone-IA.",
 				Set: common.SchemaSetHashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,

@@ -36,11 +36,11 @@ resource "clumio_policy_rule" "example_2" {
 - `before_rule_id` (String) The policy rule ID before which this policy rule should be inserted. An empty value will set the rule to have lowest priority. NOTE: If in the Global Organizational Unit, rules can also be prioritized against two virtual rules maintained by the system: `asset-level-rule` and `child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct Assignments (when a policy is applied directly to an asset) whereas `child-ou-rule` corresponds to the priority of rules created by child organizational units.
 - `condition` (String) The condition of the policy rule. Possible conditions include: 1) `entity_type` is required and supports `$eq` and `$in` filters. 2) `aws_account_native_id` and `aws_region` are optional and both support `$eq` and `$in` filters. 3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` filters.
 - `name` (String) The name of the policy rule.
-- `policy_id` (String) The policy ID of the policy to be applied to the assets.
+- `policy_id` (String) The Clumio-assigned ID of the policy.
 
 ### Optional
 
-- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit to be associated with the policy rule.
+- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit to use as the context for assigning the policy.
 
 ### Read-Only
 

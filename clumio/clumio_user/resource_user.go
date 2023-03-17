@@ -223,7 +223,7 @@ func clumioUserUpdate(
 		deletedStrings := common.GetStringSliceFromInterfaceSlice(deleted)
 		addedStrings := common.GetStringSliceFromInterfaceSlice(added)
 		updateRequest.OrganizationalUnitAssignmentUpdates =
-			&models.EntityGroupAssignmetUpdates{
+			&models.EntityGroupAssignmentUpdatesV1{
 				Add:    addedStrings,
 				Remove: deletedStrings,
 			}

@@ -12,4 +12,6 @@ const (
 	schemaDescendantIds             = "descendant_ids"
 	schemaUserCount                 = "user_count"
 	schemaUsers                     = "users"
+	http200                         = 200
+	http202                         = 202
 )

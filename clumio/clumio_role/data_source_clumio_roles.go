@@ -1,6 +1,6 @@
 // Copyright 2021. Clumio, Inc.
 
-// clumio_roles Data Source implementation.
+// clumio_role Data Source implementation.
 
 package clumio_role
 

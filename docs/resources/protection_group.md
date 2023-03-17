@@ -38,18 +38,18 @@ resource "clumio_protection_group" "example" {
 ### Required
 
 - `name` (String) The user-assigned name of the protection group.
-- `object_filter` (Block Set, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--object_filter))
 
 ### Optional
 
 - `bucket_rule` (String) Describes the possible conditions for a bucket to be automatically added to a protection group. For example: {"aws_tag":{"$eq":{"key":"Environment", "value":"Prod"}}}
 - `description` (String) The user-assigned description of the protection group.
+- `object_filter` (Block, Optional) (see [below for nested schema](#nestedblock--object_filter))
 - `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit associated with the protection group.
 
 ### Read-Only
 
 - `id` (String) Protection Group Id.
-- `protection_info` (List of Object) The protection policy applied to this resource. (see [below for nested schema](#nestedatt--protection_info))
+- `protection_info` (Attributes) The protection policy applied to this resource. (see [below for nested schema](#nestedatt--protection_info))
 - `protection_status` (String) The protection status of the protection group. Possible values include "protected", "unprotected", and "unsupported". If the protection group does not support backups, then this field has a value of unsupported.
 
 <a id="nestedblock--object_filter"></a>
@@ -79,9 +79,9 @@ Optional:
 
 Read-Only:
 
-- `inheriting_entity_id` (String)
-- `inheriting_entity_type` (String)
-- `policy_id` (String)
+- `inheriting_entity_id` (String) The ID of the entity from which protection was inherited.
+- `inheriting_entity_type` (String) The type of the entity from which protection was inherited.
+- `policy_id` (String) ID of policy to apply on Protection Group
 
 ## Import
 

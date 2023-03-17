@@ -68,7 +68,7 @@ resource "clumio_policy" "example_2" {
 ### Required
 
 - `name` (String) The name of the policy.
-- `operations` (Block Set, Min: 1) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
+- `operations` (Block Set) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
 
 ### Optional
 
@@ -87,53 +87,26 @@ resource "clumio_policy" "example_2" {
 Required:
 
 - `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values:immediate: to start backup process immediatelywindow: to start backup in the specified window
-- `slas` (Block Set, Min: 1) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
+- `slas` (Block Set) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
 - `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the API Documentation for "List policies" for more information about the supported types.
 
 Optional:
 
-- `advanced_settings` (Block Set, Max: 1) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
-- `backup_window_tz` (Block Set, Max: 1) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
-
-<a id="nestedblock--operations--slas"></a>
-### Nested Schema for `operations.slas`
-
-Required:
-
-- `retention_duration` (Block Set, Min: 1, Max: 1) The retention time for this SLA. For example, to retain the backup for 1 month, set unit=months and value=1. (see [below for nested schema](#nestedblock--operations--slas--retention_duration))
-- `rpo_frequency` (Block Set, Min: 1, Max: 1) The minimum frequency between backups for this SLA. Also known as the recovery point objective (RPO) interval. For example, to configure the minimum frequency between backups to be every 2 days, set unit=days and value=2. To configure the SLA for on-demand backups, set unit=on_demand and leave the value field empty. (see [below for nested schema](#nestedblock--operations--slas--rpo_frequency))
-
-<a id="nestedblock--operations--slas--retention_duration"></a>
-### Nested Schema for `operations.slas.retention_duration`
-
-Required:
-
-- `unit` (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
-- `value` (Number) The measurement value of the SLA parameter.
-
-
-<a id="nestedblock--operations--slas--rpo_frequency"></a>
-### Nested Schema for `operations.slas.rpo_frequency`
-
-Required:
-
-- `unit` (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
-- `value` (Number) The measurement value of the SLA parameter.
-
-
+- `advanced_settings` (Block, Optional) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
+- `backup_window_tz` (Block, Optional) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
 
 <a id="nestedblock--operations--advanced_settings"></a>
 ### Nested Schema for `operations.advanced_settings`
 
 Optional:
 
-- `aws_ebs_volume_backup` (Block Set, Max: 1) Optional configuration settings for the aws_ebs_volume_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ebs_volume_backup))
-- `aws_ec2_instance_backup` (Block Set, Max: 1) Optional configuration settings for the aws_ec2_instance_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ec2_instance_backup))
-- `ec2_mssql_database_backup` (Block Set, Max: 1) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
-- `ec2_mssql_log_backup` (Block Set, Max: 1) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_log_backup))
-- `mssql_database_backup` (Block Set, Max: 1) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_database_backup))
-- `mssql_log_backup` (Block Set, Max: 1) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_log_backup))
-- `protection_group_backup` (Block Set, Max: 1) Additional policy configuration settings for the protection_group_backup operation. If this operation is not of type protection_group_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--protection_group_backup))
+- `aws_ebs_volume_backup` (Block, Optional) Optional configuration settings for the aws_ebs_volume_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ebs_volume_backup))
+- `aws_ec2_instance_backup` (Block, Optional) Optional configuration settings for the aws_ec2_instance_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ec2_instance_backup))
+- `ec2_mssql_database_backup` (Block, Optional) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
+- `ec2_mssql_log_backup` (Block, Optional) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_log_backup))
+- `mssql_database_backup` (Block, Optional) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_database_backup))
+- `mssql_log_backup` (Block, Optional) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_log_backup))
+- `protection_group_backup` (Block, Optional) Additional policy configuration settings for the protection_group_backup operation. If this operation is not of type protection_group_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--protection_group_backup))
 
 <a id="nestedblock--operations--advanced_settings--aws_ebs_volume_backup"></a>
 ### Nested Schema for `operations.advanced_settings.aws_ebs_volume_backup`
@@ -199,13 +172,40 @@ Optional:
 <a id="nestedblock--operations--backup_window_tz"></a>
 ### Nested Schema for `operations.backup_window_tz`
 
-Required:
-
-- `start_time` (String) The time when the backup window opens. Specify the start time in the format `hh:mm`, where `hh` represents the hour of the day and `mm` represents the minute of the day based on the 24 hour clock.
-
 Optional:
 
 - `end_time` (String) The time when the backup window closes. Specify the end time in the format `hh:mm`, where `hh` represents the hour of the day and `mm` represents the minute of the day based on the 24 hour clock. Leave empty if you do not want to specify an end time. If the backup window closes while a backup is in progress, the entire backup process is aborted. The next backup will be performed when the  backup window re-opens.
+- `start_time` (String) The time when the backup window opens. Specify the start time in the format `hh:mm`, where `hh` represents the hour of the day and `mm` represents the minute of the day based on the 24 hour clock.
+
+
+<a id="nestedblock--operations--slas"></a>
+### Nested Schema for `operations.slas`
+
+Required:
+
+- `retention_duration` (Block, Required) The retention time for this SLA. For example, to retain the backup for 1 month, set unit=months and value=1. (see [below for nested schema](#nestedblock--operations--slas--retention_duration))
+- `rpo_frequency` (Block, Required) The minimum frequency between backups for this SLA. Also known as the recovery point objective (RPO) interval. For example, to configure the minimum frequency between backups to be every 2 days, set unit=days and value=2. To configure the SLA for on-demand backups, set unit=on_demand and leave the value field empty. (see [below for nested schema](#nestedblock--operations--slas--rpo_frequency))
+
+<a id="nestedblock--operations--slas--retention_duration"></a>
+### Nested Schema for `operations.slas.retention_duration`
+
+Required:
+
+- `unit` (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
+- `value` (Number) The measurement value of the SLA parameter.
+
+
+<a id="nestedblock--operations--slas--rpo_frequency"></a>
+### Nested Schema for `operations.slas.rpo_frequency`
+
+Required:
+
+- `unit` (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
+- `value` (Number) The measurement value of the SLA parameter.
+
+Optional:
+
+- `offsets` (List of Number) The offset values of the SLA parameter.
 
 ## Import
 

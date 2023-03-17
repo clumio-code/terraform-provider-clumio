@@ -19,8 +19,9 @@ resource "clumio_post_process_kms" "example" {
   account_id              = "account_id"
   region                  = "region"
   multi_region_cmk_key_id = "multi_region_cmk_key_id"
-  stack_set_id            = "stack_set_id"
-  other_regions           = "other_regions"
+  role_external_id        = "role_external_id"
+  role_arn                = "role_arn"
+  role_id                 = "role_id"
 }
 ```
 
@@ -29,9 +30,7 @@ resource "clumio_post_process_kms" "example" {
 
 ### Required
 
-- `account_id` (String) The AWS Customer Account ID.
-- `created_multi_region_cmk` (Boolean) Whether a new CMK was created.
-- `multi_region_cmk_key_id` (String) Multi Region CMK Key ID.
+- `account_id` (String) The AWS Customer Account ID associated with the connection.
 - `region` (String) The AWS Region.
 - `role_arn` (String) The ARN of the IAM role to manage the CMK.
 - `role_external_id` (String) The external ID to use when assuming the IAM role.
@@ -40,10 +39,8 @@ resource "clumio_post_process_kms" "example" {
 
 ### Optional
 
+- `created_multi_region_cmk` (Boolean) Whether a new CMK was created.
+- `multi_region_cmk_key_id` (String) Multi Region CMK Key ID.
 - `template_version` (Number) Template version
-
-### Read-Only
-
-- `id` (String) The ID of this resource.
 
 

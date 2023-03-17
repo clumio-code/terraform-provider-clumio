@@ -18,6 +18,7 @@ const (
 	schemaRpoFrequency           = "rpo_frequency"
 	schemaUnit                   = "unit"
 	schemaValue                  = "value"
+	schemaOffsets                = "offsets"
 	schemaId                     = "id"
 	schemaLockStatus             = "lock_status"
 	schemaAdvancedSettings       = "advanced_settings"

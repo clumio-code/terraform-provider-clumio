@@ -461,9 +461,9 @@ func clumioPolicyDelete(
 // mapSchemaOperationsToClumioOperations maps the schema operations to the Clumio API
 // request operations.
 func mapSchemaOperationsToClumioOperations(
-	operations interface{}) []*models.PolicyOperation {
+	operations interface{}) []*models.PolicyOperationInput {
 	operationsSlice := operations.(*schema.Set).List()
-	policyOperations := make([]*models.PolicyOperation, 0)
+	policyOperations := make([]*models.PolicyOperationInput, 0)
 	for _, operation := range operationsSlice {
 		operationAttrMap := operation.(map[string]interface{})
 		actionSetting := operationAttrMap[schemaActionSetting].(string)
@@ -500,14 +500,25 @@ func mapSchemaOperationsToClumioOperations(
 			}
 
 			var rpoFrequency *models.RPOBackupSLAParam
+			var rpoOffsets []*int64
 			rpoFrequencyIface := schemaSla[schemaRpoFrequency]
 			schemaRpoFrequencySlice := rpoFrequencyIface.(*schema.Set).List()
 			schemaRpoFrequency := schemaRpoFrequencySlice[0].(map[string]interface{})
 			rpoUnit := schemaRpoFrequency[schemaUnit].(string)
 			rpoValue := int64(schemaRpoFrequency[schemaValue].(int))
+			rpoOffsetsIface, ok := schemaRpoFrequency[schemaOffsets]
+			if ok {
+				rpoOffsetsIfaceList := rpoOffsetsIface.(*schema.Set).List()
+				rpoOffsets = make([]*int64, 0)
+				for _, rpoOffsetIface := range rpoOffsetsIfaceList {
+					rpoOffset := rpoOffsetIface.(int64)
+					rpoOffsets = append(rpoOffsets, &rpoOffset)
+				}
+			}
 			rpoFrequency = &models.RPOBackupSLAParam{
-				Unit:  &rpoUnit,
-				Value: &rpoValue,
+				Unit:    &rpoUnit,
+				Value:   &rpoValue,
+				Offsets: rpoOffsets,
 			}
 			backupSLA := &models.BackupSLA{
 				RetentionDuration: retentionDuration,
@@ -516,7 +527,7 @@ func mapSchemaOperationsToClumioOperations(
 			backupSLAs = append(backupSLAs, backupSLA)
 		}
 
-		policyOperation := &models.PolicyOperation{
+		policyOperation := &models.PolicyOperationInput{
 			ActionSetting:    &actionSetting,
 			BackupWindowTz:   backupWindowTz,
 			Slas:             backupSLAs,
@@ -666,9 +677,9 @@ func getOperationAdvancedSettings(
 			advancedSettings = &models.PolicyAdvancedSettings{}
 			schemaAdvSettings := schemaAdvancedSettingsSlice[0].(map[string]interface{})
 			advancedSettings.Ec2MssqlDatabaseBackup =
-				getMSSQLDatabaseBackupAdvancedSetting(
+				getEC2MSSQLDatabaseBackupAdvancedSetting(
 					schemaAdvSettings[schemaEc2MssqlDatabaseBackup])
-			advancedSettings.Ec2MssqlLogBackup = getMSSQLLogBackupAdvancedSetting(
+			advancedSettings.Ec2MssqlLogBackup = getEC2MSSQLLogBackupAdvancedSetting(
 				schemaAdvSettings[schemaEc2MssqlLogBackup])
 			advancedSettings.MssqlDatabaseBackup =
 				getMSSQLDatabaseBackupAdvancedSetting(
@@ -709,6 +720,29 @@ func getMSSQLDatabaseBackupAdvancedSetting(
 	return mssqlDatabaseBackup
 }
 
+// getEC2MSSQLDatabaseBackupAdvancedSetting returns the EC2MSSQLDatabaseBackupAdvancedSetting
+// after parsing the information from the mssqlDatabaseBackupIface interface.
+func getEC2MSSQLDatabaseBackupAdvancedSetting(
+	ec2MssqlDatabaseBackupIface interface{}) *models.EC2MSSQLDatabaseBackupAdvancedSetting {
+	var ec2MssqlDatabaseBackup *models.EC2MSSQLDatabaseBackupAdvancedSetting
+	if ec2MssqlDatabaseBackupIface != nil {
+		ec2MssqlDatabaseBackupSlice := ec2MssqlDatabaseBackupIface.(*schema.Set).List()
+		if len(ec2MssqlDatabaseBackupSlice) > 0 {
+			schemaEc2MssqlDatabaseBackupMap :=
+				ec2MssqlDatabaseBackupSlice[0].(map[string]interface{})
+			schemaPreferredReplicaVal :=
+				schemaEc2MssqlDatabaseBackupMap[schemaPreferredReplica].(string)
+			schemaAlternativeReplicaVal :=
+				schemaEc2MssqlDatabaseBackupMap[schemaAlternativeReplica].(string)
+			ec2MssqlDatabaseBackup = &models.EC2MSSQLDatabaseBackupAdvancedSetting{
+				AlternativeReplica: &schemaAlternativeReplicaVal,
+				PreferredReplica:   &schemaPreferredReplicaVal,
+			}
+		}
+	}
+	return ec2MssqlDatabaseBackup
+}
+
 // getMSSQLLogBackupAdvancedSetting returns the MSSQLLogBackupAdvancedSetting
 // after parsing the information from the mssqlLogBackupIface interface.
 func getMSSQLLogBackupAdvancedSetting(
@@ -729,6 +763,28 @@ func getMSSQLLogBackupAdvancedSetting(
 		}
 	}
 	return mssqlLogBackup
+}
+
+// getEC2MSSQLLogBackupAdvancedSetting returns the EC2MSSQLLogBackupAdvancedSetting
+// after parsing the information from the mssqlLogBackupIface interface.
+func getEC2MSSQLLogBackupAdvancedSetting(
+	ec2MssqlLogBackupIface interface{}) *models.EC2MSSQLLogBackupAdvancedSetting {
+	var ec2MssqlLogBackup *models.EC2MSSQLLogBackupAdvancedSetting
+	if ec2MssqlLogBackupIface != nil {
+		ec2MssqlLogBackupSlice := ec2MssqlLogBackupIface.(*schema.Set).List()
+		if len(ec2MssqlLogBackupSlice) > 0 {
+			ec2MssqlDatabaseBackupMap := ec2MssqlLogBackupSlice[0].(map[string]interface{})
+			schemaPreferredReplicaVal :=
+				ec2MssqlDatabaseBackupMap[schemaPreferredReplica].(string)
+			schemaAlternativeReplicaVal :=
+				ec2MssqlDatabaseBackupMap[schemaAlternativeReplica].(string)
+			ec2MssqlLogBackup = &models.EC2MSSQLLogBackupAdvancedSetting{
+				AlternativeReplica: &schemaAlternativeReplicaVal,
+				PreferredReplica:   &schemaPreferredReplicaVal,
+			}
+		}
+	}
+	return ec2MssqlLogBackup
 }
 
 // getProtectionGroupAdvancedSetting returns the ProtectionGroupBackupAdvancedSetting

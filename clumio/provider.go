@@ -21,18 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_aws_connection"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_callback"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_organizational_unit"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy_assignment"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_policy_rule"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_post_process_aws_connection"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_post_process_kms"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_protection_group"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_role"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_user"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/clumio_wallet"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -54,81 +42,17 @@ func New(isUnitTest bool) func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			ResourcesMap: map[string]*schema.Resource{
-				"clumio_callback_resource":           clumio_callback.ClumioCallback(),
-				"clumio_aws_connection":              clumio_aws_connection.ClumioAWSConnection(),
-				"clumio_post_process_aws_connection": clumio_post_process_aws_connection.ClumioPostProcessAWSConnection(),
-				"clumio_policy":                      clumio_policy.ClumioPolicy(),
-				"clumio_user":                        clumio_user.ClumioUser(),
-				"clumio_organizational_unit":         clumio_organizational_unit.ClumioOrganizationalUnit(),
-				"clumio_policy_rule":                 clumio_policy_rule.ClumioPolicyRule(),
-				"clumio_protection_group":            clumio_protection_group.ClumioS3ProtectionGroup(),
-				"clumio_policy_assignment":           clumio_policy_assignment.ClumioPolicyAssignment(),
-				"clumio_wallet":                      clumio_wallet.ClumioWallet(),
-				"clumio_post_process_kms":            clumio_post_process_kms.ClumioPostProcessKMS(),
+				//"clumio_policy":              clumio_policy.ClumioPolicy(),
+				//"clumio_policy_rule":         clumio_policy_rule.ClumioPolicyRule(),
+				//"clumio_protection_group":    clumio_protection_group.ClumioS3ProtectionGroup(),
+				//"clumio_policy_assignment":   clumio_policy_assignment.ClumioPolicyAssignment(),
+				//"clumio_user":                clumio_user.ClumioUser(),
+				//"clumio_organizational_unit": clumio_organizational_unit.ClumioOrganizationalUnit(),
 			},
-			DataSourcesMap: map[string]*schema.Resource{
-				"clumio_role": clumio_role.DataSourceClumioRole(),
-			},
+			DataSourcesMap: map[string]*schema.Resource{},
 		}
 		p.ConfigureContextFunc = configure(p, isUnitTest)
 		p.Schema = map[string]*schema.Schema{
-			"access_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "AWS Access Key.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
-			"assume_role": assumeRoleSchema(),
-			"clumio_region": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Clumio Control Plane AWS Region.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
-			"region": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "AWS Region.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
-			"secret_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "AWS Secret Key.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
-			"session_token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "AWS Session Token.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
-			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The profile for API operations. If not set, the default profile\n" +
-					"created with `aws configure` will be used.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
-			"shared_credentials_file": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The path to the shared credentials file. If not set\n" +
-					"this defaults to ~/.aws/credentials.",
-				Deprecated: "This is no longer required as it was only required for the" +
-					" deprecated clumio_callback_resource.",
-			},
 			"clumio_api_token": {
 				Type:        schema.TypeString,
 				Optional:    true,

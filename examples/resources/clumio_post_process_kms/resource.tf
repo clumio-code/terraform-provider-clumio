@@ -4,6 +4,7 @@ resource "clumio_post_process_kms" "example" {
   account_id              = "account_id"
   region                  = "region"
   multi_region_cmk_key_id = "multi_region_cmk_key_id"
-  stack_set_id            = "stack_set_id"
-  other_regions           = "other_regions"
+  role_external_id        = "role_external_id"
+  role_arn                = "role_arn"
+  role_id                 = "role_id"
 }

@@ -329,7 +329,7 @@ func validateAndGetOUIDToPatch(client *common.ApiClient, d *schema.ResourceData)
 	oldOUId, newOUId := d.GetChange(schemaOrganizationalUnitId)
 	isValidNewOU := false
 	isNewOUCurrentOUParent := false
-	oldOU, apiErr := orgUnitsAPI.ReadOrganizationalUnit(oldOUId.(string))
+	oldOU, apiErr := orgUnitsAPI.ReadOrganizationalUnit(oldOUId.(string), nil)
 	if apiErr != nil {
 		return "", false, diag.Errorf(
 			"Error retrieving current OU: %v", oldOUId.(string))

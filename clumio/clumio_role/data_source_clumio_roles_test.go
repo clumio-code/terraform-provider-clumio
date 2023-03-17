@@ -1,6 +1,6 @@
 // Copyright 2021. Clumio, Inc.
 
-// Acceptance test for Data Source clumio_roles.
+// Acceptance test for Data Source clumio_role.
 package clumio_role_test
 
 import (

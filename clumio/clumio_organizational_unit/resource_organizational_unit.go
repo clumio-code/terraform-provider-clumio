@@ -115,7 +115,13 @@ func clumioOrganizationalUnitCreate(
 		return diag.Errorf(
 			"Error creating Clumio OrganizationalUnit. Error: %v", string(apiErr.Response))
 	}
-	d.SetId(*res.Id)
+	var id string
+	if res.StatusCode == http200 {
+		id = *res.Http200.Id
+	} else if res.StatusCode == http202 {
+		id = *res.Http200.Id
+	}
+	d.SetId(id)
 	return clumioOrganizationalUnitRead(ctx, d, meta)
 }
 
@@ -124,7 +130,7 @@ func clumioOrganizationalUnitRead(
 	_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*common.ApiClient)
 	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV1(client.ClumioConfig)
-	res, apiErr := orgUnitsAPI.ReadOrganizationalUnit(d.Id())
+	res, apiErr := orgUnitsAPI.ReadOrganizationalUnit(d.Id(), nil)
 	if apiErr != nil {
 		if strings.Contains(apiErr.Error(), "The resource is not found.") {
 			d.SetId("")

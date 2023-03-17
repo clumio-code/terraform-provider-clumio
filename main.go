@@ -7,8 +7,9 @@ import (
 	"flag"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/clumio-code/terraform-provider-clumio/clumio"
+	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -22,20 +23,14 @@ import (
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 func main() {
-	var debugMode bool
-
-	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
 	flag.Parse()
 
-	opts := &plugin.ServeOpts{ProviderFunc: clumio.New(false)}
-
-	if debugMode {
-		err := plugin.Debug(context.Background(), "registry.terraform.io/clumio.com/providers/clumio", opts)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		return
+	err := providerserver.Serve(context.Background(), clumio_pf.New, providerserver.ServeOpts{
+		Address: "clumio.com/providers/clumio",
+		Debug:   *debugFlag,
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	plugin.Serve(opts)
 }

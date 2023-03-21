@@ -1,3 +1,6 @@
+## 0.5.0
+Migrated resources to terraform plugin framework. Also added new resources for user auto provisioning.
+
 ## 0.4.3
 Minor updates to documentation of policy and organizatonal_unit resource.
 

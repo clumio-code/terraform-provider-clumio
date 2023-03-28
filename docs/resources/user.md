@@ -14,9 +14,18 @@ Clumio User Resource to create and manage users in Clumio.
 
 ```terraform
 resource "clumio_user" "example" {
-  full_name               = "full name"
-  email                   = "example@someorg.com"
-  organizational_unit_ids = ["organizational_unit_id1"]
+  full_name = "full name"
+  email     = "example@someorg.com"
+  access_control_configuration = [
+    {
+      role_id                 = "role_id1"
+      organizational_unit_ids = ["organizational_unit_id1"]
+    },
+    {
+      role_id                 = "role_id2"
+      organizational_unit_ids = ["organizational_unit_id2"]
+    }
+  ]
 }
 ```
 
@@ -27,11 +36,12 @@ resource "clumio_user" "example" {
 
 - `email` (String) The email address of the user to be added to Clumio.
 - `full_name` (String) The full name of the user to be added to Clumio. For example, enter the user's first name and last name. The name appears in the User Management screen and in the body of the email invitation.
-- `organizational_unit_ids` (Set of String) The Clumio-assigned IDs of the organizational units to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
 
 ### Optional
 
-- `assigned_role` (String) The Clumio-assigned ID of the role to assign to the user.
+- `access_control_configuration` (Attributes Set) The Clumio-assigned IDs of the organizational units, along with the Clumio-assigned ID of the role, to be assigned to the user. (see [below for nested schema](#nestedatt--access_control_configuration))
+- `assigned_role` (String, Deprecated) The Clumio-assigned ID of the role to assign to the user.
+- `organizational_unit_ids` (Set of String, Deprecated) The Clumio-assigned IDs of the organizational units to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
 
 ### Read-Only
 
@@ -41,6 +51,14 @@ resource "clumio_user" "example" {
 - `is_enabled` (Boolean) Determines whether the user is enabled (in Activated or Invited status) in Clumio. If true, the user is in Activated or Invited status in Clumio. Users in Activated status can log in to Clumio. Users in Invited status have been invited to log in to Clumio via an email invitation and the invitation is pending acceptance from the user. If false, the user has been manually suspended and cannot log in to Clumio until another Clumio user reactivates the account.
 - `last_activity_timestamp` (String) The timestamp of when when the user was last active in the Clumio system. Represented in RFC-3339 format.
 - `organizational_unit_count` (Number) The number of organizational units accessible to the user.
+
+<a id="nestedatt--access_control_configuration"></a>
+### Nested Schema for `access_control_configuration`
+
+Required:
+
+- `organizational_unit_ids` (Set of String) The Clumio-assigned IDs of the organizational units to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
+- `role_id` (String) The Clumio-assigned ID of the role to assign to the user.
 
 ## Import
 

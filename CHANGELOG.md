@@ -1,3 +1,6 @@
+## 0.5.1
+Updated clumio_user resource and removed deprecated attributes from clumio_aws_connection resource.
+
 ## 0.5.0
 Migrated resources to terraform plugin framework. Also added new resources for user auto provisioning.
 

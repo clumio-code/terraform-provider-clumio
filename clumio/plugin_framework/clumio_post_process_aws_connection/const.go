@@ -21,6 +21,7 @@ const (
 	schemaProtectEc2MssqlVersion         = "protect_ec2_mssql_version"
 	schemaClumioEventPubId               = "clumio_event_pub_id"
 	schemaProperties                     = "properties"
+	schemaIntermediateRoleArn            = "intermediate_role_arn"
 
 	errorFmt = "Error: %v"
 )

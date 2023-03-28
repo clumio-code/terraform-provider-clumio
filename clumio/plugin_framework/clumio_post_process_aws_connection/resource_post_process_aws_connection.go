@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-
 	"strings"
 
 	aws_connections "github.com/clumio-code/clumio-go-sdk/controllers/post_process_aws_connection"
@@ -101,6 +100,7 @@ type postProcessAWSConnectionResourceModel struct {
 	ProtectWarmTierVersion         types.String `tfsdk:"protect_warm_tier_version"`
 	ProtectWarmTierDynamoDBVersion types.String `tfsdk:"protect_warm_tier_dynamodb_version"`
 	Properties                     types.Map    `tfsdk:"properties"`
+	IntermediateRoleArn            types.String `tfsdk:"intermediate_role_arn"`
 }
 
 // Metadata returns the resource type name.
@@ -191,6 +191,11 @@ func (r *postProcessAWSConnectionResource) Schema(
 					"by Clumio Post Processing",
 				Optional:    true,
 				ElementType: types.StringType,
+			},
+			schemaIntermediateRoleArn: schema.StringAttribute{
+				Description: "Intermediate Role arn to be assumed before accessing" +
+					" ClumioRole in customer account.",
+				Optional: true,
 			},
 		},
 	}
@@ -295,9 +300,10 @@ func (r *postProcessAWSConnectionResource) clumioPostProcessAWSConnectionCommon(
 	schemaPropertiesElements := state.Properties.Elements()
 	propertiesMap := make(map[string]*string)
 	for key, val := range schemaPropertiesElements {
-		valStr := val.String()
+		valStr := val.(types.String).ValueString()
 		propertiesMap[key] = &valStr
 	}
+	intermediateRoleArn := state.IntermediateRoleArn.ValueString()
 
 	templateConfig, err := GetTemplateConfiguration(state, true, true)
 	if err != nil {
@@ -318,15 +324,16 @@ func (r *postProcessAWSConnectionResource) clumioPostProcessAWSConnectionCommon(
 	configuration := string(configBytes)
 	_, apiErr := postProcessAwsConnection.PostProcessAwsConnection(
 		&models.PostProcessAwsConnectionV1Request{
-			AccountNativeId:  &accountId,
-			AwsRegion:        &awsRegion,
-			Configuration:    &configuration,
-			RequestType:      &eventType,
-			RoleArn:          &roleArn,
-			RoleExternalId:   &roleExternalId,
-			Token:            &token,
-			ClumioEventPubId: &clumioEventPubId,
-			Properties:       propertiesMap,
+			AccountNativeId:     &accountId,
+			AwsRegion:           &awsRegion,
+			Configuration:       &configuration,
+			RequestType:         &eventType,
+			RoleArn:             &roleArn,
+			RoleExternalId:      &roleExternalId,
+			Token:               &token,
+			ClumioEventPubId:    &clumioEventPubId,
+			Properties:          propertiesMap,
+			IntermediateRoleArn: &intermediateRoleArn,
 		})
 	if apiErr != nil {
 		diagnostics := diag.Diagnostics{}

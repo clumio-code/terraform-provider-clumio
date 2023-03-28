@@ -50,6 +50,7 @@ resource "clumio_post_process_aws_connection" "example" {
 ### Optional
 
 - `discover_version` (String) Clumio Discover version.
+- `intermediate_role_arn` (String) Intermediate Role arn to be assumed before accessing ClumioRole in customer account.
 - `properties` (Map of String) A map to pass in additional information to be consumed by Clumio Post Processing
 - `protect_config_version` (String) Clumio Protect Config version.
 - `protect_dynamodb_version` (String) Clumio DynamoDB Protect version.

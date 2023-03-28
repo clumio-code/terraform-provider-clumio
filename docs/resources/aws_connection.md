@@ -33,8 +33,6 @@ resource "clumio_aws_connection" "example" {
 
 - `description` (String) Clumio AWS Connection Description.
 - `organizational_unit_id` (String) Clumio Organizational Unit Id.
-- `protect_asset_types_enabled` (Set of String, Deprecated) The asset types enabled for protect. This is only populated if protect is enabled. Valid values are any of [EBS, RDS, DynamoDB, EC2MSSQL, S3].
-- `services_enabled` (Set of String, Deprecated) The services to be enabled for this configuration. Valid values are [discover], [discover, protect]. This is only set when the registration is created, the enabled services are obtained directly from the installed template after that.
 
 ### Read-Only
 

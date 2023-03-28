@@ -88,3 +88,34 @@ func GetStringSliceFromAttrValueSlice(input []attr.Value) []*string {
 	}
 	return strSlice
 }
+
+// SliceDifferenceString returns the slice difference in string slices.
+func SliceDifferenceString(slice1 []string, slice2 []string) []string {
+	var diff []string
+
+	for _, s1 := range slice1 {
+		found := false
+		for _, s2 := range slice2 {
+			if s1 == s2 {
+				found = true
+				break
+			}
+		}
+		// String not found. We add it to return slice
+		if !found {
+			diff = append(diff, s1)
+		}
+	}
+
+	return diff
+}
+
+// GetStringPtrSliceFromStringSlice returns the string pointer slice from string slice.
+func GetStringPtrSliceFromStringSlice(input []string) []*string {
+	strSlice := make([]*string, 0)
+	for _, val := range input {
+		strVal := val
+		strSlice = append(strSlice, &strVal)
+	}
+	return strSlice
+}

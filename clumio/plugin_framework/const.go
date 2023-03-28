@@ -6,7 +6,7 @@ const (
 	// Provider version key and value
 	clumioTfProviderVersionKey = "CLUMIO_TERRAFORM_PROVIDER_VERSION"
 	// If the version is being changed here, it must also be changed in the GNUmakefile.
-	clumioTfProviderVersionValue = "0.5.0"
+	clumioTfProviderVersionValue = "0.5.1"
 
 	errorFmt = "The provider cannot create the Clumio API client as" +
 		" there is an unknown configuration value for the Clumio API %s. " +

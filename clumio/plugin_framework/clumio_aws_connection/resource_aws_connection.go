@@ -42,18 +42,16 @@ type clumioAWSConnectionResource struct {
 
 // clumioAWSConnectionResource model
 type clumioAWSConnectionResourceModel struct {
-	ID                       types.String `tfsdk:"id"`
-	AccountNativeID          types.String `tfsdk:"account_native_id"`
-	AWSRegion                types.String `tfsdk:"aws_region"`
-	Description              types.String `tfsdk:"description"`
-	OrganizationalUnitID     types.String `tfsdk:"organizational_unit_id"`
-	ProtectAssetTypesEnabled types.Set    `tfsdk:"protect_asset_types_enabled"`
-	ServicesEnabled          types.Set    `tfsdk:"services_enabled"`
-	ConnectionStatus         types.String `tfsdk:"connection_status"`
-	Token                    types.String `tfsdk:"token"`
-	Namespace                types.String `tfsdk:"namespace"`
-	ClumioAWSAccountID       types.String `tfsdk:"clumio_aws_account_id"`
-	ClumioAWSRegion          types.String `tfsdk:"clumio_aws_region"`
+	ID                   types.String `tfsdk:"id"`
+	AccountNativeID      types.String `tfsdk:"account_native_id"`
+	AWSRegion            types.String `tfsdk:"aws_region"`
+	Description          types.String `tfsdk:"description"`
+	OrganizationalUnitID types.String `tfsdk:"organizational_unit_id"`
+	ConnectionStatus     types.String `tfsdk:"connection_status"`
+	Token                types.String `tfsdk:"token"`
+	Namespace            types.String `tfsdk:"namespace"`
+	ClumioAWSAccountID   types.String `tfsdk:"clumio_aws_account_id"`
+	ClumioAWSRegion      types.String `tfsdk:"clumio_aws_region"`
 }
 
 // Metadata returns the resource type name.
@@ -98,26 +96,6 @@ func (r *clumioAWSConnectionResource) Schema(
 				Description: "Clumio Organizational Unit Id.",
 				Optional:    true,
 				Computed:    true,
-			},
-			schemaProtectAssetTypesEnabled: schema.SetAttribute{
-				Description: "The asset types enabled for protect. This is only" +
-					" populated if protect is enabled. Valid values are any of" +
-					" [EBS, RDS, DynamoDB, EC2MSSQL, S3].",
-				ElementType: types.StringType,
-				Optional:    true,
-				DeprecationMessage: "This is no longer required as the asset types to be" +
-					"enabled are based on the variables passed to the " +
-					"clumio_terraform_aws_template module.",
-			},
-			schemaServicesEnabled: schema.SetAttribute{
-				Description: "The services to be enabled for this configuration." +
-					" Valid values are [discover], [discover, protect]. This is only set" +
-					" when the registration is created, the enabled services are" +
-					" obtained directly from the installed template after that.",
-				ElementType: types.StringType,
-				Optional:    true,
-				DeprecationMessage: "This is no longer required as by default discover" +
-					" and protect are enabled.",
 			},
 			schemaConnectionStatus: schema.StringAttribute{
 				Description: "The status of the connection. Possible values include " +

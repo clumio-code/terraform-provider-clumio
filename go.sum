@@ -73,8 +73,8 @@ github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQ
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
-github.com/clumio-code/clumio-go-sdk v0.9.0 h1:4bF7VBN+xyHEBejLUcbjYFx+Oif1Fi/jIQtGqYj2tjc=
-github.com/clumio-code/clumio-go-sdk v0.9.0/go.mod h1:VRfL425ngYOZV0MgQVzEamVXezbLJwSckPZ2h3cj22k=
+github.com/clumio-code/clumio-go-sdk v0.11.0 h1:bQgBjd8gpjJsbM0cMThGznVMlONdwxsXancDxmiBIo0=
+github.com/clumio-code/clumio-go-sdk v0.11.0/go.mod h1:9tR+t83CcGVHhW9P1ZiZn0U4xXCCmn4yWhAAXIkurJs=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

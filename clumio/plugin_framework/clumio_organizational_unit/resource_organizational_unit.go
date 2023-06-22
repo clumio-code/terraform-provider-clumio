@@ -444,12 +444,18 @@ func (r *clumioOrganizationalUnitResource) Delete(
 	}
 
 	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV2(r.client.ClumioConfig)
-	_, apiErr := orgUnitsAPI.DeleteOrganizationalUnit(state.Id.ValueString(), nil)
+	res, apiErr := orgUnitsAPI.DeleteOrganizationalUnit(state.Id.ValueString(), nil)
 	if apiErr != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf(
 				"Error deleting Clumio organizational unit %v.", state.Id.ValueString()),
 			fmt.Sprintf(errorFmt, string(apiErr.Response)))
+	}
+	err := common.PollTask(ctx, r.client, *res.TaskId, pollTimeoutInSec, pollIntervalInSec)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error while polling for Delete OU Task"),
+			fmt.Sprintf(errorFmt, string(err.Error())))
 	}
 }
 

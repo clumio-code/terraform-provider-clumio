@@ -2,11 +2,15 @@
 
 package clumio_pf
 
+import "fmt"
+
 const (
 	// Provider version key and value
 	clumioTfProviderVersionKey = "CLUMIO_TERRAFORM_PROVIDER_VERSION"
 	// If the version is being changed here, it must also be changed in the GNUmakefile.
-	clumioTfProviderVersionValue = "0.5.1"
+	clumioTfProviderVersionValue = "0.5.2"
+	// User-Agent Header
+	userAgentHeader = "User-Agent"
 
 	errorFmt = "The provider cannot create the Clumio API client as" +
 		" there is an unknown configuration value for the Clumio API %s. " +
@@ -15,3 +19,5 @@ const (
 	baseUrl = "Base URL"
 	token   = "Token"
 )
+
+var userAgentHeaderValue = fmt.Sprintf("Clumio-Terraform-Provider-%s", clumioTfProviderVersionValue)

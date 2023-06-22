@@ -347,12 +347,20 @@ func updateOUForConnectionIfNeeded(ctx context.Context, client *common.ApiClient
 			},
 		}
 		orgUnitsAPI := orgUnits.NewOrganizationalUnitsV1(client.ClumioConfig)
-		_, apiErr := orgUnitsAPI.PatchOrganizationalUnit(ouIdStr, nil, ouUpdateRequest)
+		res, apiErr := orgUnitsAPI.PatchOrganizationalUnit(ouIdStr, nil, ouUpdateRequest)
 		if apiErr != nil {
 			resp.Diagnostics.AddError(
 				"Error updating the Organizational Unit for the connection.",
 				fmt.Sprintf(errorFmt, apiErr))
 			return ouUpdated
+		}
+		if res.StatusCode == http202 {
+			err := common.PollTask(ctx, client, *res.Http202.TaskId, pollTimeoutInSec, pollIntervalInSec)
+			if err != nil {
+				resp.Diagnostics.AddError("Error while polling for the Update OU task for the connection",
+					fmt.Sprintf(errorFmt, err))
+				return ouUpdated
+			}
 		}
 		ouUpdated = true
 	}

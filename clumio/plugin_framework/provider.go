@@ -173,6 +173,7 @@ func (p *clumioProvider) Configure(ctx context.Context, req provider.ConfigureRe
 			BaseUrl:                   clumioApiBaseUrl,
 			OrganizationalUnitContext: clumioOrganizationalUnitContext,
 			CustomHeaders: map[string]string{
+				userAgentHeader:            userAgentHeaderValue,
 				clumioTfProviderVersionKey: clumioTfProviderVersionValue,
 			},
 		},

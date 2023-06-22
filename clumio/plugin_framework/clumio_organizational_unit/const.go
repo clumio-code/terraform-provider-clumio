@@ -18,4 +18,6 @@ const (
 	http200                         = 200
 	http202                         = 202
 	errorFmt                        = "Error: %v"
+	pollTimeoutInSec                = 3600
+	pollIntervalInSec               = 5
 )

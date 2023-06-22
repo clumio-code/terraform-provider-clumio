@@ -1,3 +1,6 @@
+## 0.5.2
+Documentation updates and minor changes to the clumio_aws_connection and clumio_organizational_unit resources.
+
 ## 0.5.1
 Updated clumio_user resource and removed deprecated attributes from clumio_aws_connection resource.
 

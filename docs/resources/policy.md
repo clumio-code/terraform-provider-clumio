@@ -146,8 +146,8 @@ Required:
 
 Optional:
 
-- `advanced_settings` (Block Set) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
-- `backup_window_tz` (Block Set) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
+- `advanced_settings` (Block, Optional) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
+- `backup_window_tz` (Block, Optional) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
 
 <a id="nestedblock--operations--advanced_settings"></a>
 ### Nested Schema for `operations.advanced_settings`

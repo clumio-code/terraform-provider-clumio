@@ -23,7 +23,7 @@ const (
 	descNameAfter  = "test-ou-description-updated"
 )
 
-func TestAccResourceClumioAwsConnection(t *testing.T) {
+func TestAccResourceClumioOrganizationalUnit(t *testing.T) {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },

@@ -17,4 +17,8 @@ const (
 	awsEnvironment  = "aws_environment"
 	statusConnected = "connected"
 	errorFmt        = "Error: %v"
+
+	http202           = 202
+	pollTimeoutInSec  = 3600
+	pollIntervalInSec = 5
 )

@@ -65,6 +65,7 @@ type policyOperationModel struct {
 	BackupWindowTz   []*backupWindowModel     `tfsdk:"backup_window_tz"`
 	Slas             []*slaModel              `tfsdk:"slas"`
 	AdvancedSettings []*advancedSettingsModel `tfsdk:"advanced_settings"`
+	BackupAwsRegion  types.String             `tfsdk:"backup_aws_region"`
 }
 
 type unitValueModel struct {
@@ -131,7 +132,6 @@ func (r *policyResource) Schema(
 			Optional:    true,
 			Description: "The offset values of the SLA parameter.",
 			ElementType: types.Int64Type,
-			Computed:    true,
 		},
 	}
 
@@ -262,7 +262,6 @@ func (r *policyResource) Schema(
 				" is aborted. The next backup will be performed when the " +
 				" backup window re-opens.",
 			Optional: true,
-			Computed: true,
 		},
 	}
 
@@ -315,6 +314,13 @@ func (r *policyResource) Schema(
 				"Documentation for \"List policies\" for more information about the " +
 				"supported types.",
 			Required: true,
+		},
+		schemaBackupAwsRegion: schema.StringAttribute{
+			Description: "The region in which this backup is stored. This might be used " +
+				"for cross-region backup. Possible values are AWS region string, for " +
+				"example: `us-east-1`, `us-west-2`, .... If no value is provided, it " +
+				"defaults to in-region (the asset's source region).",
+			Optional: true,
 		},
 	}
 
@@ -631,13 +637,14 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 	for _, operation := range schemaOperations {
 		actionSetting := operation.ActionSetting.ValueString()
 		operationType := operation.OperationType.ValueString()
+		backupAwsRegion := operation.BackupAwsRegion.ValueString()
 		var backupWindowTz *models.BackupWindow
 		if operation.BackupWindowTz != nil {
 			startTime := operation.BackupWindowTz[0].StartTime.ValueString()
 			endTime := operation.BackupWindowTz[0].EndTime.ValueString()
 			backupWindowTz = &models.BackupWindow{
-				EndTime:   &endTime,
-				StartTime: &startTime,
+				EndTime:   common.GetStringPtr(endTime),
+				StartTime: common.GetStringPtr(startTime),
 			}
 		}
 
@@ -678,6 +685,7 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 			Slas:             backupSLAs,
 			ClumioType:       &operationType,
 			AdvancedSettings: advancedSettings,
+			BackupAwsRegion:  common.GetStringPtr(backupAwsRegion),
 		}
 		policyOperations = append(policyOperations, policyOperation)
 	}
@@ -695,10 +703,14 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 		schemaOperation.ActionSetting = types.StringValue(*operation.ActionSetting)
 		schemaOperation.OperationType = types.StringValue(*operation.ClumioType)
 
+		if operation.BackupAwsRegion != nil {
+			schemaOperation.BackupAwsRegion = types.StringValue(*operation.BackupAwsRegion)
+		}
+
 		if operation.BackupWindowTz != nil {
 			window := &backupWindowModel{}
-			window.StartTime = types.StringValue(*operation.BackupWindowTz.StartTime)
-			window.EndTime = types.StringValue(*operation.BackupWindowTz.EndTime)
+			window.StartTime = common.StringToStringValue(operation.BackupWindowTz.StartTime)
+			window.EndTime = common.StringToStringValue(operation.BackupWindowTz.EndTime)
 			schemaOperation.BackupWindowTz = []*backupWindowModel{window}
 		}
 

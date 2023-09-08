@@ -32,6 +32,7 @@ const (
 	schemaBackupTier             = "backup_tier"
 	schemaEBSVolumeBackup        = "aws_ebs_volume_backup"
 	schemaEC2InstanceBackup      = "aws_ec2_instance_backup"
+	schemaBackupAwsRegion        = "backup_aws_region"
 
 	alternativeReplicaDescFmt = "The alternative replica for MSSQL %s backups. This" +
 		" setting only applies to Availability Group databases. Possible" +

@@ -16,7 +16,7 @@ on:
   # schedule:
   #   - cron: '0 13 * * *'
 env:
-  check-latest: true
+  GO_VERSION: 1.20.1
 jobs:
   # ensure the code builds...
   build:
@@ -25,14 +25,14 @@ jobs:
     timeout-minutes: 5
     steps:
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v3.3.0
-
     - name: Set up Go
       uses: actions/setup-go@v4.0.0
       with:
-        go-version-file: 'go.mod'
+        go-version: ${{ env.GO_VERSION }}
       id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v3.3.0
 
     - name: Get dependencies
       run: |
@@ -53,7 +53,6 @@ jobs:
       matrix:
         # list whatever Terraform versions here you would like to support
         terraform:
-          - '0.14.11'
           - '1.3.9'
     steps:
 
@@ -75,4 +74,4 @@ jobs:
       env:
         TF_ACC_TERRAFORM_VERSION: ${{ matrix.terraform }}
       run: |
-        go test -v -cover ./clumio/
+        go test -v -cover ./clumio/plugin_framework

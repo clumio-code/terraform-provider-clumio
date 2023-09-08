@@ -8,16 +8,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/clumio-code/terraform-provider-clumio/clumio"
 	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccResourceClumioPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio.UtilTestAccPreCheckClumio(t) },
+		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
 		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -49,6 +47,12 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 			},
 			{
 				Config: getTestAccResourceClumioPolicyWeekly(true),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyBackupRegion(false),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyBackupRegion(true),
 			},
 		},
 	})
@@ -204,6 +208,19 @@ func getTestAccResourceClumioPolicyWeekly(update bool) string {
 		`
 	}
 	return fmt.Sprintf(testAccResourceClumioPolicyWeekly, baseUrl, name, weeklySla)
+}
+
+func getTestAccResourceClumioPolicyBackupRegion(update bool) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "Backup Region Policy Create"
+	timezone := "UTC"
+	region := `
+	backup_aws_region = "us-west-2"`
+	if update {
+		name = "Backup Region Policy Update"
+		region = `` // valid as the region is optional
+	}
+	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, region)
 }
 
 const testAccResourceClumioPolicy = `

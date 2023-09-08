@@ -13,6 +13,8 @@ import (
 	"github.com/clumio-code/clumio-go-sdk/controllers/tasks"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // function to convert string in snake case to camel case
@@ -118,4 +120,21 @@ func GetStringPtrSliceFromStringSlice(input []string) []*string {
 		strSlice = append(strSlice, &strVal)
 	}
 	return strSlice
+}
+
+// GetStringPtr returns the ptr of the string if not empty, otherwise return nil.
+func GetStringPtr(s string) *string {
+	if s == "" {
+		return nil
+	} else {
+		return &s
+	}
+}
+
+func StringToStringValue(s *string) basetypes.StringValue {
+	if s != nil && *s != "" {
+		return types.StringValue(*s)
+	} else {
+		return types.StringNull()
+	}
 }

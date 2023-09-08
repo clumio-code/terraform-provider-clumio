@@ -1,3 +1,6 @@
+## 0.5.3
+Updates to clumio_policy resource.
+
 ## 0.5.2
 Documentation updates and minor changes to the clumio_aws_connection and clumio_organizational_unit resources.
 

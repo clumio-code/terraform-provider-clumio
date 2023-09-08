@@ -3,8 +3,8 @@
 #
 
 # If the version is being changed here, it should also be changed for the variable
-# clumioTfProviderVersionValue in the file clumio/common/const.go.
-VERSION=0.5.2
+# clumioTfProviderVersionValue in the file clumio/plugin_framework/common/const.go.
+VERSION=0.5.3
 ifndef OS_ARCH
 OS_ARCH=darwin_amd64
 endif

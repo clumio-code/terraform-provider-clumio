@@ -10,9 +10,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/clumio-code/terraform-provider-clumio/clumio"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/common"
 	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -22,7 +21,7 @@ func TestAccResourcePostProcessKMS(t *testing.T) {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	testAwsRegion := os.Getenv(common.AwsRegion)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio.UtilTestAccPreCheckClumio(t) },
+		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
 		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

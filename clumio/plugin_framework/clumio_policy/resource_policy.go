@@ -262,6 +262,11 @@ func (r *policyResource) Schema(
 				" is aborted. The next backup will be performed when the " +
 				" backup window re-opens.",
 			Optional: true,
+			// Use computed property to accept both empty string and null value.
+			Computed: true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 	}
 
@@ -373,6 +378,9 @@ func (r *policyResource) Schema(
 			schemaLockStatus: schema.StringAttribute{
 				Description: "Policy Lock Status.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			schemaName: schema.StringAttribute{
 				Description: "The name of the policy.",
@@ -384,7 +392,11 @@ func (r *policyResource) Schema(
 					"For more information, see the Time Zone Database " +
 					"(https://www.iana.org/time-zones) on the IANA website.",
 				Optional: true,
+				// Use computed property to accept both empty string and null value.
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			schemaActivationStatus: schema.StringAttribute{
 				Description: "The status of the policy. Valid values are:" +
@@ -393,13 +405,21 @@ func (r *policyResource) Schema(
 					" The assets associated with the policy will have their compliance" +
 					" status set to deactivated.",
 				Optional: true,
+				// Use computed property to accept both empty string and null value.
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			schemaOrganizationalUnitId: schema.StringAttribute{
 				Description: "The Clumio-assigned ID of the organizational unit" +
 					" associated with the policy.",
 				Optional: true,
+				// Use computed property to accept both empty string and null value.
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -637,14 +657,15 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 	for _, operation := range schemaOperations {
 		actionSetting := operation.ActionSetting.ValueString()
 		operationType := operation.OperationType.ValueString()
-		backupAwsRegion := operation.BackupAwsRegion.ValueString()
+		backupAwsRegionPtr := common.GetStringPtr(operation.BackupAwsRegion)
+
 		var backupWindowTz *models.BackupWindow
 		if operation.BackupWindowTz != nil {
 			startTime := operation.BackupWindowTz[0].StartTime.ValueString()
 			endTime := operation.BackupWindowTz[0].EndTime.ValueString()
 			backupWindowTz = &models.BackupWindow{
-				EndTime:   common.GetStringPtr(endTime),
-				StartTime: common.GetStringPtr(startTime),
+				EndTime:   &endTime,
+				StartTime: &startTime,
 			}
 		}
 
@@ -685,7 +706,7 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 			Slas:             backupSLAs,
 			ClumioType:       &operationType,
 			AdvancedSettings: advancedSettings,
-			BackupAwsRegion:  common.GetStringPtr(backupAwsRegion),
+			BackupAwsRegion:  backupAwsRegionPtr,
 		}
 		policyOperations = append(policyOperations, policyOperation)
 	}
@@ -709,8 +730,8 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 
 		if operation.BackupWindowTz != nil {
 			window := &backupWindowModel{}
-			window.StartTime = common.StringToStringValue(operation.BackupWindowTz.StartTime)
-			window.EndTime = common.StringToStringValue(operation.BackupWindowTz.EndTime)
+			window.StartTime = types.StringValue(*operation.BackupWindowTz.StartTime)
+			window.EndTime = types.StringValue(*operation.BackupWindowTz.EndTime)
 			schemaOperation.BackupWindowTz = []*backupWindowModel{window}
 		}
 

@@ -52,6 +52,8 @@ type clumioAWSConnectionResourceModel struct {
 	Namespace            types.String `tfsdk:"namespace"`
 	ClumioAWSAccountID   types.String `tfsdk:"clumio_aws_account_id"`
 	ClumioAWSRegion      types.String `tfsdk:"clumio_aws_region"`
+	ExternalID           types.String `tfsdk:"role_external_id"`
+	DataPlaneAccountID   types.String `tfsdk:"data_plane_account_id"`
 }
 
 // Metadata returns the resource type name.
@@ -119,6 +121,14 @@ func (r *clumioAWSConnectionResource) Schema(
 				Description: "Clumio AWS Region.",
 				Computed:    true,
 			},
+			schemaExternalId: schema.StringAttribute{
+				Description: "A key used by Clumio to assume the service role in your account.",
+				Computed: true,
+			},
+			schemaDataPlaneAccountId: schema.StringAttribute{
+				Description: "The internal representation to uniquely identify a given data plane.",
+				Computed: true,
+			},
 		},
 	}
 }
@@ -170,6 +180,8 @@ func (r *clumioAWSConnectionResource) Create(
 	plan.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion) // Set state to fully populated data
 	plan.OrganizationalUnitID = types.StringValue(*res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringValue(*res.ConnectionStatus)
+	plan.ExternalID = types.StringValue(*res.ExternalId)
+	plan.DataPlaneAccountID = types.StringValue(*res.DataPlaneAccountId)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -208,6 +220,8 @@ func (r *clumioAWSConnectionResource) Read(
 	state.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion)
 	state.AccountNativeID = types.StringValue(*res.AccountNativeId)
 	state.AWSRegion = types.StringValue(*res.AwsRegion)
+	state.ExternalID = types.StringValue(*res.ExternalId)
+	state.DataPlaneAccountID = types.StringValue(*res.DataPlaneAccountId)
 	if res.Description != nil {
 		state.Description = types.StringValue(*res.Description)
 	}
@@ -275,6 +289,8 @@ func (r *clumioAWSConnectionResource) Update(
 	plan.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion)
 	plan.OrganizationalUnitID = types.StringValue(*res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringValue(*res.ConnectionStatus)
+	plan.ExternalID = types.StringValue(*res.ExternalId)
+	plan.DataPlaneAccountID = types.StringValue(*res.DataPlaneAccountId)
 	plan.ID = types.StringValue(*res.Id)
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)

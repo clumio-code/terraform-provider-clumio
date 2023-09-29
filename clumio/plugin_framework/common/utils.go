@@ -13,7 +13,6 @@ import (
 	"github.com/clumio-code/clumio-go-sdk/controllers/tasks"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -122,19 +121,12 @@ func GetStringPtrSliceFromStringSlice(input []string) []*string {
 	return strSlice
 }
 
-// GetStringPtr returns the ptr of the string if not empty, otherwise return nil.
-func GetStringPtr(s string) *string {
-	if s == "" {
+// GetStringPtr returns the ptr of the string if not null, otherwise return nil.
+func GetStringPtr(v basetypes.StringValue) *string {
+	if v.IsNull() {
 		return nil
 	} else {
+		s := v.ValueString()
 		return &s
-	}
-}
-
-func StringToStringValue(s *string) basetypes.StringValue {
-	if s != nil && *s != "" {
-		return types.StringValue(*s)
-	} else {
-		return types.StringNull()
 	}
 }

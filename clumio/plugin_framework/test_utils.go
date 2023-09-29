@@ -27,6 +27,19 @@ func UtilTestAccPreCheckClumio(t *testing.T) {
 	UtilTestFailIfEmpty(t, common.AwsRegion, common.AwsRegion+" cannot be empty")
 }
 
+// UtilTestAwsManualConnectionPreCheckClumio validates that the required environment variables are set before
+// the acceptance test is executed for aws manual connections.
+func UtilTestAwsManualConnectionPreCheckClumio(t *testing.T) {
+	UtilTestFailIfEmpty(t, common.ClumioIAMRoleArn, common.ClumioIAMRoleArn+" cannot be empty")
+	UtilTestFailIfEmpty(t, common.ClumioEventPubArn, common.ClumioEventPubArn+" cannot be empty.")
+	UtilTestFailIfEmpty(t, common.ClumioSupportRoleArn, common.ClumioSupportRoleArn+" cannot be empty.")
+	UtilTestFailIfEmpty(t, common.CloudtrailRuleArn, common.CloudtrailRuleArn+" cannot be empty")
+	UtilTestFailIfEmpty(t, common.CloudwatchRuleArn, common.CloudwatchRuleArn+" cannot be empty")
+	UtilTestFailIfEmpty(t, common.ContinuousBackupsRoleArn, common.ContinuousBackupsRoleArn+" cannot be empty.")
+	UtilTestFailIfEmpty(t, common.SsmNotificationRoleArn, common.SsmNotificationRoleArn+" cannot be empty.")
+	UtilTestFailIfEmpty(t, common.Ec2SsmInstanceProfileArn, common.Ec2SsmInstanceProfileArn+" cannot be empty")
+}
+
 // UtilTestFailIfEmpty verifies that an environment variable is non-empty or fails the test.
 //
 // For acceptance tests, this function must be used outside PreCheck functions to set values for configurations.

@@ -39,8 +39,10 @@ resource "clumio_aws_connection" "example" {
 - `clumio_aws_account_id` (String) Clumio AWS AccountId.
 - `clumio_aws_region` (String) Clumio AWS Region.
 - `connection_status` (String) The status of the connection. Possible values include connecting, connected and unlinked.
+- `data_plane_account_id` (String) The internal representation to uniquely identify a given data plane.
 - `id` (String) Clumio AWS Connection Id.
 - `namespace` (String) K8S Namespace.
+- `role_external_id` (String) A key used by Clumio to assume the service role in your account.
 - `token` (String) The 36-character Clumio AWS integration ID token used to identify the installation of the Terraform template on the account.
 
 ## Import

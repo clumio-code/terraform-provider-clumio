@@ -13,6 +13,7 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_rule"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_setting"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_connection"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_organizational_unit"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy_assignment"
@@ -208,5 +209,6 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_post_process_kms.NewClumioPostProcessKmsResource,
 		clumio_auto_user_provisioning_rule.NewAutoUserProvisioningRuleResource,
 		clumio_auto_user_provisioning_setting.NewAutoUserProvisioningSettingResource,
+		clumio_aws_manual_connection.NewAwsManualConnectionResource,
 	}
 }

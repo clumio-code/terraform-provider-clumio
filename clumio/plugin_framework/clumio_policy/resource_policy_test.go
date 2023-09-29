@@ -6,6 +6,7 @@ package clumio_policy_test
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
@@ -19,10 +20,13 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getTestAccResourceClumioPolicyFixedStart(false),
+				Config: getTestAccResourceClumioPolicyFixedStart(0),
 			},
 			{
-				Config: getTestAccResourceClumioPolicyFixedStart(true),
+				Config: getTestAccResourceClumioPolicyFixedStart(1),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyFixedStart(2),
 			},
 			{
 				Config: getTestAccResourceClumioPolicyWindow(false),
@@ -49,10 +53,14 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 				Config: getTestAccResourceClumioPolicyWeekly(true),
 			},
 			{
-				Config: getTestAccResourceClumioPolicyBackupRegion(false),
+				Config: getTestAccResourceClumioPolicyBackupRegion(0),
 			},
 			{
-				Config: getTestAccResourceClumioPolicyBackupRegion(true),
+				Config: getTestAccResourceClumioPolicyBackupRegion(1),
+			},
+			{
+				Config:      getTestAccResourceClumioPolicyBackupRegion(2),
+				ExpectError: regexp.MustCompile(".*Error running apply.*"),
 			},
 		},
 	})
@@ -79,7 +87,7 @@ func getTestAccResourceClumioPolicyWindow(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
 }
 
-func getTestAccResourceClumioPolicyFixedStart(update bool) string {
+func getTestAccResourceClumioPolicyFixedStart(update int) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	name := "acceptance-test-policy-1234"
 	timezone := "UTC"
@@ -87,12 +95,18 @@ func getTestAccResourceClumioPolicyFixedStart(update bool) string {
 	backup_window_tz {
 		start_time = "01:00"
 	}`
-	if update {
+	if update == 1 {
 		name = "acceptance-test-policy-4321"
 		timezone = "US/Pacific"
 		window = `
 		backup_window_tz {
 			start_time = "05:00"
+		}`
+	} else if update == 2 {
+		window = `
+		backup_window_tz {
+			start_time = "05:00"
+			end_time = ""
 		}`
 	}
 	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
@@ -210,15 +224,19 @@ func getTestAccResourceClumioPolicyWeekly(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioPolicyWeekly, baseUrl, name, weeklySla)
 }
 
-func getTestAccResourceClumioPolicyBackupRegion(update bool) string {
+func getTestAccResourceClumioPolicyBackupRegion(scenario int) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	name := "Backup Region Policy Create"
 	timezone := "UTC"
 	region := `
 	backup_aws_region = "us-west-2"`
-	if update {
+	if scenario == 1 {
 		name = "Backup Region Policy Update"
 		region = `` // valid as the region is optional
+	} else if scenario == 2 {
+		name = "Backup Region Policy Update 2"
+		region = `
+	backup_aws_region = ""` // invalid as empty region is not allowed as request.
 	}
 	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, region)
 }

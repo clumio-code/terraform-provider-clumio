@@ -1,3 +1,6 @@
+## 0.5.5
+Bug fix release to fix clumio_aws_connection resource.
+
 ## 0.5.4
 New resource clumio_aws_manual_connection added and additional output attribute added to clumio_aws_connection resource.
 

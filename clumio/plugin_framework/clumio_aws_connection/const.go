@@ -16,9 +16,11 @@ const (
 	schemaExternalId           = "role_external_id"
 	schemaDataPlaneAccountId   = "data_plane_account_id"
 
-	awsEnvironment  = "aws_environment"
-	statusConnected = "connected"
-	errorFmt        = "Error: %v"
+	awsEnvironment            = "aws_environment"
+	statusConnected           = "connected"
+	errorFmt                  = "Error: %v"
+	externalIDFmt             = "ExternalID_%s"
+	defaultDataPlaneAccountId = "*"
 
 	http202           = 202
 	pollTimeoutInSec  = 3600

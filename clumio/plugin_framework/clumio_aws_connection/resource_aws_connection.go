@@ -123,11 +123,11 @@ func (r *clumioAWSConnectionResource) Schema(
 			},
 			schemaExternalId: schema.StringAttribute{
 				Description: "A key used by Clumio to assume the service role in your account.",
-				Computed: true,
+				Computed:    true,
 			},
 			schemaDataPlaneAccountId: schema.StringAttribute{
 				Description: "The internal representation to uniquely identify a given data plane.",
-				Computed: true,
+				Computed:    true,
 			},
 		},
 	}
@@ -180,8 +180,8 @@ func (r *clumioAWSConnectionResource) Create(
 	plan.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion) // Set state to fully populated data
 	plan.OrganizationalUnitID = types.StringValue(*res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringValue(*res.ConnectionStatus)
-	plan.ExternalID = types.StringValue(*res.ExternalId)
-	plan.DataPlaneAccountID = types.StringValue(*res.DataPlaneAccountId)
+	setExternalId(&plan, res.ExternalId, res.Token)
+	setDataPlaneAccountId(&plan, res.DataPlaneAccountId)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -220,8 +220,8 @@ func (r *clumioAWSConnectionResource) Read(
 	state.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion)
 	state.AccountNativeID = types.StringValue(*res.AccountNativeId)
 	state.AWSRegion = types.StringValue(*res.AwsRegion)
-	state.ExternalID = types.StringValue(*res.ExternalId)
-	state.DataPlaneAccountID = types.StringValue(*res.DataPlaneAccountId)
+	setExternalId(&state, res.ExternalId, res.Token)
+	setDataPlaneAccountId(&state, res.DataPlaneAccountId)
 	if res.Description != nil {
 		state.Description = types.StringValue(*res.Description)
 	}
@@ -289,8 +289,8 @@ func (r *clumioAWSConnectionResource) Update(
 	plan.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion)
 	plan.OrganizationalUnitID = types.StringValue(*res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringValue(*res.ConnectionStatus)
-	plan.ExternalID = types.StringValue(*res.ExternalId)
-	plan.DataPlaneAccountID = types.StringValue(*res.DataPlaneAccountId)
+	setExternalId(&plan, res.ExternalId, res.Token)
+	setDataPlaneAccountId(&plan, res.DataPlaneAccountId)
 	plan.ID = types.StringValue(*res.Id)
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -507,7 +507,32 @@ func validateAndGetOUIDToPatch(ctx context.Context, client *common.ApiClient,
 	return ouIdStr, isNewOUCurrentOUParent
 }
 
-func (r *clumioAWSConnectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// ImportState is used to import the resource
+func (r *clumioAWSConnectionResource) ImportState(ctx context.Context,
+	req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// clumioAWSConnectionResourceModel checks and sets the ExternalID in the clumioAWSConnectionResourceModel
+func setExternalId(
+	state *clumioAWSConnectionResourceModel, externalId *string, token *string) {
+
+	if externalId != nil && *externalId != "" {
+		state.ExternalID = types.StringValue(*externalId)
+	} else {
+		state.ExternalID = types.StringValue(fmt.Sprintf(externalIDFmt, *token))
+	}
+}
+
+// setDataPlaneAccountId checks and sets the DataPlaneAccountID in the clumioAWSConnectionResourceModel
+func setDataPlaneAccountId(state *clumioAWSConnectionResourceModel,
+	dataPlaneAccountId *string) {
+
+	if dataPlaneAccountId != nil && *dataPlaneAccountId != "" {
+		state.DataPlaneAccountID = types.StringValue(*dataPlaneAccountId)
+	} else {
+		state.DataPlaneAccountID = types.StringValue(defaultDataPlaneAccountId)
+	}
 }

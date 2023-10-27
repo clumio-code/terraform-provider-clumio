@@ -124,6 +124,9 @@ func (r *clumioAWSConnectionResource) Schema(
 			schemaExternalId: schema.StringAttribute{
 				Description: "A key used by Clumio to assume the service role in your account.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			schemaDataPlaneAccountId: schema.StringAttribute{
 				Description: "The internal representation to uniquely identify a given data plane.",
@@ -201,7 +204,9 @@ func (r *clumioAWSConnectionResource) Read(
 	}
 
 	awsConnection := aws_connections.NewAwsConnectionsV1(r.client.ClumioConfig)
-	res, apiErr := awsConnection.ReadAwsConnection(state.ID.ValueString())
+	// To get the external_id field
+	queryParams := "true"
+	res, apiErr := awsConnection.ReadAwsConnection(state.ID.ValueString(), &queryParams)
 	if apiErr != nil {
 		if strings.Contains(apiErr.Error(), "The resource is not found.") {
 			state.ID = types.StringValue("")
@@ -289,7 +294,6 @@ func (r *clumioAWSConnectionResource) Update(
 	plan.ClumioAWSRegion = types.StringValue(*res.ClumioAwsRegion)
 	plan.OrganizationalUnitID = types.StringValue(*res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringValue(*res.ConnectionStatus)
-	setExternalId(&plan, res.ExternalId, res.Token)
 	setDataPlaneAccountId(&plan, res.DataPlaneAccountId)
 	plan.ID = types.StringValue(*res.Id)
 	// Set state to fully populated data

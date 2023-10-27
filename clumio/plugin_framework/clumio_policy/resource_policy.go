@@ -49,6 +49,10 @@ type backupTierModel struct {
 	BackupTier types.String `tfsdk:"backup_tier"`
 }
 
+type pitrConfigModel struct {
+	Apply types.String `tfsdk:"apply"`
+}
+
 type advancedSettingsModel struct {
 	EC2MssqlDatabaseBackup []*replicaModel    `tfsdk:"ec2_mssql_database_backup"`
 	EC2MssqlLogBackup      []*replicaModel    `tfsdk:"ec2_mssql_log_backup"`
@@ -57,6 +61,7 @@ type advancedSettingsModel struct {
 	ProtectionGroupBackup  []*backupTierModel `tfsdk:"protection_group_backup"`
 	EBSVolumeBackup        []*backupTierModel `tfsdk:"aws_ebs_volume_backup"`
 	EC2InstanceBackup      []*backupTierModel `tfsdk:"aws_ec2_instance_backup"`
+	RDSPitrConfigSync      []*pitrConfigModel `tfsdk:"aws_rds_config_sync"`
 }
 
 type policyOperationModel struct {
@@ -218,7 +223,7 @@ func (r *policyResource) Schema(
 				Attributes: map[string]schema.Attribute{
 					schemaBackupTier: schema.StringAttribute{
 						Optional:    true,
-						Description: secureVaultLiteDescFmt,
+						Description: secureVaultLiteDesc,
 					},
 				},
 			},
@@ -227,12 +232,26 @@ func (r *policyResource) Schema(
 			},
 		},
 		schemaEC2InstanceBackup: schema.SetNestedBlock{
-			Description: eC2BackupDesc,
+			Description: ec2BackupDesc,
 			NestedObject: schema.NestedBlockObject{
 				Attributes: map[string]schema.Attribute{
 					schemaBackupTier: schema.StringAttribute{
 						Optional:    true,
-						Description: secureVaultLiteDescFmt,
+						Description: secureVaultLiteDesc,
+					},
+				},
+			},
+			Validators: []validator.Set{
+				setvalidator.SizeAtMost(1),
+			},
+		},
+		schemaRDSPitrConfigSync: schema.SetNestedBlock{
+			Description: rdsPitrConfigSyncDesc,
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					schemaApply: schema.StringAttribute{
+						Optional:    true,
+						Description: pitrConfigDesc,
 					},
 				},
 			},
@@ -829,6 +848,14 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 					},
 				}
 			}
+			if operation.AdvancedSettings.AwsRdsConfigSync != nil {
+				advSettings.RDSPitrConfigSync = []*pitrConfigModel{
+					{
+						Apply: types.StringValue(
+							*operation.AdvancedSettings.AwsRdsConfigSync.Apply),
+					},
+				}
+			}
 			schemaOperation.AdvancedSettings = []*advancedSettingsModel{advSettings}
 		}
 		schemaOperations = append(schemaOperations, schemaOperation)
@@ -908,6 +935,13 @@ func getOperationAdvancedSettings(
 				&models.MSSQLLogBackupAdvancedSetting{
 					AlternativeReplica: &alternativeReplica,
 					PreferredReplica:   &preferredReplica,
+				}
+		}
+		if operation.AdvancedSettings[0].RDSPitrConfigSync != nil {
+			apply := operation.AdvancedSettings[0].RDSPitrConfigSync[0].Apply.ValueString()
+			advancedSettings.AwsRdsConfigSync =
+				&models.RDSConfigSyncAdvancedSetting{
+					Apply: &apply,
 				}
 		}
 	}

@@ -1,3 +1,6 @@
+## 0.5.6
+Updates to clumio_policy resource and documentation changes.
+
 ## 0.5.5
 Bug fix release to fix clumio_aws_connection resource.
 

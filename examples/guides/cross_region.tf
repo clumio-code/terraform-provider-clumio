@@ -49,7 +49,7 @@ module "clumio_protect_west" {
   }
   source                = "clumio-code/aws-template/clumio"
   clumio_token          = clumio_aws_connection.connection_west.token
-  role_external_id      = "my_external_id_west"
+  role_external_id      = clumio_aws_connection.connection_west.role_external_id
   aws_account_id        = clumio_aws_connection.connection_west.account_native_id
   aws_region            = clumio_aws_connection.connection_west.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection_west.clumio_aws_account_id

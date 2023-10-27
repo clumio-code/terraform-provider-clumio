@@ -24,6 +24,7 @@ const (
 	schemaAdvancedSettings       = "advanced_settings"
 	schemaAlternativeReplica     = "alternative_replica"
 	schemaPreferredReplica       = "preferred_replica"
+	schemaBackupAwsRegion        = "backup_aws_region"
 	schemaEc2MssqlDatabaseBackup = "ec2_mssql_database_backup"
 	schemaEc2MssqlLogBackup      = "ec2_mssql_log_backup"
 	schemaMssqlDatabaseBackup    = "mssql_database_backup"
@@ -32,7 +33,8 @@ const (
 	schemaBackupTier             = "backup_tier"
 	schemaEBSVolumeBackup        = "aws_ebs_volume_backup"
 	schemaEC2InstanceBackup      = "aws_ec2_instance_backup"
-	schemaBackupAwsRegion        = "backup_aws_region"
+	schemaRDSPitrConfigSync      = "aws_rds_config_sync"
+	schemaApply                  = "apply"
 
 	alternativeReplicaDescFmt = "The alternative replica for MSSQL %s backups. This" +
 		" setting only applies to Availability Group databases. Possible" +
@@ -60,10 +62,17 @@ const (
 
 	ebsBackupDesc = "Optional configuration settings for the aws_ebs_volume_backup operation."
 
-	eC2BackupDesc = "Optional configuration settings for the aws_ec2_instance_backup operation."
+	ec2BackupDesc = "Optional configuration settings for the aws_ec2_instance_backup operation."
 
-	secureVaultLiteDescFmt = "Backup tier to store the SecureVault Lite backup in." +
+	secureVaultLiteDesc = "Backup tier to store the SecureVault Lite backup in." +
 		" Valid values are: `standard` and `lite`. If not provided, the default is `standard`."
+
+	rdsPitrConfigSyncDesc = "Optional configuration settings for the aws_rds_config_sync operation."
+
+	pitrConfigDesc = "Additional policy configuration for syncing the configuration of Pitr in aws." +
+		" Possible values include \"immediate\" and \"maintenance_window\"." +
+		" If \"immediate\" is provided, then configuration sync will be kicked in immediately." +
+		" Otherwise configuration sync will be executed in a specific time user has provided."
 
 	errorFmt           = "Error: %v"
 	errorPolicyReadMsg = "Error retrieving Clumio Policy."

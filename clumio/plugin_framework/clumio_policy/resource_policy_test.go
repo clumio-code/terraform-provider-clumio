@@ -372,7 +372,7 @@ resource "clumio_policy" "hourly_minutely_policy" {
 	name = "%s"
 	operations {
 		action_setting = "immediate"
-		type = "mssql_database_backup"
+		type = "ec2_mssql_database_backup"
 		slas {
 			retention_duration {
 				unit = "days"
@@ -385,7 +385,7 @@ resource "clumio_policy" "hourly_minutely_policy" {
 		}
 		%s
 		advanced_settings {
-			mssql_database_backup {
+			ec2_mssql_database_backup {
 				alternative_replica = "sync_secondary"
 				preferred_replica = "primary"
 			}
@@ -393,10 +393,10 @@ resource "clumio_policy" "hourly_minutely_policy" {
 	}
 	operations {
 		action_setting = "immediate"
-		type = "mssql_log_backup"
+		type = "ec2_mssql_log_backup"
 		%s
 		advanced_settings {
-			mssql_log_backup {
+			ec2_mssql_log_backup {
 				alternative_replica = "sync_secondary"
 				preferred_replica = "primary"
 			}
@@ -416,5 +416,144 @@ resource "clumio_policy" "weekly_policy" {
 		type = "aws_ebs_volume_backup"
 		%s
 	}
+}
+`
+
+func TestRdsPitrClumioPolicy(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// PITR only
+				Config: getTestClumioPolicyRds(true, false, false),
+			},
+			{
+				// GRR only
+				Config: getTestClumioPolicyRds(false, true, false),
+			},
+			{
+				// Airgap only
+				Config: getTestClumioPolicyRds(false, false, true),
+			},
+			{
+				// PITR and GRR both
+				Config: getTestClumioPolicyRds(true, true, false),
+			},
+			{
+				// RDS PITR immediate
+				Config: getTestClumioPolicyRdsPitrAdv(true),
+			},
+			{
+				// RDS PITR maintenance_window
+				Config: getTestClumioPolicyRdsPitrAdv(false),
+			},
+		},
+	})
+}
+
+func getTestClumioPolicyRds(pitr bool, logical bool, airgap bool) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "tf-rds-policy"
+	operations := ""
+	// TODO: add advanced settings on it.
+	pitrTemplate := `
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_aws_snapshot"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 7
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 1
+			}
+		}
+	}`
+	logicalTemplate := `
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_granular_backup"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 31
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 7
+			}
+		}
+	}`
+	airgapTemplate := `
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_rolling_backup"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 31
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 7
+			}
+		}
+	}`
+
+	if pitr {
+		operations += pitrTemplate
+		name += "-pitr"
+	}
+	if logical {
+		operations += logicalTemplate
+		name += "-logical"
+	}
+	if airgap {
+		operations += airgapTemplate
+		name += "-airgap"
+	}
+	return fmt.Sprintf(testClumioPolicyRdsPolicyTemplate, baseUrl, name, operations)
+}
+
+func getTestClumioPolicyRdsPitrAdv(immediate bool) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "tf-rds-pitr-adv-policy"
+	rdsPitrConfigAdv := "immediate"
+	if !immediate {
+		rdsPitrConfigAdv = "maintenance_window"
+	}
+	operations := fmt.Sprintf(`
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_aws_snapshot"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 7
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 1
+			}
+		}
+		advanced_settings {
+			aws_rds_config_sync {
+				apply = "%s"
+			}
+		}
+	}`, rdsPitrConfigAdv)
+	return fmt.Sprintf(testClumioPolicyRdsPolicyTemplate, baseUrl, name, operations)
+}
+
+const testClumioPolicyRdsPolicyTemplate = `
+provider clumio{
+	clumio_api_base_url = "%s"
+}
+resource "clumio_policy" "tf_rds_policy" {
+	name = "%s"
+	%s
 }
 `

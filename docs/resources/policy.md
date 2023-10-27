@@ -103,6 +103,7 @@ Optional:
 
 - `aws_ebs_volume_backup` (Block Set) Optional configuration settings for the aws_ebs_volume_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ebs_volume_backup))
 - `aws_ec2_instance_backup` (Block Set) Optional configuration settings for the aws_ec2_instance_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ec2_instance_backup))
+- `aws_rds_config_sync` (Block Set) Optional configuration settings for the aws_rds_config_sync operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_rds_config_sync))
 - `ec2_mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
 - `ec2_mssql_log_backup` (Block Set) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_log_backup))
 - `mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_database_backup))
@@ -123,6 +124,14 @@ Optional:
 Optional:
 
 - `backup_tier` (String) Backup tier to store the SecureVault Lite backup in. Valid values are: `standard` and `lite`. If not provided, the default is `standard`.
+
+
+<a id="nestedblock--operations--advanced_settings--aws_rds_config_sync"></a>
+### Nested Schema for `operations.advanced_settings.aws_rds_config_sync`
+
+Optional:
+
+- `apply` (String) Additional policy configuration for syncing the configuration of Pitr in aws. Possible values include "immediate" and "maintenance_window". If "immediate" is provided, then configuration sync will be kicked in immediately. Otherwise configuration sync will be executed in a specific time user has provided.
 
 
 <a id="nestedblock--operations--advanced_settings--ec2_mssql_database_backup"></a>

@@ -54,7 +54,7 @@ module "clumio_protect" {
   }
   source                = "clumio-code/aws-template/clumio"
   clumio_token          = clumio_aws_connection.connection.token
-  role_external_id      = "my_external_id"
+  role_external_id      = clumio_aws_connection.connection.role_external_id
   aws_account_id        = clumio_aws_connection.connection.account_native_id
   aws_region            = clumio_aws_connection.connection.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id

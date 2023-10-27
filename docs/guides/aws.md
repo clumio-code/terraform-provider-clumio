@@ -64,7 +64,7 @@ module "clumio_protect" {
   }
   source                = "clumio-code/aws-template/clumio"
   clumio_token          = clumio_aws_connection.connection.token
-  role_external_id      = "my_external_id"
+  role_external_id      = clumio_aws_connection.connection.role_external_id
   aws_account_id        = clumio_aws_connection.connection.account_native_id
   aws_region            = clumio_aws_connection.connection.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id
@@ -136,7 +136,7 @@ module "clumio_protect_west" {
   }
   source                = "clumio-code/aws-template/clumio"
   clumio_token          = clumio_aws_connection.connection_west.token
-  role_external_id      = "my_external_id_west"
+  role_external_id      = clumio_aws_connection.connection_west.role_external_id
   aws_account_id        = clumio_aws_connection.connection_west.account_native_id
   aws_region            = clumio_aws_connection.connection_west.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection_west.clumio_aws_account_id
@@ -243,7 +243,7 @@ module "clumio_protect_account_1_west" {
   }
   source                = "clumio-code/aws-template/clumio"
   clumio_token          = clumio_aws_connection.connection_account_1_west.token
-  role_external_id      = "my_external_id_account_1_west"
+  role_external_id      = clumio_aws_connection.connection_account_1_west.role_external_id
   aws_account_id        = clumio_aws_connection.connection_account_1_west.account_native_id
   aws_region            = clumio_aws_connection.connection_account_1_west.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection_account_1_west.clumio_aws_account_id
@@ -265,7 +265,7 @@ module "clumio_protect_account_2_east" {
   }
   source                = "clumio-code/aws-template/clumio"
   clumio_token          = clumio_aws_connection.connection_account_2_east.token
-  role_external_id      = "my_external_id_account_2_east"
+  role_external_id      = clumio_aws_connection.connection_account_2_east.role_external_id
   aws_account_id        = clumio_aws_connection.connection_account_2_east.account_native_id
   aws_region            = clumio_aws_connection.connection_account_2_east.aws_region
   clumio_aws_account_id = clumio_aws_connection.connection_account_2_east.clumio_aws_account_id

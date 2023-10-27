@@ -338,7 +338,7 @@ func (r *postProcessAWSConnectionResource) clumioPostProcessAWSConnectionCommon(
 	if apiErr != nil {
 		diagnostics := diag.Diagnostics{}
 		diagnostics.AddError("Error in invoking Post-process Clumio AWS Connection.",
-			fmt.Sprintf(errorFmt, err))
+			fmt.Sprintf(errorFmt, apiErr))
 		return diagnostics
 	}
 	return nil

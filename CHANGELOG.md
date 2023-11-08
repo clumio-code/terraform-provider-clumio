@@ -1,3 +1,6 @@
+## 0.5.7
+Documentation update to Getting Started guide.
+
 ## 0.5.6
 Updates to clumio_policy resource and documentation changes.
 

@@ -62,6 +62,7 @@ type advancedSettingsModel struct {
 	EBSVolumeBackup        []*backupTierModel `tfsdk:"aws_ebs_volume_backup"`
 	EC2InstanceBackup      []*backupTierModel `tfsdk:"aws_ec2_instance_backup"`
 	RDSPitrConfigSync      []*pitrConfigModel `tfsdk:"aws_rds_config_sync"`
+	RDSLogicalBackup       []*backupTierModel `tfsdk:"aws_rds_resource_granular_backup"`
 }
 
 type policyOperationModel struct {
@@ -252,6 +253,20 @@ func (r *policyResource) Schema(
 					schemaApply: schema.StringAttribute{
 						Optional:    true,
 						Description: pitrConfigDesc,
+					},
+				},
+			},
+			Validators: []validator.Set{
+				setvalidator.SizeAtMost(1),
+			},
+		},
+		schemaRdsLogicalBackup: schema.SetNestedBlock{
+			Description: rdsLogicalBackupDesc,
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					schemaBackupTier: schema.StringAttribute{
+						Optional:    true,
+						Description: rdsLogicalBackupAdvancedSettingDesc,
 					},
 				},
 			},
@@ -856,6 +871,14 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 					},
 				}
 			}
+			if operation.AdvancedSettings.AwsRdsResourceGranularBackup != nil {
+				advSettings.RDSLogicalBackup = []*backupTierModel{
+					{
+						BackupTier: types.StringValue(
+							*operation.AdvancedSettings.AwsRdsResourceGranularBackup.BackupTier),
+					},
+				}
+			}
 			schemaOperation.AdvancedSettings = []*advancedSettingsModel{advSettings}
 		}
 		schemaOperations = append(schemaOperations, schemaOperation)
@@ -942,6 +965,14 @@ func getOperationAdvancedSettings(
 			advancedSettings.AwsRdsConfigSync =
 				&models.RDSConfigSyncAdvancedSetting{
 					Apply: &apply,
+				}
+		}
+		if operation.AdvancedSettings[0].RDSLogicalBackup != nil {
+			backupTier :=
+				operation.AdvancedSettings[0].RDSLogicalBackup[0].BackupTier.ValueString()
+			advancedSettings.AwsRdsResourceGranularBackup =
+				&models.RDSLogicalBackupAdvancedSetting{
+					BackupTier: &backupTier,
 				}
 		}
 	}

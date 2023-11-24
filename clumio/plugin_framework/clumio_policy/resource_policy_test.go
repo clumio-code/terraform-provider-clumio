@@ -283,34 +283,6 @@ resource "clumio_policy" "test_policy" {
 			}
 		}
 	}
-	operations {
-		action_setting = "immediate"
-		type           = "aws_rds_resource_granular_backup"
-		slas {
-			retention_duration {
-				unit  = "days"
-				value = 31
-			}
-			rpo_frequency {
-				unit  = "days"
-				value = 7
-			}
-		}
-	}
-	operations {
-		action_setting = "immediate"
-		type           = "aws_rds_resource_aws_snapshot"
-		slas {
-			retention_duration {
-				unit  = "days"
-				value = 7
-			}
-			rpo_frequency {
-				unit  = "days"
-				value = 1
-			}
-		}
-	}
 }
 `
 
@@ -419,6 +391,65 @@ resource "clumio_policy" "weekly_policy" {
 }
 `
 
+func TestRdsComplianceClumioPolicy(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyRDSCompliance(false),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyRDSCompliance(true),
+			},
+		},
+	})
+}
+
+func getTestAccResourceClumioPolicyRDSCompliance(update bool) string {
+
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "Rds Compliance Policy Create"
+	slas := `
+	slas {
+		retention_duration {
+			unit  = "days"
+			value = 31
+		}
+		rpo_frequency {
+			unit  = "days"
+			value = 7
+		}
+	}
+	advanced_settings {
+		aws_rds_resource_granular_backup {
+			backup_tier = "frozen"
+		}
+	}
+	`
+	if update {
+		name = "Rds Compliance Policy Update"
+		slas = `
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 28
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 7
+			}
+		}
+		advanced_settings {
+			aws_rds_resource_granular_backup {
+				backup_tier = "frozen"
+			}
+		}
+		`
+	}
+	return fmt.Sprintf(testAccResourceClumioRdsPolicy, baseUrl, name, slas)
+}
+
 func TestRdsPitrClumioPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
@@ -448,6 +479,13 @@ func TestRdsPitrClumioPolicy(t *testing.T) {
 				// RDS PITR maintenance_window
 				Config: getTestClumioPolicyRdsPitrAdv(false),
 			},
+			// Note: this test is disabled as advanced settings is not supported
+			// if `apibackend.EnableRDSComplianceTier` is off.
+			// Consider this to be enabled after advanced settings are mandated.
+			// {
+			// 	// RDS Compliance tier
+			// 	Config: getTestClumioPolicyRdsComplianceTier(true),
+			// },
 		},
 	})
 }
@@ -484,6 +522,11 @@ func getTestClumioPolicyRds(pitr bool, logical bool, airgap bool) string {
 			rpo_frequency {
 				unit  = "days"
 				value = 7
+			}
+		}
+		advanced_settings {
+			aws_rds_resource_granular_backup {
+				backup_tier = "standard"
 			}
 		}
 	}`
@@ -548,6 +591,36 @@ func getTestClumioPolicyRdsPitrAdv(immediate bool) string {
 	return fmt.Sprintf(testClumioPolicyRdsPolicyTemplate, baseUrl, name, operations)
 }
 
+func getTestClumioPolicyRdsComplianceTier(complianceTier bool) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "tf-rds-pitr-adv-policy"
+	backupTier := "standard"
+	if complianceTier {
+		backupTier = "frozen"
+	}
+	operations := fmt.Sprintf(`
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_granular_backup"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 31
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 7
+			}
+		}
+		advanced_settings {
+			aws_rds_resource_granular_backup {
+				backup_tier = "%s"
+			}
+		}
+	}`, backupTier)
+	return fmt.Sprintf(testClumioPolicyRdsPolicyTemplate, baseUrl, name, operations)
+}
+
 const testClumioPolicyRdsPolicyTemplate = `
 provider clumio{
 	clumio_api_base_url = "%s"
@@ -555,5 +628,34 @@ provider clumio{
 resource "clumio_policy" "tf_rds_policy" {
 	name = "%s"
 	%s
+}
+`
+
+const testAccResourceClumioRdsPolicy = `
+provider clumio{
+	clumio_api_base_url = "%s"
+}
+
+resource "clumio_policy" "test_policy" {
+	name = "%s"
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_granular_backup"
+		%s
+	}
+	operations {
+		action_setting = "immediate"
+		type           = "aws_rds_resource_aws_snapshot"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 7
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 1
+			}
+		}
+	}
 }
 `

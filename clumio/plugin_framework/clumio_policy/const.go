@@ -35,6 +35,7 @@ const (
 	schemaEC2InstanceBackup      = "aws_ec2_instance_backup"
 	schemaRDSPitrConfigSync      = "aws_rds_config_sync"
 	schemaApply                  = "apply"
+	schemaRdsLogicalBackup       = "aws_rds_resource_granular_backup"
 
 	alternativeReplicaDescFmt = "The alternative replica for MSSQL %s backups. This" +
 		" setting only applies to Availability Group databases. Possible" +
@@ -73,6 +74,11 @@ const (
 		" Possible values include \"immediate\" and \"maintenance_window\"." +
 		" If \"immediate\" is provided, then configuration sync will be kicked in immediately." +
 		" Otherwise configuration sync will be executed in a specific time user has provided."
+
+	rdsLogicalBackupDesc = "Optional configuration settings for the aws_rds_resource_granular_backup operation."
+
+	rdsLogicalBackupAdvancedSettingDesc = "Backup tier to store the RDS backup in." +
+		" Valid values are: `standard` and `frozen`. If not provided, the default is `standard`."
 
 	errorFmt           = "Error: %v"
 	errorPolicyReadMsg = "Error retrieving Clumio Policy."

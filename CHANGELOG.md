@@ -1,3 +1,6 @@
+## 0.5.8
+Changes to the clumio_policy resource for RDS Compliance Tier.
+
 ## 0.5.7
 Documentation update to Getting Started guide.
 

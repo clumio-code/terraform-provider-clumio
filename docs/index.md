@@ -26,12 +26,22 @@ provider "clumio" {
 
 ### Optional
 
-- `clumio_api_base_url` (String) The base URL for Clumio APIs. The following are the valid values for clumio_api_base_url. Use the appropriate value depending on the region for which your credentials were created:
+- `clumio_api_base_url` (String) The base URL for Clumio APIs. The following are the valid values for clumio_api_base_url. Use the appropriate value depending on the region for which your credentials were created. Below are the URLs to access the Clumio portal for each region and the corresponding API Base URLs:
 
-		us-west: https://us-west-2.api.clumio.com
+		Portal: https://west.portal.clumio.com/
 
-		us-east: https://us-east-1.api.clumio.com
+		API Base URL: https://us-west-2.api.clumio.com
 
-		canada:  https://ca-central-1.ca.api.clumio.com
-- `clumio_api_token` (String) The API token required to invoke Clumio APIs.
+		Portal: https://east.portal.clumio.com/
+
+		API Base URL: https://us-east-1.api.clumio.com
+
+		Portal: https://canada.portal.clumio.com/
+
+		API Base URL:  https://ca-central-1.ca.api.clumio.com
+
+		Portal: https://eu1.portal.clumio.com/
+
+		API Base URL:  https://eu-central-1.de.api.clumio.com
+- `clumio_api_token` (String) The API token required to invoke Clumio APIs. Information on how to obtain API token can be found here: https://support.clumio.com/hc/en-us/articles/5009876674196-Creating-an-API-Token
 - `clumio_organizational_unit_context` (String) Organizational Unit context in which to create the clumio resources. If not set, the resources will be created in the context of the Global Organizational Unit. The value should be the id of the Organizational Unit and not the name.

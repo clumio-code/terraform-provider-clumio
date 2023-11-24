@@ -67,16 +67,24 @@ func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 		Description: "",
 		Attributes: map[string]schema.Attribute{
 			"clumio_api_token": schema.StringAttribute{
-				MarkdownDescription: "The API token required to invoke Clumio APIs.",
-				Optional:            true,
+				MarkdownDescription: "The API token required to invoke Clumio APIs. " +
+					"Information on how to obtain API token can be found here: " +
+					"https://support.clumio.com/hc/en-us/articles/5009876674196-Creating-an-API-Token",
+				Optional: true,
 			},
 			"clumio_api_base_url": schema.StringAttribute{
 				MarkdownDescription: "The base URL for Clumio APIs. The following are the valid " +
 					"values for clumio_api_base_url. Use the appropriate value depending" +
-					" on the region for which your credentials were created:\n\n\t\t" +
-					"us-west: https://us-west-2.api.clumio.com\n\n\t\t" +
-					"us-east: https://us-east-1.api.clumio.com\n\n\t\t" +
-					"canada:  https://ca-central-1.ca.api.clumio.com",
+					" on the region for which your credentials were created. " +
+					"Below are the URLs to access the Clumio portal for each region and the corresponding API Base URLs:\n\n\t\t" +
+					"Portal: https://west.portal.clumio.com/\n\n\t\t" +
+					"API Base URL: https://us-west-2.api.clumio.com\n\n\t\t" +
+					"Portal: https://east.portal.clumio.com/\n\n\t\t" +
+					"API Base URL: https://us-east-1.api.clumio.com\n\n\t\t" +
+					"Portal: https://canada.portal.clumio.com/\n\n\t\t" +
+					"API Base URL:  https://ca-central-1.ca.api.clumio.com\n\n\t\t" +
+					"Portal: https://eu1.portal.clumio.com/\n\n\t\t" +
+					"API Base URL:  https://eu-central-1.de.api.clumio.com\n\n\t\t",
 				Optional: true,
 			},
 			"clumio_organizational_unit_context": schema.StringAttribute{

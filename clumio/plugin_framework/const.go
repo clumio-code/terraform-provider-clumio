@@ -8,7 +8,7 @@ const (
 	// Provider version key and value
 	clumioTfProviderVersionKey = "CLUMIO_TERRAFORM_PROVIDER_VERSION"
 	// If the version is being changed here, it must also be changed in the GNUmakefile.
-	clumioTfProviderVersionValue = "0.5.8"
+	clumioTfProviderVersionValue = "0.5.9"
 	// User-Agent Header
 	userAgentHeader = "User-Agent"
 

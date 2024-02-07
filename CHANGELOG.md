@@ -1,3 +1,6 @@
+## 0.5.9
+Upgraded go dependencies to fix dependabot security alerts.
+
 ## 0.5.8
 Changes to the clumio_policy resource for RDS Compliance Tier.
 

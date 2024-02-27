@@ -1,5 +1,4 @@
-# This GitHub action runs your tests for each commit push and/or PR. Optionally
-# you can turn it on using a cron schedule for regular testing.
+# This GitHub action runs your tests for each commit push and/or PR.
 #
 name: Tests
 on:
@@ -9,69 +8,53 @@ on:
   push:
     paths-ignore:
       - 'README.md'
-  # For systems with an upstream API that could drift unexpectedly (like most SaaS systems, etc.),
-  # we recommend testing at a regular interval not necessarily tied to code changes. This will 
-  # ensure you are alerted to something breaking due to an API change, even if the code did not
-  # change.
-  # schedule:
-  #   - cron: '0 13 * * *'
+  workflow_dispatch:
+    # Allows us to trigger this action manually.
 env:
-  GO_VERSION: 1.20.1
-jobs:
-  # ensure the code builds...
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
+  GOEXPERIMENT: boringcrypto
 
+jobs:
+  build-and-test:
+    name: Build
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        go: [ 1.21, 1.22 ]
+        # Use a dynamic matrix to allow testing multiple OSes and Go versions
+        # in the public repository but reduce combinations in private clones.
+        exclude:
+          - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'macos-latest' }}
+          - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'windows-latest' }}
+          - go: ${{ github.repository_owner == 'clumio-code' && '_' || '1.22' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
     - name: Set up Go
-      uses: actions/setup-go@v4.0.0
+      uses: actions/setup-go@v5
       with:
-        go-version: ${{ env.GO_VERSION }}
-      id: go
+        go-version: ${{ matrix.go }}
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v3.3.0
+      uses: actions/checkout@v4
+
+    - name: Show Environment
+      run: |
+        echo "matrix.os=${{ matrix.os }}"
+        echo "matrix.go=${{ matrix.go }}"
+        echo "github.repository_owner=${{ github.repository_owner }}"
+        go version
 
     - name: Get dependencies
-      run: |
-        go mod download
+      run: go mod download
 
     - name: Build
       run: |
         go build -v .
 
-  # run acceptance tests in a matrix with Terraform core versions
-  test:
-    name: Matrix Test
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        # list whatever Terraform versions here you would like to support
-        terraform:
-          - '1.3.9'
-    steps:
-
-    - name: Set up Go
-      uses: actions/setup-go@v3.5.0
-      with:
-        go-version: ${{ env.GO_VERSION }}
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v3.3.0
-
-    - name: Get dependencies
-      run: |
-        go mod download
-        
     - name: TF unit tests
-      timeout-minutes: 10
-      env:
-        TF_ACC_TERRAFORM_VERSION: ${{ matrix.terraform }}
+      timeout-minutes: 5
+      shell: bash
       run: |
-        go test -v -cover ./clumio/plugin_framework
+        for TF in '1.0.*' '1.1.*' '1.2.*' '1.3.*' '1.4.*' '1.5.*' '1.6.*' '1.7.*'; do
+          TF_ACC_TERRAFORM_VERSION=$TF go test -v -cover ./clumio/plugin_framework;
+        done

@@ -3,12 +3,12 @@
 page_title: "clumio_aws_connection Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
+  Resource for establishing a connection between AWS accounts and Clumio.
 ---
 
 # clumio_aws_connection (Resource)
 
-Clumio AWS Connection Resource used to connect AWS accounts to Clumio.
+Resource for establishing a connection between AWS accounts and Clumio.
 
 ## Example Usage
 
@@ -26,24 +26,24 @@ resource "clumio_aws_connection" "example" {
 
 ### Required
 
-- `account_native_id` (String) AWS Account Id to connect to Clumio.
-- `aws_region` (String) AWS Region of account.
+- `account_native_id` (String) Identifier of the AWS account to be linked with Clumio.
+- `aws_region` (String) Region of the AWS account to be linked with Clumio.
 
 ### Optional
 
-- `description` (String) Clumio AWS Connection Description.
-- `organizational_unit_id` (String) Clumio Organizational Unit Id.
+- `description` (String) Brief description to denote details of the connection.
+- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the connection. If not provided, the connection will be associated with the default organizational unit associated with the credentials used to create the connection.
 
 ### Read-Only
 
-- `clumio_aws_account_id` (String) Clumio AWS AccountId.
-- `clumio_aws_region` (String) Clumio AWS Region.
-- `connection_status` (String) The status of the connection. Possible values include connecting, connected and unlinked.
-- `data_plane_account_id` (String) The internal representation to uniquely identify a given data plane.
-- `id` (String) Clumio AWS Connection Id.
-- `namespace` (String) K8S Namespace.
-- `role_external_id` (String) A key used by Clumio to assume the service role in your account.
-- `token` (String) The 36-character Clumio AWS integration ID token used to identify the installation of the Terraform template on the account.
+- `clumio_aws_account_id` (String) Identifier of the AWS account associated with Clumio. This identifier is provided so that access to the service role for Clumio can be restricted to just this account.
+- `clumio_aws_region` (String) Region of the AWS account associated with Clumio.
+- `connection_status` (String) Current state of the connection (e.g, `connecting`, `connected`, `unlinked`, etc.)
+- `data_plane_account_id` (String) Identifier of the AWS account data plane within Clumio.
+- `id` (String) Unique identifier for the Clumio AWS connection.
+- `namespace` (String, Deprecated) K8S Namespace.
+- `role_external_id` (String) Unique identifier Clumio uses to access the service role within your account.
+- `token` (String) Distinct 36-character token used to identify resources set up by the Clumio AWS template installation on the account being connected.
 
 ## Import
 

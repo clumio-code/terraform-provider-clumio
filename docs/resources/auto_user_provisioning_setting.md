@@ -3,12 +3,15 @@
 page_title: "clumio_auto_user_provisioning_setting Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  Clumio Auto User Provisioning Setting Resource used to determine if Auto User Provisioning feature is enabled or not.
+  Clumio Auto User Provisioning Setting Resource used to enable or disable the auto user provisioning feature.
 ---
 
 # clumio_auto_user_provisioning_setting (Resource)
 
-Clumio Auto User Provisioning Setting Resource used to determine if Auto User Provisioning feature is enabled or not.
+Clumio Auto User Provisioning Setting Resource used to enable or disable the auto user provisioning feature.
+
+NOTE: Single Sign-On (SSO) is a prerequisite for Auto User Provisioning. You must ensure that Single Sign-On is setup and enabled
+before enabling Auto User Provisioning. To get started with setting up Single Sign-On, refer [here](https://help.clumio.com/docs/authentication-1#single-sign-on-sso).
 
 ## Example Usage
 
@@ -27,4 +30,4 @@ resource "clumio_auto_user_provisioning_setting" "example" {
 
 ### Read-Only
 
-- `id` (String) Auto User Provisioning Setting Id.
+- `id` (String) Unique identifier of the auto user provisioning setting.

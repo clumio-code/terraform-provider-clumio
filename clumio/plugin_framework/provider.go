@@ -1,13 +1,14 @@
 // Copyright 2023. Clumio, Inc.
-//
-// This file contains the functions related to provider definition and initialization utilizing plugin framework.
+
+// This file contains the functions related to provider definition and initialization utilizing the
+// plugin framework.
 
 package clumio_pf
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"strings"
 
 	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_rule"
@@ -26,76 +27,29 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_user"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_wallet"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure the implementation satisfies the expected interfaces
+// Ensure the implementation satisfies the following Provider interface.
 var (
 	_ provider.Provider = &clumioProvider{}
 )
 
-// New is a helper function to simplify provider server and testing implementation.
-func New() provider.Provider {
-	return &clumioProvider{}
-}
-
-// clumioProvider is the provider implementation.
+// clumioProvider is the struct backing the Clumio Provider for Terraform.
 type clumioProvider struct{}
 
-// clumioProviderModel maps provider schema data to a Go type.
-type clumioProviderModel struct {
-	ClumioApiToken                  types.String `tfsdk:"clumio_api_token"`
-	ClumioApiBaseUrl                types.String `tfsdk:"clumio_api_base_url"`
-	ClumioOrganizationalUnitContext types.String `tfsdk:"clumio_organizational_unit_context"`
+// New creates a new instance of clumioProvider.
+func New() provider.Provider {
+	return &clumioProvider{}
 }
 
 // Metadata returns the provider type name.
 func (p *clumioProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "clumio"
-}
-
-// Schema defines the provider-level schema for configuration data.
-func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Description: "",
-		Attributes: map[string]schema.Attribute{
-			"clumio_api_token": schema.StringAttribute{
-				MarkdownDescription: "The API token required to invoke Clumio APIs. " +
-					"Information on how to obtain API token can be found here: " +
-					"https://support.clumio.com/hc/en-us/articles/5009876674196-Creating-an-API-Token",
-				Optional: true,
-			},
-			"clumio_api_base_url": schema.StringAttribute{
-				MarkdownDescription: "The base URL for Clumio APIs. The following are the valid " +
-					"values for clumio_api_base_url. Use the appropriate value depending" +
-					" on the region for which your credentials were created. " +
-					"Below are the URLs to access the Clumio portal for each region and the corresponding API Base URLs:\n\n\t\t" +
-					"Portal: https://west.portal.clumio.com/\n\n\t\t" +
-					"API Base URL: https://us-west-2.api.clumio.com\n\n\t\t" +
-					"Portal: https://east.portal.clumio.com/\n\n\t\t" +
-					"API Base URL: https://us-east-1.api.clumio.com\n\n\t\t" +
-					"Portal: https://canada.portal.clumio.com/\n\n\t\t" +
-					"API Base URL:  https://ca-central-1.ca.api.clumio.com\n\n\t\t" +
-					"Portal: https://eu1.portal.clumio.com/\n\n\t\t" +
-					"API Base URL:  https://eu-central-1.de.api.clumio.com\n\n\t\t",
-				Optional: true,
-			},
-			"clumio_organizational_unit_context": schema.StringAttribute{
-				MarkdownDescription: "Organizational Unit context in which to create the" +
-					" clumio resources. If not set, the resources will be created in" +
-					" the context of the Global Organizational Unit. The value should" +
-					" be the id of the Organizational Unit and not the name.",
-				Optional: true,
-			},
-		},
-	}
 }
 
 // Configure prepares a Clumio API client for data sources and resources.
@@ -110,32 +64,28 @@ func (p *clumioProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	// If practitioner provided a configuration value for any of the
-	// attributes, it must be a known value.
-
+	// If given, provider attributes must be "known" values. In other words, their values cannot be
+	// computed from other values in the configuration.
 	if config.ClumioApiToken.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("clumioApiToken"),
-			"Unknown Clumio API Token",
-			fmt.Sprintf(errorFmt, token, common.ClumioApiToken),
-		)
+		attribute := path.Root("clumioApiToken")
+		summary := "Unknown Clumio API Token"
+		detail := "Value must not be computed from other values in the configuration."
+		resp.Diagnostics.AddAttributeError(attribute, summary, detail)
 	}
-
 	if config.ClumioApiBaseUrl.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("clumioApiBaseUrl"),
-			"Unknown Clumio API Base URL",
-			fmt.Sprintf(errorFmt, baseUrl, common.ClumioApiBaseUrl),
-		)
+		attribute := path.Root("clumioApiBaseUrl")
+		summary := "Unknown Clumio API Base URL"
+		detail := "Value must not be computed from other values in the configuration."
+		resp.Diagnostics.AddAttributeError(attribute, summary, detail)
 	}
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Default values to environment variables, but override
-	// with Terraform configuration value if set.
-
+	// Provider attributes can be set statically in the configuration or using environment. If
+	// statically set, the value is available in the configuration. If set using environment, the
+	// value is available in documented environment variables. Statically set values take precedence
+	// over environment variables.
 	clumioApiToken := os.Getenv(common.ClumioApiToken)
 	clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
@@ -143,60 +93,54 @@ func (p *clumioProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if !config.ClumioApiToken.IsNull() {
 		clumioApiToken = config.ClumioApiToken.ValueString()
 	}
-
 	if !config.ClumioApiBaseUrl.IsNull() {
 		clumioApiBaseUrl = config.ClumioApiBaseUrl.ValueString()
 	}
-
 	if !config.ClumioOrganizationalUnitContext.IsNull() {
 		clumioOrganizationalUnitContext = config.ClumioOrganizationalUnitContext.ValueString()
 	}
 
-	// If any of the expected configurations are missing, return
-	// errors with provider-specific guidance.
-
+	// Ensure that all required values are set. If not, return an error.
 	if clumioApiToken == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("clumioApiToken"),
-			"Missing Clumio API Token",
-			fmt.Sprintf(errorFmt, token, common.ClumioApiToken),
-		)
+		attribute := path.Root("clumioApiToken")
+		summary := "Missing Clumio API Token"
+		detail := "Value is required."
+		resp.Diagnostics.AddAttributeError(attribute, summary, detail)
 	}
-
 	if clumioApiBaseUrl == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("clumioApiBaseUrl"),
-			"Missing Clumio API Username",
-			fmt.Sprintf(errorFmt, baseUrl, common.ClumioApiBaseUrl),
-		)
+		attribute := path.Root("clumioApiBaseUrl")
+		summary := "Missing Clumio API Token"
+		detail := "Value is required."
+		resp.Diagnostics.AddAttributeError(attribute, summary, detail)
 	}
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Creating Clumio client")
+	// Ensure that the base URL does not end with a slash.
+	clumioApiBaseUrl = strings.TrimRight(clumioApiBaseUrl, "/")
 
+	// Create the Clumio API client and make it available to instances of DataSource and Resource
+	// types in their Configure methods.
+	tflog.Debug(ctx, "Creating Clumio client")
 	client := &common.ApiClient{
 		ClumioConfig: clumioConfig.Config{
 			Token:                     clumioApiToken,
 			BaseUrl:                   clumioApiBaseUrl,
 			OrganizationalUnitContext: clumioOrganizationalUnitContext,
 			CustomHeaders: map[string]string{
-				userAgentHeader:            userAgentHeaderValue,
-				clumioTfProviderVersionKey: clumioTfProviderVersionValue,
+				userAgentHeader:               userAgentHeaderValue,
+				clumioTfProviderVersionHeader: clumioTfProviderVersionHeaderValue,
 			},
 		},
 	}
-	// Make the Clumio client available during DataSource and Resource
-	// type Configure methods.
 	resp.DataSourceData = client
 	resp.ResourceData = client
-
 	tflog.Info(ctx, "Configured Clumio client", map[string]any{"success": true})
 }
 
-// DataSources defines the data sources implemented in the provider.
+// DataSources defines the data sources implemented in the provider. Any new data source should be
+// added here.
 func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		clumio_role.NewClumioRoleDataSource,
@@ -204,7 +148,8 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 	}
 }
 
-// Resources defines the resources implemented in the provider.
+// Resources defines the resources implemented in the provider. Any new resource should be added
+// here.
 func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		clumio_aws_connection.NewClumioAWSConnectionResource,
@@ -212,13 +157,13 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_policy.NewPolicyResource,
 		clumio_policy_assignment.NewPolicyAssignmentResource,
 		clumio_policy_rule.NewPolicyRuleResource,
-		clumio_protection_group.NewProtectionGroupResource,
+		clumio_protection_group.NewClumioProtectionGroupResource,
 		clumio_user.NewClumioUserResource,
 		clumio_organizational_unit.NewClumioOrganizationalUnitResource,
 		clumio_wallet.NewClumioWalletResource,
 		clumio_post_process_kms.NewClumioPostProcessKmsResource,
 		clumio_auto_user_provisioning_rule.NewAutoUserProvisioningRuleResource,
 		clumio_auto_user_provisioning_setting.NewAutoUserProvisioningSettingResource,
-		clumio_aws_manual_connection.NewAwsManualConnectionResource,
+		clumio_aws_manual_connection.NewClumioAWSManualConnectionResource,
 	}
 }

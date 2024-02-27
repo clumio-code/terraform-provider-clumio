@@ -1,3 +1,12 @@
+## 0.6.0
+Multiple updates were applied across the provider, including, but not limited to:
+  - Resolved Issue [#57](https://github.com/clumio-code/terraform-provider-clumio/issues/57) found in the GitHub public repository.
+  - Implemented additional safeguards to further prevent provider failures.
+  - Management of resources when externally altered, ensuring Terraform will regenerate a resource if it's deleted externally.
+  - Broadened the scope of acceptance tests to cover a wider array of standard situations, including updates and recreations.
+  - Adjusted the code structure, with such gradual refinements likely to continue for the next couple releases.
+  - Revisions and updates to documentation.
+
 ## 0.5.9
 Upgraded go dependencies to fix dependabot security alerts.
 

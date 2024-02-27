@@ -8,7 +8,7 @@ description: |-
 
 # clumio_wallet (Resource)
 
-Clumio Wallet Resource to create and manage wallets in Clumio. Wallets should be created "after" connecting an AWS account to Clumio.<br>**NOTE:** To protect against accidental deletion, wallets cannot be destroyed. To remove a wallet, contact Clumio support.
+Clumio Wallet Resource to create and manage wallets in Clumio. Wallets should be created "after" connecting an AWS account to Clumio.<br>**NOTE:** To protect against accidental deletion, wallets cannot be destroyed once the byok-template module has been installed. To remove a wallet, contact Clumio support.
 
 ## Example Usage
 
@@ -24,14 +24,17 @@ resource "clumio_wallet" "example" {
 
 ### Required
 
-- `account_native_id` (String) The AWS account id to be associated with the wallet.
+- `account_native_id` (String) Identifier of the AWS account to be setup with BYOK and associated with the wallet.
 
 ### Read-Only
 
-- `clumio_account_id` (String) Clumio Account ID.
-- `id` (String) Wallet Id.
-- `state` (String) State describes the state of the wallet. Valid states are: Waiting: The wallet has been created, but a stack hasn't been created. The wallet can't be used in this state. Enabled: The wallet has been created and a stack has been created for the wallet. This is the normal expected state of a wallet in use. Error: The wallet is inaccessible. See ErrorCode and ErrorMessage fields for additional details.
-- `token` (String) Token is used to identify and authenticate the CloudFormation stack creation.
+- `clumio_account_id` (String) Identifier of the AWS account associated with Clumio. This identifier is provided so that access to the service role for Clumio can be restricted to just this account.
+- `id` (String) Unique identifier for the Clumio Wallet.
+- `state` (String) State describes the state of the wallet. Valid states are:
+	Waiting: The wallet has been created, but a stack hasn't been created. The wallet can't be used in this state.
+	Enabled: The wallet has been created and a stack has been created for the wallet. This is the normal expected state of a wallet in use.
+	Error: The wallet is inaccessible.
+- `token` (String) Token used to identify resources set up by the BYOK template installation on the account being connected.
 
 ## Import
 

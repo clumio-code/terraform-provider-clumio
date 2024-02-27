@@ -3,6 +3,9 @@
 package clumio_post_process_aws_connection
 
 const (
+	// Constants used by the resource model for the clumio_post_process_aws_connection Terraform
+	// resource. These values should match the schema tfsdk tags on the resource model struct in
+	// schema.go.
 	schemaId                             = "id"
 	schemaToken                          = "token"
 	schemaRoleExternalId                 = "role_external_id"
@@ -22,6 +25,4 @@ const (
 	schemaClumioEventPubId               = "clumio_event_pub_id"
 	schemaProperties                     = "properties"
 	schemaIntermediateRoleArn            = "intermediate_role_arn"
-
-	errorFmt = "Error: %v"
 )

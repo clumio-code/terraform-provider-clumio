@@ -3,6 +3,8 @@
 package clumio_policy_assignment
 
 const (
+	// Constants used by the resource model for the clumio_policy_assignment Terraform resource.
+	// These values should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaId                   = "id"
 	schemaEntityId             = "entity_id"
 	schemaEntityType           = "entity_type"
@@ -14,8 +16,6 @@ const (
 
 	timeoutInSec  = 3600
 	intervalInSec = 5
-
-	errorFmt = "Error: %v"
 )
 
 var (

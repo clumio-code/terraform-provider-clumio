@@ -32,16 +32,13 @@ data "clumio_aws_manual_connection_resources" "test_get_resources" {
 ### Required
 
 - `account_native_id` (String) AWS Account ID to be connected to Clumio
-- `asset_types_enabled` (Object) Assets to be connection to Clumio (see [below for nested schema](#nestedatt--asset_types_enabled))
+- `asset_types_enabled` (Object) Assets to be connected to Clumio (see [below for nested schema](#nestedatt--asset_types_enabled))
 - `aws_region` (String) AWS Region to be connected to Clumio
-
-### Optional
-
-- `resources` (String) Generated manual resources for provided config
 
 ### Read-Only
 
 - `id` (String) Combination of provided Account Native ID and Aws Region
+- `resources` (String) Generated manual resources for provided configuration
 
 <a id="nestedatt--asset_types_enabled"></a>
 ### Nested Schema for `asset_types_enabled`
@@ -53,5 +50,3 @@ Required:
 - `mssql` (Boolean)
 - `rds` (Boolean)
 - `s3` (Boolean)
-
-

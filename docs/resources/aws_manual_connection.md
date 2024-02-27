@@ -51,10 +51,14 @@ resource "clumio_aws_manual_connection" "test_update_resources" {
 
 ### Required
 
-- `account_id` (String) AWS Account Id of the connection
-- `assets_enabled` (Object) Assets enabled for the connection (see [below for nested schema](#nestedatt--assets_enabled))
-- `aws_region` (String) AWS Region of the connection
-- `resources` (Object) Manual resources for the connection (see [below for nested schema](#nestedatt--resources))
+- `account_id` (String) Identifier of the AWS account to be linked with Clumio.
+- `assets_enabled` (Object) Assets enabled for the connection. (see [below for nested schema](#nestedatt--assets_enabled))
+- `aws_region` (String) Region of the AWS account to be linked with Clumio.
+- `resources` (Object) An object containing the ARNs of the resources created for the manual AWS connection. Please refer to this guide for instructions on how to create them. - https://help.clumio.com/docs/manual-setup-for-aws-account-integration (see [below for nested schema](#nestedatt--resources))
+
+### Read-Only
+
+- `id` (String) Unique identifier for the Clumio AWS manual connection.
 
 <a id="nestedatt--assets_enabled"></a>
 ### Nested Schema for `assets_enabled`
@@ -111,5 +115,3 @@ Required:
 Required:
 
 - `continuous_backups_role_arn` (String)
-
-

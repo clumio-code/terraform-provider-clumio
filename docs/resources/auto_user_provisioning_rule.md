@@ -62,9 +62,9 @@ resource "clumio_auto_user_provisioning_rule" "example_5" {
 	5) `Group CONTAINS ANY of these keywords` - User's group must contain at least one of the specified keywords
 	6) `Group CONTAINS ALL of these keywords` - User's group must contain all the specified keywords
 - `name` (String) The name of the auto user provisioning rule.
-- `organizational_unit_ids` (Set of String) The Clumio-assigned IDs of the organizational units to be assigned to the user.
-- `role_id` (String) The role ID of the role to be assigned to the user.
+- `organizational_unit_ids` (Set of String) List of Clumio organizational unit identifiers to be assigned to the user.
+- `role_id` (String) Identifier of the Clumio role to be assigned to the user.
 
 ### Read-Only
 
-- `id` (String) Auto User Provisioning Rule Id.
+- `id` (String) Unique identifier of the auto user provisioning rule.

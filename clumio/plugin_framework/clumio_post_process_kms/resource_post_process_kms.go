@@ -1,6 +1,9 @@
 // Copyright 2023. Clumio, Inc.
 //
-// clumio_post_process_kms definition and CRUD implementation.
+// This file holds the resource implementation for the clumio_post_process_kms Terraform resource.
+// This resource is used to send the necessary information required by Clumio to post-process BYOK
+// after the necessary resources have been created. This resource should only be invoked as part of
+// the byok-template module.
 
 package clumio_post_process_kms
 
@@ -8,13 +11,11 @@ import (
 	"context"
 	"fmt"
 
-	kms "github.com/clumio-code/clumio-go-sdk/controllers/post_process_kms"
+	sdkPostProcessKms "github.com/clumio-code/clumio-go-sdk/controllers/post_process_kms"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -24,88 +25,31 @@ var (
 	_ resource.ResourceWithConfigure = &clumioPostProcessKmsResource{}
 )
 
-// NewClumioPostProcessKmsResource is a helper function to simplify the provider implementation.
+// clumioPostProcessKmsResource is the struct backing the clumio_post_process_kms Terraform resource.
+// It holds the Clumio API client and any other required state needed do post process kms after the
+// necessary resources have been created. This resource should only be invoked as part of the
+// byok-template module.
+type clumioPostProcessKmsResource struct {
+	client            *common.ApiClient
+	sdkPostProcessKMS sdkPostProcessKms.PostProcessKmsV1Client
+}
+
+// NewClumioPostProcessKmsResource creates a new instance of clumioPostProcessKmsResource. Its
+// attributes are initialized later by Terraform via Metadata and Configure once the Provider is
+// initialized.
 func NewClumioPostProcessKmsResource() resource.Resource {
 	return &clumioPostProcessKmsResource{}
 }
 
-// clumioPostProcessKmsResource is the resource implementation.
-type clumioPostProcessKmsResource struct {
-	client *common.ApiClient
-}
-
-// clumioPostProcessKmsResourceModel model
-type clumioPostProcessKmsResourceModel struct {
-	Id                    types.String `tfsdk:"id"`
-	Token                 types.String `tfsdk:"token"`
-	AccountId             types.String `tfsdk:"account_id"`
-	Region                types.String `tfsdk:"region"`
-	RoleId                types.String `tfsdk:"role_id"`
-	RoleArn               types.String `tfsdk:"role_arn"`
-	RoleExternalId        types.String `tfsdk:"role_external_id"`
-	CreatedMultiRegionCMK types.Bool   `tfsdk:"created_multi_region_cmk"`
-	MultiRegionCMKKeyId   types.String `tfsdk:"multi_region_cmk_key_id"`
-	TemplateVersion       types.Int64  `tfsdk:"template_version"`
-}
-
-// Metadata returns the resource type name.
+// Metadata returns the name of the resource type. This is used by Terraform configurations to
+// instantiate the resource.
 func (r *clumioPostProcessKmsResource) Metadata(
 	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_post_process_kms"
 }
 
-// Schema defines the schema for the resource.
-func (r *clumioPostProcessKmsResource) Schema(
-	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-
-	resp.Schema = schema.Schema{
-		Description: "Post-Process Clumio KMS Resource used to post-process KMS in Clumio.",
-		Attributes: map[string]schema.Attribute{
-			schemaId: schema.StringAttribute{
-				Description: "The ID of this resource.",
-				Computed:    true,
-			},
-			schemaToken: schema.StringAttribute{
-				Description: "The AWS integration ID token.",
-				Required:    true,
-			},
-			schemaAccountId: schema.StringAttribute{
-				Description: "The AWS Customer Account ID associated with the connection.",
-				Required:    true,
-			},
-			schemaRegion: schema.StringAttribute{
-				Description: "The AWS Region.",
-				Required:    true,
-			},
-			schemaRoleId: schema.StringAttribute{
-				Description: "The ID of the IAM role to manage the CMK.",
-				Required:    true,
-			},
-			schemaRoleArn: schema.StringAttribute{
-				Description: "The ARN of the IAM role to manage the CMK.",
-				Required:    true,
-			},
-			schemaRoleExternalId: schema.StringAttribute{
-				Description: "The external ID to use when assuming the IAM role.",
-				Required:    true,
-			},
-			schemaCreatedMultiRegionCMK: schema.BoolAttribute{
-				Description: "Whether a new CMK was created.",
-				Optional:    true,
-			},
-			schemaMultiRegionCMKKeyID: schema.StringAttribute{
-				Description: "Multi Region CMK Key ID.",
-				Optional:    true,
-			},
-			schemaTemplateVersion: schema.Int64Attribute{
-				Description: "Template version",
-				Optional:    true,
-			},
-		},
-	}
-}
-
-// Configure adds the provider configured client to the data source.
+// Configure sets up the resource with the Clumio API client and any other required state. It is
+// called by Terraform once the Provider is initialized.
 func (r *clumioPostProcessKmsResource) Configure(
 	_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 
@@ -114,23 +58,28 @@ func (r *clumioPostProcessKmsResource) Configure(
 	}
 
 	r.client = req.ProviderData.(*common.ApiClient)
+	r.sdkPostProcessKMS = sdkPostProcessKms.NewPostProcessKmsV1(r.client.ClumioConfig)
 }
 
-// Create creates the resource and sets the initial Terraform state.
+// Create creates the resource via the Clumio API and sets the initial Terraform state.
 func (r *clumioPostProcessKmsResource) Create(
 	ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
+	// Retrieve the schema from the Terraform plan.
 	var plan clumioPostProcessKmsResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	diags = r.clumioPostProcessKmsCommon(ctx, plan, "Create")
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Set the schema into the Terraform state.
 	accountId := plan.AccountId.ValueString()
 	awsRegion := plan.Region.ValueString()
 	token := plan.Token.ValueString()
@@ -142,16 +91,17 @@ func (r *clumioPostProcessKmsResource) Create(
 	}
 }
 
-// Read refreshes the Terraform state with the latest data.
+// Read does not have an implementation as there is no API to read for post process kms.
 func (r *clumioPostProcessKmsResource) Read(
 	ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 
 }
 
-// Update updates the resource and sets the updated Terraform state on success.
+// Update updates the resource via the Clumio API and removes the Terraform state.
 func (r *clumioPostProcessKmsResource) Update(
 	ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 
+	// Retrieve the schema from the Terraform plan.
 	var plan clumioPostProcessKmsResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -159,19 +109,13 @@ func (r *clumioPostProcessKmsResource) Update(
 		return
 	}
 
-	var state clumioPostProcessKmsResourceModel
-	diags = req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	plan.Id = state.Id
-
 	diags = r.clumioPostProcessKmsCommon(ctx, plan, "Update")
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -179,16 +123,18 @@ func (r *clumioPostProcessKmsResource) Update(
 	}
 }
 
-// Delete deletes the resource and removes the Terraform state on success.
+// Delete deletes the resource via the Clumio API and removes the Terraform state.
 func (r *clumioPostProcessKmsResource) Delete(
 	ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 
+	// Retrieve the schema from the Terraform state.
 	var state clumioPostProcessKmsResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	diags = r.clumioPostProcessKmsCommon(ctx, state, "Delete")
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -196,37 +142,32 @@ func (r *clumioPostProcessKmsResource) Delete(
 	}
 }
 
+// clumioPostProcessKmsCommon contains the common logic for all CRUD operations of PostProcessKms
+// resource.
 func (r *clumioPostProcessKmsResource) clumioPostProcessKmsCommon(
 	_ context.Context, state clumioPostProcessKmsResourceModel, eventType string) diag.Diagnostics {
 
-	postProcessAwsKMS := kms.NewPostProcessKmsV1(r.client.ClumioConfig)
-	accountId := state.AccountId.ValueString()
-	awsRegion := state.Region.ValueString()
-	multiRegionCMKKeyId := state.MultiRegionCMKKeyId.ValueString()
-	token := state.Token.ValueString()
-	roleId := state.RoleId.ValueString()
-	roleArn := state.RoleArn.ValueString()
-	roleExternalId := state.RoleExternalId.ValueString()
-	createdMrCmk := state.CreatedMultiRegionCMK.ValueBool()
-	templateVersion := uint64(state.TemplateVersion.ValueInt64())
+	templateVersion := uint64(*state.TemplateVersion.ValueInt64Pointer())
 
-	_, apiErr := postProcessAwsKMS.PostProcessKms(
+	// Call the Clumio API to post process kms.
+	_, apiErr := r.sdkPostProcessKMS.PostProcessKms(
 		&models.PostProcessKmsV1Request{
-			AccountNativeId:       &accountId,
-			AwsRegion:             &awsRegion,
+			AccountNativeId:       state.AccountId.ValueStringPointer(),
+			AwsRegion:             state.Region.ValueStringPointer(),
 			RequestType:           &eventType,
-			Token:                 &token,
-			MultiRegionCmkKeyId:   &multiRegionCMKKeyId,
-			RoleId:                &roleId,
-			RoleArn:               &roleArn,
-			RoleExternalId:        &roleExternalId,
-			CreatedMultiRegionCmk: &createdMrCmk,
+			Token:                 state.Token.ValueStringPointer(),
+			MultiRegionCmkKeyId:   state.MultiRegionCMKKeyId.ValueStringPointer(),
+			RoleId:                state.RoleId.ValueStringPointer(),
+			RoleArn:               state.RoleArn.ValueStringPointer(),
+			RoleExternalId:        state.RoleExternalId.ValueStringPointer(),
+			CreatedMultiRegionCmk: state.CreatedMultiRegionCMK.ValueBoolPointer(),
 			Version:               &templateVersion,
 		})
 	if apiErr != nil {
 		diagnostics := diag.Diagnostics{}
-		diagnostics.AddError("Error in invoking Post-process Clumio KMS.",
-			fmt.Sprintf("Error: %v", apiErr))
+		summary := "Error in invoking Post-process Clumio KMS."
+		detail := common.ParseMessageFromApiError(apiErr)
+		diagnostics.AddError(summary, detail)
 		return diagnostics
 	}
 	return nil

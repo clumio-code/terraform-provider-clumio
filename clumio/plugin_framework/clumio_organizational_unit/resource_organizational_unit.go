@@ -1,25 +1,23 @@
 // Copyright 2023. Clumio, Inc.
-//
-// clumio_organizational_unit definition and CRUD implementation.
+
+// This file holds the resource implementation for the clumio_organizational_unit Terraform resource.
+// This resource is used to manage organizational units within Clumio.
 
 package clumio_organizational_unit
 
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/http"
 
-	orgUnits "github.com/clumio-code/clumio-go-sdk/controllers/organizational_units"
+	sdkOrgUnits "github.com/clumio-code/clumio-go-sdk/controllers/organizational_units"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -29,132 +27,46 @@ var (
 	_ resource.ResourceWithImportState = &clumioOrganizationalUnitResource{}
 )
 
-// NewClumioOrganizationalUnitResource is a helper function to simplify the provider implementation.
+// clumioOrganizationalUnitResource is the struct backing the clumio_organizational_unit Terraform resource.
+// It holds the Clumio API client and any other required state needed to
+// manage organizational units within Clumio.
+type clumioOrganizationalUnitResource struct {
+	name        string
+	client      *common.ApiClient
+	sdkOrgUnits sdkOrgUnits.OrganizationalUnitsV2Client
+}
+
+// NewClumioOrganizationalUnitResource creates a new instance of clumioOrganizationalUnitResource. Its
+// attributes are initialized later by Terraform via Metadata and Configure once the Provider is
+// initialized.
 func NewClumioOrganizationalUnitResource() resource.Resource {
 	return &clumioOrganizationalUnitResource{}
 }
 
-// clumioOrganizationalUnitResource is the resource implementation.
-type clumioOrganizationalUnitResource struct {
-	client *common.ApiClient
-}
-
-type userWithRole struct {
-	UserId       types.String `tfsdk:"user_id"`
-	AssignedRole types.String `tfsdk:"assigned_role"`
-}
-
-// clumioOrganizationalUnitResource model
-type clumioOrganizationalUnitResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Name                      types.String `tfsdk:"name"`
-	Description               types.String `tfsdk:"description"`
-	ParentId                  types.String `tfsdk:"parent_id"`
-	ChildrenCount             types.Int64  `tfsdk:"children_count"`
-	ConfiguredDatasourceTypes types.List   `tfsdk:"configured_datasource_types"`
-	DescendantIds             types.List   `tfsdk:"descendant_ids"`
-	UserCount                 types.Int64  `tfsdk:"user_count"`
-	Users                     types.List   `tfsdk:"users"`
-	UsersWithRole             types.List   `tfsdk:"users_with_role"`
-}
-
-// Metadata returns the resource type name.
+// Metadata returns the name of the resource type. This is used by Terraform configurations to
+// instantiate the resource.
 func (r *clumioOrganizationalUnitResource) Metadata(
 	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_organizational_unit"
+	r.name = req.ProviderTypeName + "_organizational_unit"
+	resp.TypeName = r.name
 }
 
-// Schema defines the schema for the resource.
-func (r *clumioOrganizationalUnitResource) Schema(
-	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Description: "Resource for creating and managing Organizational Unit in Clumio.",
-		Attributes: map[string]schema.Attribute{
-			schemaId: schema.StringAttribute{
-				Description: "OrganizationalUnit Id.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			schemaName: schema.StringAttribute{
-				Description: "Unique name assigned to the organizational unit.",
-				Required:    true,
-			},
-			schemaDescription: schema.StringAttribute{
-				Description: "A description of the organizational unit.",
-				Optional:    true,
-			},
-			schemaParentId: schema.StringAttribute{
-				Description: "The Clumio-assigned ID of the parent organizational unit" +
-					" under which the new organizational unit is to be created.",
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-			},
-			schemaChildrenCount: schema.Int64Attribute{
-				Description: "Number of immediate children of the organizational unit.",
-				Computed:    true,
-			},
-			schemaConfiguredDatasourceTypes: schema.ListAttribute{
-				Description: "Datasource types configured in this organizational unit." +
-					" Possible values include aws, microsoft365, vmware, or mssql.",
-				ElementType: types.StringType,
-				Computed:    true,
-			},
-			schemaDescendantIds: schema.ListAttribute{
-				Description: "List of all recursive descendant organizational units" +
-					" of this OU.",
-				ElementType: types.StringType,
-				Computed:    true,
-			},
-			schemaUserCount: schema.Int64Attribute{
-				Description: "Number of users to whom this organizational unit or any" +
-					" of its descendants have been assigned.",
-				Computed: true,
-			},
-			schemaUsers: schema.ListAttribute{
-				Description:        "List of user ids to assign this organizational unit.",
-				ElementType:        types.StringType,
-				Computed:           true,
-				DeprecationMessage: "This attribute will be removed in the next major version of the provider.",
-			},
-			schemaUsersWithRole: schema.ListNestedAttribute{
-				Description: "List of user ids, with role, to assign this organizational unit.",
-				Computed:    true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						schemaUserId: schema.StringAttribute{
-							Description: "The Clumio-assigned ID of the user.",
-							Computed:    true,
-						},
-						schemaAssignedRole: schema.StringAttribute{
-							Description: "The Clumio-assigned ID of the role assigned to the user.",
-							Computed:    true,
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-// Configure adds the provider configured client to the data source.
+// Configure sets up the resource with the Clumio API client and any other required state. It is
+// called by Terraform once the Provider is initialized.
 func (r *clumioOrganizationalUnitResource) Configure(
 	_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
-
 	r.client = req.ProviderData.(*common.ApiClient)
+	r.sdkOrgUnits = sdkOrgUnits.NewOrganizationalUnitsV2(r.client.ClumioConfig)
 }
 
-// Create creates the resource and sets the initial Terraform state.
+// Create creates the resource via the Clumio API and sets the initial Terraform state.
 func (r *clumioOrganizationalUnitResource) Create(
 	ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
+	// Retrieve the schema from the Terraform plan.
 	var plan clumioOrganizationalUnitResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -162,29 +74,30 @@ func (r *clumioOrganizationalUnitResource) Create(
 		return
 	}
 
-	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV2(r.client.ClumioConfig)
-	name := plan.Name.ValueString()
-	parentId := plan.ParentId.ValueString()
+	// Convert the schema to a Clumio API request to create an organizational unit.
 	request := &models.CreateOrganizationalUnitV2Request{
-		Name:     &name,
-		ParentId: &parentId,
-	}
-	description := plan.Description.ValueString()
-	if !plan.Description.IsNull() {
-		request.Description = &description
+		Name:        plan.Name.ValueStringPointer(),
+		ParentId:    plan.ParentId.ValueStringPointer(),
+		Description: plan.Description.ValueStringPointer(),
 	}
 
-	res, apiErr := orgUnitsAPI.CreateOrganizationalUnit(nil, request)
+	// Call the Clumio API to create the organizational unit.
+	res, apiErr := r.sdkOrgUnits.CreateOrganizationalUnit(nil, request)
 	if apiErr != nil {
+		summary := fmt.Sprintf("Unable to create %s", r.name)
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
+		return
+	}
+	if res == nil {
 		resp.Diagnostics.AddError(
-			"Error creating Clumio organizational unit.",
-			fmt.Sprintf(errorFmt, string(apiErr.Response)))
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
 		return
 	}
 
+	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
+	// including the ID given that the resource is getting created.
 	var id types.String
-	var nameString types.String
-	var descriptionString types.String
 	var parentIdString types.String
 	var childrenCount types.Int64
 	var userCount types.Int64
@@ -193,38 +106,34 @@ func (r *clumioOrganizationalUnitResource) Create(
 	var userWithRoleSlice []userWithRole
 	var descendantIdSlice []*string
 
-	if res.StatusCode == http200 {
-		id = types.StringValue(*res.Http200.Id)
-		nameString = types.StringValue(*res.Http200.Name)
-		if res.Http200.Description != nil {
-			descriptionString = types.StringValue(*res.Http200.Description)
-		}
-		if res.Http200.ParentId != nil {
-			parentIdString = types.StringValue(*res.Http200.ParentId)
-		}
-		childrenCount = types.Int64Value(*res.Http200.ChildrenCount)
-		userCount = types.Int64Value(*res.Http200.UserCount)
+	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
+	// including the ID given that the resource is getting created.
+	// API call can result in either 200 or 201 status code. Relevant data is returned inside a field
+	// name mapped to the status code. Data is extracted from the correct field according to the
+	// status code. Else return an empty response error.
+	if res.StatusCode == http.StatusOK && res.Http200 != nil {
+		id = types.StringPointerValue(res.Http200.Id)
+		parentIdString = types.StringPointerValue(res.Http200.ParentId)
+		childrenCount = types.Int64PointerValue(res.Http200.ChildrenCount)
+		userCount = types.Int64PointerValue(res.Http200.UserCount)
 		configuredDatasourceTypes = res.Http200.ConfiguredDatasourceTypes
 		userSlice, userWithRoleSlice = getUsersFromHTTPRes(res.Http200.Users)
 		descendantIdSlice = res.Http200.DescendantIds
-	} else if res.StatusCode == http202 {
-		id = types.StringValue(*res.Http202.Id)
-		nameString = types.StringValue(*res.Http202.Name)
-		if res.Http202.Description != nil {
-			descriptionString = types.StringValue(*res.Http202.Description)
-		}
-		if res.Http202.ParentId != nil {
-			parentIdString = types.StringValue(*res.Http202.ParentId)
-		}
-		childrenCount = types.Int64Value(*res.Http202.ChildrenCount)
-		userCount = types.Int64Value(*res.Http202.UserCount)
+	} else if res.StatusCode == http.StatusAccepted && res.Http202 != nil {
+		id = types.StringPointerValue(res.Http202.Id)
+		parentIdString = types.StringPointerValue(res.Http202.ParentId)
+		childrenCount = types.Int64PointerValue(res.Http202.ChildrenCount)
+		userCount = types.Int64PointerValue(res.Http202.UserCount)
 		configuredDatasourceTypes = res.Http202.ConfiguredDatasourceTypes
 		userSlice, userWithRoleSlice = getUsersFromHTTPRes(res.Http202.Users)
 		descendantIdSlice = res.Http202.DescendantIds
+	} else {
+		summary := "Empty response returned."
+		detail := "CreateOrganizationalUnit returned empty response returned which is not expected."
+		resp.Diagnostics.AddError(summary, detail)
+		return
 	}
 	plan.Id = id
-	plan.Name = nameString
-	plan.Description = descriptionString
 	plan.ParentId = parentIdString
 	plan.ChildrenCount = childrenCount
 	plan.UserCount = userCount
@@ -249,7 +158,7 @@ func (r *clumioOrganizationalUnitResource) Create(
 	resp.Diagnostics.Append(conversionDiags...)
 	plan.DescendantIds = descendantIds
 
-	// Set the state.
+	// Set the schema into the Terraform state
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -257,11 +166,11 @@ func (r *clumioOrganizationalUnitResource) Create(
 	}
 }
 
-// Read refreshes the Terraform state with the latest data.
+// Read retrieves the resource from the Clumio API and sets the Terraform state.
 func (r *clumioOrganizationalUnitResource) Read(
 	ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 
-	// Get current state
+	// Retrieve the schema from the current Terraform state.
 	var state clumioOrganizationalUnitResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -269,28 +178,41 @@ func (r *clumioOrganizationalUnitResource) Read(
 		return
 	}
 
-	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV2(r.client.ClumioConfig)
-	res, apiErr := orgUnitsAPI.ReadOrganizationalUnit(state.Id.ValueString(), nil)
+	// Call the Clumio API to read the orgainizational unit.
+	res, apiErr := r.sdkOrgUnits.ReadOrganizationalUnit(state.Id.ValueString(), nil)
 	if apiErr != nil {
-		if strings.Contains(apiErr.Error(), "The resource is not found.") {
-			state.Id = types.StringValue("")
+		if apiErr.ResponseCode == http.StatusNotFound {
+			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state", r.name, state.Id.ValueString())
+			tflog.Warn(ctx, summary)
+			resp.State.RemoveResource(ctx)
+		} else {
+			summary := fmt.Sprintf("Unable to read %s (ID: %v)", r.name, state.Id.ValueString())
+			detail := common.ParseMessageFromApiError(apiErr)
+			resp.Diagnostics.AddError(summary, detail)
 		}
+		return
+	}
+	if res == nil {
 		resp.Diagnostics.AddError(
-			"Error retrieving Clumio organizational unit.",
-			fmt.Sprintf(errorFmt, string(apiErr.Response)))
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
 		return
 	}
 
-	state.Id = types.StringValue(*res.Id)
-	state.Name = types.StringValue(*res.Name)
-	if res.Description != nil {
-		state.Description = types.StringValue(*res.Description)
+	// Convert the Clumio API response back to a schema and update the state. In addition to
+	// computed fields, all fields are populated from the API response in case any values have been
+	// changed externally. ID is not updated however given that it is the field used to query the
+	// resource from the backend.
+	state.Name = types.StringPointerValue(res.Name)
+
+	// Since the Description field is optional, it should only be populated if it initially
+	// contained a non-null value or if there is a specific value that needs to be assigned.
+	description := types.StringPointerValue(res.Description)
+	if !state.Description.IsNull() || description.ValueString() != "" {
+		state.Description = description
 	}
-	if res.ParentId != nil {
-		state.ParentId = types.StringValue(*res.ParentId)
-	}
-	state.ChildrenCount = types.Int64Value(*res.ChildrenCount)
-	state.UserCount = types.Int64Value(*res.UserCount)
+	state.ParentId = types.StringPointerValue(res.ParentId)
+	state.ChildrenCount = types.Int64PointerValue(res.ChildrenCount)
+	state.UserCount = types.Int64PointerValue(res.UserCount)
 
 	configuredDataTypes, conversionDiags := types.ListValueFrom(ctx, types.StringType, res.ConfiguredDatasourceTypes)
 	resp.Diagnostics.Append(conversionDiags...)
@@ -313,7 +235,7 @@ func (r *clumioOrganizationalUnitResource) Read(
 	resp.Diagnostics.Append(conversionDiags...)
 	state.DescendantIds = descendantIds
 
-	// Set refreshed state
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -321,10 +243,11 @@ func (r *clumioOrganizationalUnitResource) Read(
 	}
 }
 
-// Update updates the resource and sets the updated Terraform state on success.
+// Update updates the resource via the Clumio API and updates the Terraform state.
 func (r *clumioOrganizationalUnitResource) Update(
 	ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Retrieve values from plan
+
+	// Retrieve the schema from the Terraform plan.
 	var plan clumioOrganizationalUnitResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -332,6 +255,7 @@ func (r *clumioOrganizationalUnitResource) Update(
 		return
 	}
 
+	// Retrieve the schema from the current Terraform state.
 	var state clumioOrganizationalUnitResourceModel
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -339,26 +263,29 @@ func (r *clumioOrganizationalUnitResource) Update(
 		return
 	}
 
-	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV2(r.client.ClumioConfig)
-	name := plan.Name.ValueString()
-	request := &models.PatchOrganizationalUnitV2Request{
-		Name: &name,
+	// Convert the schema to a Clumio API request to update the organizational unit.
+	createReq := &models.PatchOrganizationalUnitV2Request{
+		Name:        plan.Name.ValueStringPointer(),
+		Description: plan.Description.ValueStringPointer(),
 	}
-	description := plan.Description.ValueString()
-	if !plan.Description.IsNull() {
-		request.Description = &description
-	}
-	res, apiErr := orgUnitsAPI.PatchOrganizationalUnit(plan.Id.ValueString(), nil, request)
+
+	// Call the Clumio API to update the organizational unit.
+	res, apiErr := r.sdkOrgUnits.PatchOrganizationalUnit(plan.Id.ValueString(), nil, createReq)
 	if apiErr != nil {
+		summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, plan.Id.ValueString())
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
+		return
+	}
+	if res == nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error updating Clumio organizational unit id: %v.", plan.Id.ValueString()),
-			fmt.Sprintf(errorFmt, string(apiErr.Response)))
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
 		return
 	}
 
-	var id types.String
-	var nameString types.String
-	var descriptionString types.String
+	// Convert the Clumio API response back to a schema and populate all computed fields of the
+	// plan. ID however is not updated given that it is the field used to denote which resource to
+	// update in the backend.
 	var parentIdString types.String
 	var childrenCount types.Int64
 	var userCount types.Int64
@@ -367,38 +294,31 @@ func (r *clumioOrganizationalUnitResource) Update(
 	var userSlice []*string
 	var descendantIdSlice []*string
 
-	if res.StatusCode == http200 {
-		id = types.StringValue(*res.Http200.Id)
-		nameString = types.StringValue(*res.Http200.Name)
-		if res.Http200.Description != nil {
-			descriptionString = types.StringValue(*res.Http200.Description)
-		}
-		if res.Http200.ParentId != nil {
-			parentIdString = types.StringValue(*res.Http200.ParentId)
-		}
-		childrenCount = types.Int64Value(*res.Http200.ChildrenCount)
-		userCount = types.Int64Value(*res.Http200.UserCount)
+	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
+	// including the ID given that the resource is getting created.
+	// API call can result in either 200 or 201 status code. Relevant data is returned inside a field
+	// name mapped to the status code. Data is extracted from the correct field according to the
+	// status code. Else return an empty response error.
+	if res.StatusCode == http.StatusOK && res.Http200 != nil {
+		parentIdString = types.StringPointerValue(res.Http200.ParentId)
+		childrenCount = types.Int64PointerValue(res.Http200.ChildrenCount)
+		userCount = types.Int64PointerValue(res.Http200.UserCount)
 		configuredDatasourceTypes = res.Http200.ConfiguredDatasourceTypes
 		userSlice, userWithRoleSlice = getUsersFromHTTPRes(res.Http200.Users)
 		descendantIdSlice = res.Http200.DescendantIds
-	} else if res.StatusCode == http202 {
-		id = types.StringValue(*res.Http202.Id)
-		nameString = types.StringValue(*res.Http202.Name)
-		if res.Http202.Description != nil {
-			descriptionString = types.StringValue(*res.Http202.Description)
-		}
-		if res.Http202.ParentId != nil {
-			parentIdString = types.StringValue(*res.Http202.ParentId)
-		}
-		childrenCount = types.Int64Value(*res.Http202.ChildrenCount)
-		userCount = types.Int64Value(*res.Http202.UserCount)
+	} else if res.StatusCode == http.StatusAccepted && res.Http202 != nil {
+		parentIdString = types.StringPointerValue(res.Http202.ParentId)
+		childrenCount = types.Int64PointerValue(res.Http202.ChildrenCount)
+		userCount = types.Int64PointerValue(res.Http202.UserCount)
 		configuredDatasourceTypes = res.Http202.ConfiguredDatasourceTypes
 		userSlice, userWithRoleSlice = getUsersFromHTTPRes(res.Http202.Users)
 		descendantIdSlice = res.Http202.DescendantIds
+	} else {
+		summary := "Empty response returned."
+		detail := "PatchOrganizationalUnit returned empty response returned which is not expected."
+		resp.Diagnostics.AddError(summary, detail)
+		return
 	}
-	plan.Id = id
-	plan.Name = nameString
-	plan.Description = descriptionString
 	plan.ParentId = parentIdString
 	plan.ChildrenCount = childrenCount
 	plan.UserCount = userCount
@@ -423,7 +343,7 @@ func (r *clumioOrganizationalUnitResource) Update(
 	resp.Diagnostics.Append(conversionDiags...)
 	plan.DescendantIds = descendantIds
 
-	// Set state to fully populated data.
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -431,11 +351,11 @@ func (r *clumioOrganizationalUnitResource) Update(
 	}
 }
 
-// Delete deletes the resource and removes the Terraform state on success.
+// Delete deletes the resource via the Clumio API and removes the Terraform state.
 func (r *clumioOrganizationalUnitResource) Delete(
 	ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 
-	// Retrieve values from state
+	// Retrieve the schema from the current Terraform state.
 	var state clumioOrganizationalUnitResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -443,36 +363,32 @@ func (r *clumioOrganizationalUnitResource) Delete(
 		return
 	}
 
-	orgUnitsAPI := orgUnits.NewOrganizationalUnitsV2(r.client.ClumioConfig)
-	res, apiErr := orgUnitsAPI.DeleteOrganizationalUnit(state.Id.ValueString(), nil)
+	// Call the Clumio API to delete the organizational unit.
+	res, apiErr := r.sdkOrgUnits.DeleteOrganizationalUnit(state.Id.ValueString(), nil)
 	if apiErr != nil {
+		if apiErr.ResponseCode != http.StatusNotFound {
+			summary := fmt.Sprintf("Unable to delete %s (ID: %v)", r.name, state.Id.ValueString())
+			detail := common.ParseMessageFromApiError(apiErr)
+			resp.Diagnostics.AddError(summary, detail)
+		}
+		return
+	}
+	if res == nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf(
-				"Error deleting Clumio organizational unit %v.", state.Id.ValueString()),
-			fmt.Sprintf(errorFmt, string(apiErr.Response)))
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+		return
 	}
 	err := common.PollTask(ctx, r.client, *res.TaskId, pollTimeoutInSec, pollIntervalInSec)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error while polling for Delete OU Task"),
-			fmt.Sprintf(errorFmt, string(err.Error())))
+		summary := fmt.Sprintf("Unable to poll %s (ID: %v) for deletion", r.name, state.Id.ValueString())
+		detail := err.Error()
+		resp.Diagnostics.AddError(summary, detail)
 	}
 }
 
+// ImportState retrieves the resource via the Clumio API and sets the Terraform state. The import
+// is done by the ID of the resource.
 func (r *clumioOrganizationalUnitResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func getUsersFromHTTPRes(users []*models.UserWithRole) ([]*string, []userWithRole) {
-	userSlice, userWithRoleSlice := make([]*string, len(users)), make([]userWithRole, len(users))
-	for idx, user := range users {
-		userSlice[idx] = user.UserId
-		userWithRoleSlice[idx] = userWithRole{
-			UserId:       types.StringValue(*user.UserId),
-			AssignedRole: types.StringValue(*user.AssignedRole),
-		}
-	}
-
-	return userSlice, userWithRoleSlice
 }

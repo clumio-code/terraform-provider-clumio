@@ -3,12 +3,12 @@
 page_title: "clumio_role Data Source - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  Clumio Roles Data Source used to list the Clumio Roles.
+  Clumio Role data source used to retrieve details of a role for use in other resources.
 ---
 
 # clumio_role (Data Source)
 
-Clumio Roles Data Source used to list the Clumio Roles.
+Clumio Role data source used to retrieve details of a role for use in other resources.
 
 ## Example Usage
 
@@ -22,12 +22,12 @@ data "clumio_role" "example" {
 
 ### Required
 
-- `name` (String) Unique name assigned to the role.
+- `name` (String) The unique name of the role from which to populate the data source.
 
 ### Read-Only
 
-- `description` (String) A description of the role.
-- `id` (String) The Clumio-assigned ID of the role.
+- `description` (String) Brief description to denote details of the role.
+- `id` (String) Unique identifier for the role.
 - `permissions` (Block List) Permissions contained in the role. (see [below for nested schema](#nestedblock--permissions))
 - `user_count` (Number) Number of users to whom the role has been assigned.
 
@@ -36,8 +36,6 @@ data "clumio_role" "example" {
 
 Read-Only:
 
-- `description` (String) Description of the permission.
-- `id` (String) The Clumio-assigned ID of the permission.
+- `description` (String) Brief description to denote details of the permission.
+- `id` (String) Unique identifier for the permission.
 - `name` (String) Name of the permission.
-
-

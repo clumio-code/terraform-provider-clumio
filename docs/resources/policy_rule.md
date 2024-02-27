@@ -44,7 +44,7 @@ resource "clumio_policy_rule" "example_2" {
 
 ### Read-Only
 
-- `id` (String) Policy Rule Id.
+- `id` (String) Unique identifier of the policy rule.
 
 ## Import
 

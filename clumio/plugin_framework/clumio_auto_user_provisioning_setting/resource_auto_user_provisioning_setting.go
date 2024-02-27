@@ -1,20 +1,18 @@
 // Copyright 2023. Clumio, Inc.
 
+// This file holds the resource implementation for the clumio_auto_user_provisioning_setting
+// Terraform resource. This resource is used to enable or disable auto user provisioning setting.
+
 package clumio_auto_user_provisioning_setting
 
 import (
 	"context"
-	"fmt"
 
-	aupSettings "github.com/clumio-code/clumio-go-sdk/controllers/auto_user_provisioning_settings"
+	sdkAUPSettings "github.com/clumio-code/clumio-go-sdk/controllers/auto_user_provisioning_settings"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -24,52 +22,34 @@ var (
 	_ resource.ResourceWithConfigure = &autoUserProvisioningSettingResource{}
 )
 
-// autoUserProvisioningSettingResource is the resource implementation.
+// autoUserProvisioningSettingResource is the struct backing the clumio_auto_user_provisioning_setting
+// Terraform resource. It holds the Clumio API client and any other required state needed to enable
+// or disable auto user provisioning setting.
 type autoUserProvisioningSettingResource struct {
-	client *common.ApiClient
+	name           string
+	client         *common.ApiClient
+	sdkAUPSettings sdkAUPSettings.AutoUserProvisioningSettingsV1Client
 }
 
-// NewAutoUserProvisioningSettingResource is a helper function to simplify the provider implementation.
+// NewAutoUserProvisioningSettingResource creates a new instance of autoUserProvisioningSettingResource.
+// Its attributes are initialized later by Terraform via Metadata and Configure once the Provider is
+// initialized.
 func NewAutoUserProvisioningSettingResource() resource.Resource {
+
 	return &autoUserProvisioningSettingResource{}
 }
 
-// autoUserProvisioningSettingResource model
-type autoUserProvisioningSettingResourceModel struct {
-	ID        types.String `tfsdk:"id"`
-	IsEnabled types.Bool   `tfsdk:"is_enabled"`
-}
-
-// Metadata returns the resource type name.
+// Metadata returns the name of the resource type. This is used by Terraform configurations to
+// instantiate the resource.
 func (r *autoUserProvisioningSettingResource) Metadata(
 	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auto_user_provisioning_setting"
+
+	r.name = req.ProviderTypeName + "_auto_user_provisioning_setting"
+	resp.TypeName = r.name
 }
 
-// Schema defines the schema for the data source.
-func (r *autoUserProvisioningSettingResource) Schema(
-	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		// This description is used by the documentation generator and the language server.
-		Description: "Clumio Auto User Provisioning Setting Resource used to determine if Auto User Provisioning " +
-			"feature is enabled or not.",
-		Attributes: map[string]schema.Attribute{
-			schemaId: schema.StringAttribute{
-				Description: "Auto User Provisioning Setting Id.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			schemaIsEnabled: schema.BoolAttribute{
-				Description: "Whether auto user provisioning is enabled or not.",
-				Required:    true,
-			},
-		},
-	}
-}
-
-// Configure adds the provider configured client to the data source.
+// Configure sets up the resource with the Clumio API client and any other required state. It is
+// called by Terraform once the Provider is initialized.
 func (r *autoUserProvisioningSettingResource) Configure(
 	_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
 
@@ -78,12 +58,14 @@ func (r *autoUserProvisioningSettingResource) Configure(
 	}
 
 	r.client = req.ProviderData.(*common.ApiClient)
+	r.sdkAUPSettings = sdkAUPSettings.NewAutoUserProvisioningSettingsV1(r.client.ClumioConfig)
 }
 
-// Create creates the resource and sets the initial Terraform state.
+// Create creates the resource via the Clumio API and sets the initial Terraform state.
 func (r *autoUserProvisioningSettingResource) Create(
 	ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
+	// Retrieve the schema from the Terraform plan.
 	var plan autoUserProvisioningSettingResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -91,23 +73,26 @@ func (r *autoUserProvisioningSettingResource) Create(
 		return
 	}
 
-	aups := aupSettings.NewAutoUserProvisioningSettingsV1(r.client.ClumioConfig)
-	isEnabled := plan.IsEnabled.ValueBool()
 	aupsRequest := &models.UpdateAutoUserProvisioningSettingV1Request{
-		IsEnabled: &isEnabled,
+		IsEnabled: plan.IsEnabled.ValueBoolPointer(),
 	}
-	_, apiErr := aups.UpdateAutoUserProvisioningSetting(aupsRequest)
+
+	// Call the Clumio API to enable or disable the auto user provisioning setting. NOTE that this
+	// setting is a singleton state for the entire organization and as such, creation of this
+	// resource results in "updating" the current state rather than creating a new instance of a
+	// setting.
+	_, apiErr := r.sdkAUPSettings.UpdateAutoUserProvisioningSetting(aupsRequest)
 	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			"Error creating auto user provisioning setting.",
-			fmt.Sprintf(errorFmt, string(apiErr.Response)),
-		)
+		summary := "Unable to set auto user provisioning setting."
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
 		return
 	}
 
+	// Since the API doesn't return an id, we are setting a uuid as the resource id.
 	plan.ID = types.StringValue(uuid.New().String())
 
-	// Set the state.
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -118,7 +103,8 @@ func (r *autoUserProvisioningSettingResource) Create(
 // Read refreshes the Terraform state with the latest data.
 func (r *autoUserProvisioningSettingResource) Read(
 	ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// Get current state
+
+	// Retrieve the schema from the Terraform state.
 	var state autoUserProvisioningSettingResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -126,19 +112,26 @@ func (r *autoUserProvisioningSettingResource) Read(
 		return
 	}
 
-	aups := aupSettings.NewAutoUserProvisioningSettingsV1(r.client.ClumioConfig)
-	res, apiErr := aups.ReadAutoUserProvisioningSetting()
+	// Call the Clumio API to read the auto user provisioning setting. The setting is an Org-wide
+	// value and as such, the Org ID associated with the API credentials will be utilized.
+	res, apiErr := r.sdkAUPSettings.ReadAutoUserProvisioningSetting()
 	if apiErr != nil {
+		summary := "Unable to retrieve auto user provisioning setting."
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
+		return
+	}
+	if res == nil {
 		resp.Diagnostics.AddError(
-			"Error retrieving auto user provisioning setting.",
-			fmt.Sprintf(errorFmt, string(apiErr.Response)),
-		)
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
 		return
 	}
 
-	state.IsEnabled = types.BoolValue(*res.IsEnabled)
+	// Convert the Clumio API response back to a schema and update the state. IsEnabled is the only
+	// setting that needs to be refreshed.
+	state.IsEnabled = types.BoolPointerValue(res.IsEnabled)
 
-	// Set refreshed state.
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -149,7 +142,8 @@ func (r *autoUserProvisioningSettingResource) Read(
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *autoUserProvisioningSettingResource) Update(
 	ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Retrieve values from plan
+
+	// Retrieve the schema from the Terraform plan.
 	var plan autoUserProvisioningSettingResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -157,24 +151,26 @@ func (r *autoUserProvisioningSettingResource) Update(
 		return
 	}
 
-	aups := aupSettings.NewAutoUserProvisioningSettingsV1(r.client.ClumioConfig)
 	isEnabled := plan.IsEnabled.ValueBool()
 	aupsRequest := &models.UpdateAutoUserProvisioningSettingV1Request{
 		IsEnabled: &isEnabled,
 	}
 
-	res, apiErr := aups.UpdateAutoUserProvisioningSetting(aupsRequest)
+	// Call the Clumio API to enable or disable auto user provisioning setting.
+	res, apiErr := r.sdkAUPSettings.UpdateAutoUserProvisioningSetting(aupsRequest)
 	if apiErr != nil {
+		summary := "Unable to update auto user provisioning setting."
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
+		return
+	}
+	if res == nil {
 		resp.Diagnostics.AddError(
-			"Error updating auto user provisioning setting.",
-			fmt.Sprintf(errorFmt, string(apiErr.Response)),
-		)
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
 		return
 	}
 
-	plan.IsEnabled = types.BoolValue(*res.IsEnabled)
-
-	// Set state to fully populated data.
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -185,7 +181,8 @@ func (r *autoUserProvisioningSettingResource) Update(
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *autoUserProvisioningSettingResource) Delete(
 	ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Retrieve values from state
+
+	// Retrieve the schema from the Terraform state.
 	var state autoUserProvisioningSettingResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -193,16 +190,16 @@ func (r *autoUserProvisioningSettingResource) Delete(
 		return
 	}
 
-	aups := aupSettings.NewAutoUserProvisioningSettingsV1(r.client.ClumioConfig)
 	isEnabled := false
 	aupsRequest := &models.UpdateAutoUserProvisioningSettingV1Request{
 		IsEnabled: &isEnabled,
 	}
-	_, apiErr := aups.UpdateAutoUserProvisioningSetting(aupsRequest)
+
+	// Call the Clumio API to disable auto user provisioning setting.
+	_, apiErr := r.sdkAUPSettings.UpdateAutoUserProvisioningSetting(aupsRequest)
 	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting auto user provisioning setting.",
-			fmt.Sprintf(errorFmt, string(apiErr.Response)),
-		)
+		summary := "Unable to delete auto user provisioning setting."
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
 	}
 }

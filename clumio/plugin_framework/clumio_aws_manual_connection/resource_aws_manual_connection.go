@@ -1,173 +1,70 @@
+// Copyright 2023. Clumio, Inc.
+
+// This file holds the resource implementation for the clumio_aws_manual_connection Terraform
+// resource. This resource is used in conjunction with clumio_aws_connection and provides the
+// externally provisioned AWS resources needed for a Clumio connection to function. This resource
+// takes the place of the clumio_post_process_aws_connection resource that is typically called as
+// part of the clumio-aws-template module.
+
 package clumio_aws_manual_connection
 
 import (
 	"context"
 	"fmt"
 
-	aws_connections "github.com/clumio-code/clumio-go-sdk/controllers/aws_connections"
+	awsConnections "github.com/clumio-code/clumio-go-sdk/controllers/aws_connections"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const (
-	EBS = "EBS"
-	S3 = "S3"
-	DynamoDB = "DynamoDB"
-	RDS = "RDS"
-	EC2MSSQL = "EC2MSSQL" 
-)
-
-// AwsManualConnection model
-type AwsManualConnectionModel struct {
-	ID            types.String        `tfsdk:"id"`
-	AccountId     types.String        `tfsdk:"account_id"`
-	AwsRegion     types.String        `tfsdk:"aws_region"`
-	AssetsEnabled *AssetsEnabledModel `tfsdk:"assets_enabled"`
-	Resources     *ResourcesModel     `tfsdk:"resources"`
+// clumioAWSConnectionResource is the struct backing the clumio_aws_connection Terraform resource.
+// It holds the Clumio API client and any other required state needed to manage AWS manual
+// connections within Clumio.
+type clumioAWSManualConnectionResource struct {
+	name              string
+	client            *common.ApiClient
+	awsConnections    awsConnections.AwsConnectionsV1Client
 }
 
-type AssetsEnabledModel struct {
-	EBS      types.Bool `tfsdk:"ebs"`
-	RDS      types.Bool `tfsdk:"rds"`
-	DynamoDB types.Bool `tfsdk:"ddb"`
-	S3       types.Bool `tfsdk:"s3"`
-	EC2MSSQL types.Bool `tfsdk:"mssql"`
+// NewClumioAWSManualConnectionResource is a helper function to simplify the provider implementation.
+func NewClumioAWSManualConnectionResource() resource.Resource {
+	return &clumioAWSManualConnectionResource{}
 }
 
-type ResourcesModel struct {
-	// IAM role with permissions to enable Clumio to backup and restore your assets
-	ClumioIAMRoleArn types.String `tfsdk:"clumio_iam_role_arn"`
-	// IAM role with permissions used by Clumio to create AWS support cases
-	ClumioSupportRoleArn types.String `tfsdk:"clumio_support_role_arn"`
-	// SNS topic to publish messages to Clumio services
-	ClumioEventPubArn types.String `tfsdk:"clumio_event_pub_arn"`
-	// Event rules for tracking changes in assets
-	EventRules *EventRules `tfsdk:"event_rules"`
-	// Asset-specific service roles
-	ServiceRoles *ServiceRoles `tfsdk:"service_roles"`
+// Metadata returns the resource type name.
+func (r *clumioAWSManualConnectionResource) Metadata(
+	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	r.name = req.ProviderTypeName + "_aws_manual_connection"
+	resp.TypeName = r.name
 }
 
-type EventRules struct {
-	// Event rule for tracking resource changes in selected assets
-	CloudtrailRuleArn types.String `tfsdk:"cloudtrail_rule_arn"`
-	// Event rule for tracking tag and resource changes in selected assets
-	CloudwatchRuleArn types.String `tfsdk:"cloudwatch_rule_arn"`
-}
-
-type ServiceRoles struct {
-	// Service roles required for mssql
-	Mssql *MssqlServiceRoles `tfsdk:"mssql"`
-	// Service roles required for s3
-	S3 *S3ServiceRoles `tfsdk:"s3"`
-}
-
-type MssqlServiceRoles struct {
-	// Role assumable by ssm service
-	SsmNotificationRoleArn types.String `tfsdk:"ssm_notification_role_arn"`
-	// Instance created for ec2 instance profile role
-	Ec2SsmInstanceProfileArn types.String `tfsdk:"ec2_ssm_instance_profile_arn"`
-}
-
-type S3ServiceRoles struct {
-	// Role assumed for continuous backups
-	ContinuousBackupsRoleArn types.String `tfsdk:"continuous_backups_role_arn"`
-}
-
-// awsManualConnectionResource is the resource implementation.
-type awsManualConnectionResource struct {
-	client *common.ApiClient
-}
-
-// NewAwsManualConnectionResource is a helper function to simplify the provider implementation.
-func NewAwsManualConnectionResource() resource.Resource {
-	return &awsManualConnectionResource{}
-}
-
-// Schema defines the schema for the resource.
-func (r *awsManualConnectionResource) Schema(
-	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Description: "Clumio AWS Manual Connection Resource used to setup manual resources for connections.",
-		Attributes: map[string]schema.Attribute{
-			schemaId: schema.StringAttribute{
-				Description: "Clumio AWS Connection Id",
-				Computed:    true,
-			},
-			schemaAccountId: schema.StringAttribute{
-				Description: "AWS Account Id of the connection",
-				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			schemaAwsRegion: schema.StringAttribute{
-				Description: "AWS Region of the connection",
-				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			schemaAssetsEnabled: schema.ObjectAttribute{
-				Description: "Assets enabled for the connection",
-				Required:    true,
-				AttributeTypes: map[string]attr.Type{
-					schemaIsEbsEnabled: types.BoolType,
-					schemaIsDynamoDBEnabled: types.BoolType,
-					schemaIsRDSEnabled: types.BoolType,
-					schemaIsS3Enabled: types.BoolType,
-					schemaIsMssqlEnabled: types.BoolType,
-				},
-			},
-			schemaResources: schema.ObjectAttribute{
-				Description: "Manual resources for the connection",
-				Required: true,
-				AttributeTypes: map[string]attr.Type{
-					schemaClumioIAMRoleArn: types.StringType,
-					schemaClumioEventPubArn: types.StringType,
-					schemaClumioSupportRoleArn: types.StringType,
-					schemaEventRules: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							schemaCloudtrailRuleArn: types.StringType,
-							schemaCloudwatchRuleArn: types.StringType,
-						},
-					},
-					schemaServiceRoles: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							schemaS3: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									schemaContinuousBackupsRoleArn: types.StringType,				
-								},			
-							},
-							schemaMssql: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									schemaSsmNotificationRoleArn: types.StringType,
-									schemaEc2SsmInstanceProfileArn: types.StringType,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+// Configure sets up the resource with the Clumio API client and any other required state. It is
+// called by Terraform once the Provider is initialized.
+func (r *clumioAWSManualConnectionResource) Configure(
+	_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
 	}
+	r.client = req.ProviderData.(*common.ApiClient)
+	r.awsConnections = awsConnections.NewAwsConnectionsV1(r.client.ClumioConfig)
 }
 
-// Create implements resource.Resource.
-func (r *awsManualConnectionResource) Create(ctx context.Context, req resource.CreateRequest, res *resource.CreateResponse) {
-	var plan AwsManualConnectionModel
+// Create creates the resource via the Clumio API and sets the initial Terraform state.
+func (r *clumioAWSManualConnectionResource) Create(
+	ctx context.Context, req resource.CreateRequest, res *resource.CreateResponse) {
+
+	// Retrieve the schema from the Terraform plan.
+	var plan clumioAWSManualConnectionResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
 		return
 	}
 
+	// Call the common util to deploy the manually configured resources for the connection.
 	diags = r.clumioSetManualResourcesCommon(ctx, plan)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
@@ -176,9 +73,9 @@ func (r *awsManualConnectionResource) Create(ctx context.Context, req resource.C
 
 	accountId := plan.AccountId.ValueString()
 	awsRegion := plan.AwsRegion.ValueString()
-	
 	plan.ID = types.StringValue(fmt.Sprintf("%v_%v", accountId, awsRegion))
 
+	// Set the schema into the Terraform state.
 	diags = res.State.Set(ctx, &plan)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
@@ -187,70 +84,70 @@ func (r *awsManualConnectionResource) Create(ctx context.Context, req resource.C
 
 }
 
-// Delete implements resource.Resource.
-func (*awsManualConnectionResource) Delete(context.Context, resource.DeleteRequest, *resource.DeleteResponse) {
-}
+// Update updates the resource via the Clumio API and updates the Terraform state. Update only
+// happens when there is a change in state of the AWS manual connection.
+func (r *clumioAWSManualConnectionResource) Update(
+	ctx context.Context, req resource.UpdateRequest, res *resource.UpdateResponse) {
 
-// Read implements resource.Resource.
-func (*awsManualConnectionResource) Read(context.Context, resource.ReadRequest, *resource.ReadResponse) {
-}
-
-// Update implements resource.Resource.
-func (r *awsManualConnectionResource) Update(ctx context.Context, req resource.UpdateRequest, res *resource.UpdateResponse) {
-	var plan AwsManualConnectionModel
+	// Retrieve the schema from the Terraform plan.
+	var plan clumioAWSManualConnectionResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
 		return
 	}
 
-	var state AwsManualConnectionModel
+	// Retrieve the schema from the current Terraform state.
+	var state clumioAWSManualConnectionResourceModel
 	diags = req.State.Get(ctx, &state)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
 		return
 	}
 
-	changeInState := isAssetConfigChanged(&plan, &state) || isResourceConfigChanged(&plan, &state)
-	if changeInState {
-		diags = r.clumioSetManualResourcesCommon(ctx, plan)
-		res.Diagnostics.Append(diags...)
-		if res.Diagnostics.HasError() {
-			return
-		}
-		plan.ID = types.StringValue(state.ID.ValueString())
-		diags = res.State.Set(ctx, &plan)
-
-		res.Diagnostics.Append(diags...)
-		if res.Diagnostics.HasError() {
-			return
-		}
+	// Block update if downgrading of assets is attempted.
+	if isAssetConfigDowngraded(&plan, &state) {
+		summary := "Error updating manual connection."
+		detail := "Downgrading assets is not allowed."
+		res.Diagnostics.AddError(summary, detail)
 	}
-}
 
-// Metadata returns the resource type name.
-func (r *awsManualConnectionResource) Metadata(
-	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_aws_manual_connection"
-}
-
-// Configure adds the provider configured client to the data source.
-func (r *awsManualConnectionResource) Configure(
-	_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+	// Call the Clumio API to update the manual connection.
+	diags = r.clumioSetManualResourcesCommon(ctx, plan)
+	res.Diagnostics.Append(diags...)
+	if res.Diagnostics.HasError() {
 		return
 	}
+	plan.ID = types.StringValue(state.ID.ValueString())
 
-	r.client = req.ProviderData.(*common.ApiClient)
+	// Set the schema into the Terraform state.
+	diags = res.State.Set(ctx, &plan)
+	res.Diagnostics.Append(diags...)
+	if res.Diagnostics.HasError() {
+		return
+	}
 }
 
-// clumioSetManualResourcesCommon contains the logic for updating resources of a manual connection.
-func (r *awsManualConnectionResource) clumioSetManualResourcesCommon(
-	ctx context.Context, state AwsManualConnectionModel) diag.Diagnostics {
-	awsConnection := aws_connections.NewAwsConnectionsV1(r.client.ClumioConfig)
+// Read does not have an implementation as there is no API to read for clumio_aws_manual_connection.
+func (*clumioAWSManualConnectionResource) Read(
+	context.Context, resource.ReadRequest, *resource.ReadResponse) {
+}
+
+// Delete does not have an implementation as there is no API to delete for
+// clumio_aws_manual_connection.
+func (*clumioAWSManualConnectionResource) Delete(
+	context.Context, resource.DeleteRequest, *resource.DeleteResponse) {
+}
+
+// clumioSetManualResourcesCommon contains the logic for updating resources of a manual connection
+// using Clumio API.
+func (r *clumioAWSManualConnectionResource) clumioSetManualResourcesCommon(
+	ctx context.Context, state clumioAWSManualConnectionResourceModel) diag.Diagnostics {
 	accountId := state.AccountId.ValueString()
 	awsRegion := state.AwsRegion.ValueString()
-
+	connectionId := accountId + "_" + awsRegion
+	
+	// Determine which asset types are enabled fo the connection
 	assetsEnabled := []*string{}
 	if state.AssetsEnabled.EBS.ValueBool() {
 		enabled := EBS
@@ -273,106 +170,37 @@ func (r *awsManualConnectionResource) clumioSetManualResourcesCommon(
 		assetsEnabled = append(assetsEnabled, &enabled)
 	}
 
-	connectionId := accountId + "_" + awsRegion
-
-	clumioIamRoleArn := state.Resources.ClumioIAMRoleArn.ValueString()
-	clumioEventPubArn := state.Resources.ClumioEventPubArn.ValueString()
-	clumioSupportRoleArn := state.Resources.ClumioSupportRoleArn.ValueString()
-	cloudtrailRuleArn := state.Resources.EventRules.CloudtrailRuleArn.ValueString()
-	cloudwatchRuleArn := state.Resources.EventRules.CloudwatchRuleArn.ValueString()
-	continuousBackupsRoleArn := state.Resources.ServiceRoles.S3.ContinuousBackupsRoleArn.ValueString()
-	ec2SsmInstanceProfileArn := state.Resources.ServiceRoles.Mssql.Ec2SsmInstanceProfileArn.ValueString()
-	ssmNotificationRoleArn := state.Resources.ServiceRoles.Mssql.SsmNotificationRoleArn.ValueString()
-
-	_, apiErr := awsConnection.UpdateAwsConnection(
-		connectionId,
-		models.UpdateAwsConnectionV1Request{
-			AssetTypesEnabled: assetsEnabled,
-			Resources: &models.Resources{
-				ClumioIamRoleArn: &clumioIamRoleArn,
-				ClumioEventPubArn: &clumioEventPubArn,
-				ClumioSupportRoleArn: &clumioSupportRoleArn,
-				EventRules: &models.EventRules{
-					CloudtrailRuleArn: &cloudtrailRuleArn,
-					CloudwatchRuleArn: &cloudwatchRuleArn,
+	// Convert the schema into a Clumio API request, containing the enabled asset types and stack ARNs
+	// to the manually configured resources
+	req := models.UpdateAwsConnectionV1Request{
+		AssetTypesEnabled: assetsEnabled,
+		Resources: &models.Resources{
+			ClumioIamRoleArn: state.Resources.ClumioIAMRoleArn.ValueStringPointer(),
+			ClumioEventPubArn: state.Resources.ClumioEventPubArn.ValueStringPointer(),
+			ClumioSupportRoleArn: state.Resources.ClumioSupportRoleArn.ValueStringPointer(),
+			EventRules: &models.EventRules{
+				CloudtrailRuleArn: state.Resources.EventRules.CloudtrailRuleArn.ValueStringPointer(),
+				CloudwatchRuleArn: state.Resources.EventRules.CloudwatchRuleArn.ValueStringPointer(),
+			},
+			ServiceRoles: &models.ServiceRoles{
+				S3: &models.S3ServiceRoles{
+					ContinuousBackupsRoleArn: state.Resources.ServiceRoles.S3.ContinuousBackupsRoleArn.ValueStringPointer(),
 				},
-				ServiceRoles: &models.ServiceRoles{
-					S3: &models.S3ServiceRoles{
-						ContinuousBackupsRoleArn: &continuousBackupsRoleArn,
-					},
-					Mssql: &models.MssqlServiceRoles{
-						Ec2SsmInstanceProfileArn: &ec2SsmInstanceProfileArn,
-						SsmNotificationRoleArn: &ssmNotificationRoleArn,
-					},
+				Mssql: &models.MssqlServiceRoles{
+					Ec2SsmInstanceProfileArn: state.Resources.ServiceRoles.Mssql.Ec2SsmInstanceProfileArn.ValueStringPointer(),
+					SsmNotificationRoleArn: state.Resources.ServiceRoles.Mssql.SsmNotificationRoleArn.ValueStringPointer(),
 				},
 			},
 		},
-	)
+	}
+
+	// Call the Clumio API to update the AWS manual connection.
+	_, apiErr := r.awsConnections.UpdateAwsConnection(connectionId, req)
 	if apiErr != nil {
 		diagnostics := diag.Diagnostics{}
-		diagnostics.AddError("Error in updating resources of Clumio AWS Manual Connection.", string(apiErr.Response))
+		diagnostics.AddError("Error in updating resources of Clumio AWS Manual Connection.",
+		common.ParseMessageFromApiError(apiErr))
 		return diagnostics
 	}
 	return nil
-}
-
-// Check if any new assets were added (downgrades aren't supported)
-func isAssetConfigChanged(plan *AwsManualConnectionModel, state *AwsManualConnectionModel) bool {
-	// If EBS was enabled now
-	if plan.AssetsEnabled.EBS.ValueBool() && !state.AssetsEnabled.EBS.ValueBool() {
-		return true
-	}
-	// If S3 was enabled now
-	if plan.AssetsEnabled.S3.ValueBool() && !state.AssetsEnabled.S3.ValueBool() {
-		return true
-	}
-	// If RDS was enabled now
-	if plan.AssetsEnabled.RDS.ValueBool() && !state.AssetsEnabled.RDS.ValueBool() {
-		return true
-	}
-	// If DynamoDB was enabled now
-	if plan.AssetsEnabled.DynamoDB.ValueBool() && !state.AssetsEnabled.DynamoDB.ValueBool() {
-		return true
-	}
-	// If EC2MSSQL was enabled now
-	if plan.AssetsEnabled.EC2MSSQL.ValueBool() && !state.AssetsEnabled.EC2MSSQL.ValueBool() {
-		return true
-	}
-	return false
-}
-
-func isResourceConfigChanged(plan *AwsManualConnectionModel, state *AwsManualConnectionModel) bool {
-	// Change in General Roles
-	if plan.Resources.ClumioIAMRoleArn.ValueString() != state.Resources.ClumioIAMRoleArn.ValueString() {
-		return true
-	}
-	if plan.Resources.ClumioSupportRoleArn.ValueString() != state.Resources.ClumioSupportRoleArn.ValueString() {
-		return true
-	}
-	if plan.Resources.ClumioSupportRoleArn.ValueString() != state.Resources.ClumioSupportRoleArn.ValueString() {
-		return true
-	}
-	// Change in Event Rules
-	if plan.Resources.EventRules.CloudtrailRuleArn.ValueString() != 
-		state.Resources.EventRules.CloudtrailRuleArn.ValueString() {
-		return true
-	}
-	if plan.Resources.EventRules.CloudwatchRuleArn.ValueString() != 
-		state.Resources.EventRules.CloudwatchRuleArn.ValueString() {
-		return true
-	}
-	// Change in Service Roles
-	if plan.Resources.ServiceRoles.S3.ContinuousBackupsRoleArn.ValueString() != 
-		state.Resources.ServiceRoles.S3.ContinuousBackupsRoleArn.ValueString() {
-		return true
-	}
-	if plan.Resources.ServiceRoles.Mssql.SsmNotificationRoleArn.ValueString() != 
-		state.Resources.ServiceRoles.Mssql.SsmNotificationRoleArn.ValueString() {
-		return true
-	}
-	if plan.Resources.ServiceRoles.Mssql.Ec2SsmInstanceProfileArn.ValueString() != 
-		state.Resources.ServiceRoles.Mssql.Ec2SsmInstanceProfileArn.ValueString() {
-		return true
-	}
-	return false
 }

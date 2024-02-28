@@ -1,113 +1,60 @@
 // Copyright 2023. Clumio, Inc.
-//
-// aws_manual_connection_resources datasource definition implementation.
+
+// This file holds the resource implementation for the clumio_aws_manual_connection_resources
+// Terraform resource.
+// This datasource is used to generate resources for deploying manual connections.
 package clumio_aws_manual_connection_resources
 
 import (
 	"context"
-	"encoding/json"
 
-	aws_templates "github.com/clumio-code/clumio-go-sdk/controllers/aws_templates"
+	awsTemplates "github.com/clumio-code/clumio-go-sdk/controllers/aws_templates"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const (
-	EBS      = "EBS"
-	S3       = "S3"
-	DynamoDB = "DynamoDB"
-	RDS      = "RDS"
-	EC2MSSQL = "EC2MSSQL"
-)
-
-// AwsManualConnectionResources model
-type AwsManualConnectionResourcesModel struct {
-	ID            types.String                 `tfsdk:"id"`
-	AccountId     types.String                 `tfsdk:"account_native_id"`
-	AwsRegion     types.String                 `tfsdk:"aws_region"`
-	AssetsEnabled *AssetTypesEnabledModel      `tfsdk:"asset_types_enabled"`
-	Resources     types.String                 `tfsdk:"resources"`
+// clumioAwsManualConnectionResourcesDatasource is the struct backing the
+// clumio_aws_manual_connection_resources Terraform resource. It holds the Clumio API client and any
+//  other required state needed to connect AWS accounts to Clumio.
+type clumioAwsManualConnectionResourcesDatasource struct {
+	name            string
+	client          *common.ApiClient
+	awsTemplates    awsTemplates.AwsTemplatesV1Client
 }
 
-// AssetTypesEnabled model
-type AssetTypesEnabledModel struct {
-	EBS      types.Bool `tfsdk:"ebs"`
-	RDS      types.Bool `tfsdk:"rds"`
-	DynamoDB types.Bool `tfsdk:"ddb"`
-	S3       types.Bool `tfsdk:"s3"`
-	EC2MSSQL types.Bool `tfsdk:"mssql"`
-}
-
-// awsManualConnectionResourcesDatasource is the datasource implementation.
-type awsManualConnectionResourcesDatasource struct {
-	client *common.ApiClient
-}
-
-// NewAwsManualConnectionResource is a helper function to simplify the provider implementation.
+// NewAwsManualConnectionResourcesDataSource creates a new instance of
+// clumioAwsManualConnectionResourcesDatasource. Its attributes are initialized later by Terraform
+// via Metadata and Configure once the Provider is initialized.
 func NewAwsManualConnectionResourcesDataSource() datasource.DataSource {
-	return &awsManualConnectionResourcesDatasource{}
+	return &clumioAwsManualConnectionResourcesDatasource{}
 }
 
-// Metadata returns the datasource type name.
-func (r *awsManualConnectionResourcesDatasource) Metadata(
+// Metadata returns the name of the resource type. This is used by Terraform configurations to
+// instantiate the resource.
+func (r *clumioAwsManualConnectionResourcesDatasource) Metadata(
 	_ context.Context, req datasource.MetadataRequest, res *datasource.MetadataResponse) {
-	res.TypeName = req.ProviderTypeName + "_aws_manual_connection_resources"
+	r.name = req.ProviderTypeName + "_aws_manual_connection_resources"
+	res.TypeName = r.name
 }
 
-// Configure adds the provider configured client to the data source.
-func (r *awsManualConnectionResourcesDatasource) Configure(
+// Configure sets up the resource with the Clumio API client and any other required state. It is
+// called by Terraform once the Provider is initialized.
+func (r *clumioAwsManualConnectionResourcesDatasource) Configure(
 	_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
 	r.client = req.ProviderData.(*common.ApiClient)
+	r.awsTemplates = awsTemplates.NewAwsTemplatesV1(r.client.ClumioConfig)
 }
 
-// Schema defines the schema for the resource.
-func (*awsManualConnectionResourcesDatasource) Schema(_ context.Context, req datasource.SchemaRequest, res *datasource.SchemaResponse) {
-	res.Schema = schema.Schema{
-		Description: "Clumio AWS Manual Connection Resources Datasource to get resources for manual connections",
-		Attributes: map[string]schema.Attribute{
-			schemaId: schema.StringAttribute{
-				Description: "Combination of provided Account Native ID and Aws Region",
-				Computed:    true,
-			},
-			schemaAccountNativeId: schema.StringAttribute{
-				Description: "AWS Account ID to be connected to Clumio",
-				Required: true,
-			},
-			schemaAwsRegion: schema.StringAttribute{
-				Description: "AWS Region to be connected to Clumio",
-				Required:    true,
-			},
-			schemaAssetTypesEnabled: schema.ObjectAttribute{
-				Description: "Assets to be connection to Clumio",
-				Required:    true,
-				AttributeTypes: map[string]attr.Type{
-					schemaIsEbsEnabled: types.BoolType,
-					schemaIsDynamoDBEnabled: types.BoolType,
-					schemaIsRDSEnabled: types.BoolType,
-					schemaIsS3Enabled: types.BoolType,
-					schemaIsMssqlEnabled: types.BoolType,
-				},
-			},
-			schemaResources: schema.StringAttribute{
-				Description: "Generated manual resources for provided config",
-				Optional: true,
-				Computed: true,
-			},
-		},
-	}
-}
-
-// Read refreshes the Terraform state with the latest data.
-func (r *awsManualConnectionResourcesDatasource) Read(ctx context.Context, req datasource.ReadRequest, res *datasource.ReadResponse) {
-	// Get current state
-	var state AwsManualConnectionResourcesModel
+// Read retrieves the resource from the Clumio API and sets the Terraform state.
+func (r *clumioAwsManualConnectionResourcesDatasource) Read(
+	ctx context.Context, req datasource.ReadRequest, res *datasource.ReadResponse) {
+	// Retrieve the schema from the current Terraform state.
+	var state clumioAwsManualConnectionResourcesModel
 	diags := req.Config.Get(ctx, &state)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
@@ -135,41 +82,32 @@ func (r *awsManualConnectionResourcesDatasource) Read(ctx context.Context, req d
 		enabled := EC2MSSQL
 		assetsEnabled = append(assetsEnabled, &enabled)
 	}
-
-	awsAccountId := state.AccountId.ValueString()
-	awsRegion := state.AwsRegion.ValueString()
 	showManualResources := true
 
-	awsTemplates := aws_templates.NewAwsTemplatesV1(r.client.ClumioConfig)
-	apiRes, apiErr := awsTemplates.CreateConnectionTemplate(&models.CreateConnectionTemplateV1Request{
+	// Call the Clumio API to read the resources for the provided configuration.
+	apiRes, apiErr := r.awsTemplates.CreateConnectionTemplate(&models.CreateConnectionTemplateV1Request{
 		ShowManualResources: &showManualResources,
 		AssetTypesEnabled: assetsEnabled,
-		AwsAccountId: &awsAccountId,
-		AwsRegion: &awsRegion,
+		AwsAccountId: state.AccountId.ValueStringPointer(),
+		AwsRegion: state.AwsRegion.ValueStringPointer(),
 	})
-
 	if apiRes.Resources == nil {
-		res.Diagnostics.AddError("Failed to get resources from API", string(apiErr.Response))
+		res.Diagnostics.AddError("Failed to get resources from API", common.ParseMessageFromApiError(
+			apiErr))
 	}
 	if res.Diagnostics.HasError() {
 		return
 	}
 
-	// Set refreshed state.
+	// Convert the resources obtained from the Clumio API response into stringified format and update
+	// the state with it.
 	stringifiedResources := stringifyResources(apiRes.Resources)
-	state.Resources = types.StringValue(*stringifiedResources)
+	state.Resources = types.StringPointerValue(stringifiedResources)
+
+	// Set the schema into the Terraform state.
 	diags = res.State.Set(ctx, &state)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
 		return
 	}
-}
-
-func stringifyResources(resources *models.CategorisedResources) *string {
-	bytes, err := json.Marshal(resources)
-	if err != nil {
-			return nil
-	}
-  stringifiedResources := string(bytes)
-	return &stringifiedResources
 }

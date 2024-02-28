@@ -3,6 +3,8 @@
 package clumio_policy
 
 const (
+	// Constants used by the resource model for the clumio_policy Terraform resource. These values
+	// should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaActivationStatus       = "activation_status"
 	schemaName                   = "name"
 	schemaTimezone               = "timezone"
@@ -77,12 +79,18 @@ const (
 
 	rdsLogicalBackupDesc = "Optional configuration settings for the aws_rds_resource_granular_backup operation."
 
-	rdsLogicalBackupAdvancedSettingDesc = "Backup tier to store the RDS backup in." +
-		" Valid values are: `standard` and `frozen`. If not provided, the default is `standard`."
+	rdsLogicalBackupAdvancedSettingDesc = "Backup tier to store the RDS backup in. Valid values" +
+		" are: `standard` (for Granular Record Retrieval) and `frozen` (for SecureVault Archive)." +
+		" To update existing policies with RDS Granular Record Retrieval, the default is `standard`" +
+		" if backup_tier is not provided. To update existing policies that do not have RDS Granular" +
+		" Record Retrieval, or to create new policies, the only supported option is `frozen`."
 
-	errorFmt           = "Error: %v"
-	errorPolicyReadMsg = "Error retrieving Clumio Policy."
+	errorPolicyReadMsg = "Unable to read %s (ID: %v)"
 
 	timeoutInSec  = 3600
 	intervalInSec = 5
+
+	// Constants for activation status allowed values
+	activationStatusActivated  = "activated"
+	activationStatusDectivated = "deactivated"
 )

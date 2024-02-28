@@ -7,12 +7,15 @@ package common
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
+	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	"github.com/clumio-code/clumio-go-sdk/controllers/tasks"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -43,9 +46,9 @@ func PollTask(ctx context.Context, apiClient *ApiClient,
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			resp, err := t.ReadTask(taskId)
-			if err != nil {
-				return err
+			resp, apiErr := t.ReadTask(taskId)
+			if apiErr != nil {
+				return errors.New(ParseMessageFromApiError(apiErr))
 			} else if *resp.Status == TaskSuccess {
 				return nil
 			} else if *resp.Status == TaskAborted {
@@ -129,4 +132,23 @@ func GetStringPtr(v basetypes.StringValue) *string {
 		s := v.ValueString()
 		return &s
 	}
+}
+
+// Parses the api error and returns the response in stringified format
+func ParseMessageFromApiError(apiError *apiutils.APIError) string {
+	// Handle auth errors separately
+	if apiError.ResponseCode == http.StatusUnauthorized || apiError.ResponseCode == http.StatusForbidden {
+		return AuthError
+	}
+	return string(apiError.Response)
+}
+
+// Parses through the path of a nested block and returns the lowest level field name
+func GetFieldNameFromNestedBlockPath(req validator.SetRequest) string {
+	// A nested block path looks something like this -
+	// operations[Value({"backup_window_tz":[{"end_time":"07:00","start_time":"05:00"}],
+	// "slas":[{"retention_duration":<null>,"rpo_frequency":[{"offsets":<null>,"unit":"days","value":1}]}],"type":"aws_ebs_volume_backup"})]
+	// .slas[Value({"retention_duration":<null>,"rpo_frequency":[{"offsets":<null>,"unit":"days","value":1}]})].retention_duration
+	// "retention_duration" is extracted from it as the lowest level field name
+	return req.Path.String()[strings.LastIndex(req.Path.String(), ".")+1:]
 }

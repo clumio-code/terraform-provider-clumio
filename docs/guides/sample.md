@@ -18,7 +18,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.5.1"
+      version = "~>0.6.0"
     }
     aws = {}
   }
@@ -149,9 +149,13 @@ resource "clumio_organizational_unit" "ou" {
 
 # Create a user for the OU
 resource "clumio_user" "user" {
-  full_name               = "Foo Bar"
-  email                   = "foobar@clumio.com"
-  assigned_role           = data.clumio_role.ou_admin.id
-  organizational_unit_ids = [clumio_organizational_unit.ou.id]
+  full_name = "Foo Bar"
+  email     = "foobar@clumio.com"
+  access_control_configuration = [
+    {
+      role_id                 = data.clumio_role.ou_admin.id,
+      organizational_unit_ids = [clumio_organizational_unit.ou.id]
+    }
+  ]
 }
 ```

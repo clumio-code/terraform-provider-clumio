@@ -1,0 +1,106 @@
+// Copyright 2024. Clumio, Inc.
+
+// This file contains the common test functions which are used by one or more acceptance tests.
+
+package common
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+
+	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
+	policydefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
+	protectionGroups "github.com/clumio-code/clumio-go-sdk/controllers/protection_groups"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+)
+
+// DeletePolicy deletes the policy using the Clumio API. It takes as argument, either the resource
+// name or the actual id of the policy.
+func DeletePolicy(idOrResourceName string, isResourceName bool) resource.TestCheckFunc {
+
+	return func(s *terraform.State) error {
+
+		id := idOrResourceName
+		if isResourceName {
+			// retrieve the resource by name from state
+			rs, ok := s.RootModule().Resources[idOrResourceName]
+			if !ok {
+				return fmt.Errorf("Not found: %s", idOrResourceName)
+			}
+
+			if rs.Primary.ID == "" {
+				return fmt.Errorf("Widget ID is not set")
+			}
+			id = rs.Primary.ID
+		}
+		clumioApiToken := os.Getenv(ClumioApiToken)
+		clumioApiBaseUrl := os.Getenv(ClumioApiBaseUrl)
+		clumioOrganizationalUnitContext := os.Getenv(ClumioOrganizationalUnitContext)
+		config := clumioConfig.Config{
+			Token:                     clumioApiToken,
+			BaseUrl:                   clumioApiBaseUrl,
+			OrganizationalUnitContext: clumioOrganizationalUnitContext,
+			CustomHeaders: map[string]string{
+				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
+			},
+		}
+		pd := policydefinitions.NewPolicyDefinitionsV1(config)
+		res, apiErr := pd.DeletePolicyDefinition(id)
+		if apiErr != nil {
+			return apiErr
+		}
+		if res != nil && res.TaskId != nil {
+			client := &ApiClient{ClumioConfig: config}
+			err := PollTask(context.Background(), client, *res.TaskId, 3600, 5)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("expected task ID in the response")
+		}
+		return nil
+	}
+}
+
+// DeleteProtectionGroup deletes the protection group using the Clumio API. It takes as argument,
+// either the resource name or the actual id of the policy.
+func DeleteProtectionGroup(idOrResourceName string, isResourceName bool) resource.TestCheckFunc {
+
+	return func(s *terraform.State) error {
+
+		id := idOrResourceName
+		if isResourceName {
+			// retrieve the resource by name from state
+			rs, ok := s.RootModule().Resources[idOrResourceName]
+			if !ok {
+				return fmt.Errorf("Not found: %s", idOrResourceName)
+			}
+
+			if rs.Primary.ID == "" {
+				return fmt.Errorf("Widget ID is not set")
+			}
+			id = rs.Primary.ID
+		}
+
+		clumioApiToken := os.Getenv(ClumioApiToken)
+		clumioApiBaseUrl := os.Getenv(ClumioApiBaseUrl)
+		clumioOrganizationalUnitContext := os.Getenv(ClumioOrganizationalUnitContext)
+		config := clumioConfig.Config{
+			Token:                     clumioApiToken,
+			BaseUrl:                   clumioApiBaseUrl,
+			OrganizationalUnitContext: clumioOrganizationalUnitContext,
+			CustomHeaders: map[string]string{
+				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
+			},
+		}
+		pd := protectionGroups.NewProtectionGroupsV1(config)
+		_, apiErr := pd.DeleteProtectionGroup(id)
+		if apiErr != nil {
+			return apiErr
+		}
+		return nil
+	}
+}

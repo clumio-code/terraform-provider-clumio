@@ -35,20 +35,20 @@ resource "clumio_user" "example" {
 ### Required
 
 - `email` (String) The email address of the user to be added to Clumio.
-- `full_name` (String) The full name of the user to be added to Clumio. For example, enter the user's first name and last name. The name appears in the User Management screen and in the body of the email invitation.
+- `full_name` (String) The full name of the user to be added to Clumio. For example, enter the user's first name and last name. The name appears in the User Management screen and in the body of the  email invitation.
 
 ### Optional
 
-- `access_control_configuration` (Attributes Set) The Clumio-assigned IDs of the organizational units, along with the Clumio-assigned ID of the role, to be assigned to the user. (see [below for nested schema](#nestedatt--access_control_configuration))
-- `assigned_role` (String, Deprecated) The Clumio-assigned ID of the role to assign to the user.
-- `organizational_unit_ids` (Set of String, Deprecated) The Clumio-assigned IDs of the organizational units to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
+- `access_control_configuration` (Attributes Set) Identifiers of the organizational units, along with the identifier of the role, to be assigned to the user. (see [below for nested schema](#nestedatt--access_control_configuration))
+- `assigned_role` (String, Deprecated) Identifier of the role to assign to the user.
+- `organizational_unit_ids` (Set of String, Deprecated) Identifiers of the organizational units  to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
 
 ### Read-Only
 
-- `id` (String) User Id.
-- `inviter` (String) The ID number of the user who sent the email invitation.
+- `id` (String) Unique identifier for the user.
+- `inviter` (String) Identifier of the user who sent the email invitation.
 - `is_confirmed` (Boolean) Determines whether the user has activated their Clumio account. If true, the user has activated the account.
-- `is_enabled` (Boolean) Determines whether the user is enabled (in Activated or Invited status) in Clumio. If true, the user is in Activated or Invited status in Clumio. Users in Activated status can log in to Clumio. Users in Invited status have been invited to log in to Clumio via an email invitation and the invitation is pending acceptance from the user. If false, the user has been manually suspended and cannot log in to Clumio until another Clumio user reactivates the account.
+- `is_enabled` (Boolean) Determines whether the user is enabled (in Activated or Invited status) in Clumio. If true, the user is in Activated or Invited status in Clumio. Users inActivated status can log in to Clumio. Users in Invited status have been invited to login to Clumio via an email invitation and the invitation is pending acceptance from the user. If false, the user has been manually suspended and cannot log in to Clumio untilanother Clumio user reactivates the account.
 - `last_activity_timestamp` (String) The timestamp of when when the user was last active in the Clumio system. Represented in RFC-3339 format.
 - `organizational_unit_count` (Number) The number of organizational units accessible to the user.
 
@@ -57,8 +57,8 @@ resource "clumio_user" "example" {
 
 Required:
 
-- `organizational_unit_ids` (Set of String) The Clumio-assigned IDs of the organizational units to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
-- `role_id` (String) The Clumio-assigned ID of the role to assign to the user.
+- `organizational_unit_ids` (Set of String) Identifiers of the organizational units to be assigned to the user.The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
+- `role_id` (String) Identifier of the role to assign to the user.
 
 ## Import
 

@@ -3,6 +3,8 @@
 package clumio_post_process_kms
 
 const (
+	// Constants used by the resource model for the clumio_post_process_kms Terraform resource.
+	// These values should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaId                    = "id"
 	schemaToken                 = "token"
 	schemaAccountId             = "account_id"

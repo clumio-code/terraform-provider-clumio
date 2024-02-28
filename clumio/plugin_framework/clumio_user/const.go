@@ -3,6 +3,8 @@
 package clumio_user
 
 const (
+	// Constants used by the resource model for the clumio_user Terraform resource. These values
+	// should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaId                         = "id"
 	schemaEmail                      = "email"
 	schemaFullName                   = "full_name"

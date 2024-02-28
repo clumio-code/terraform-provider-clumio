@@ -3,6 +3,8 @@
 package clumio_policy_rule
 
 const (
+	// Constants used by the resource model for the clumio_policy_rule Terraform resource. These
+	// values should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaName                 = "name"
 	schemaId                   = "id"
 	schemaCondition            = "condition"
@@ -12,6 +14,4 @@ const (
 
 	timeoutInSec  = 3600
 	intervalInSec = 5
-
-	errorFmt = "Error: %v"
 )

@@ -29,15 +29,15 @@ resource "clumio_organizational_unit" "example" {
 
 ### Optional
 
-- `description` (String) A description of the organizational unit.
-- `parent_id` (String) The Clumio-assigned ID of the parent organizational unit under which the new organizational unit is to be created.
+- `description` (String) Brief description to denote details of the organizational unit.
+- `parent_id` (String) The identifier of the parent organizational unit under which the neworganizational unit is to be created. If not provided, the resource will be createdunder the default organizational unit associated with the credentials used to createthe organizational unit.
 
 ### Read-Only
 
 - `children_count` (Number) Number of immediate children of the organizational unit.
 - `configured_datasource_types` (List of String) Datasource types configured in this organizational unit. Possible values include aws, microsoft365, vmware, or mssql.
-- `descendant_ids` (List of String) List of all recursive descendant organizational units of this OU.
-- `id` (String) OrganizationalUnit Id.
+- `descendant_ids` (List of String) List of all recursive descendent organizational units.
+- `id` (String) Unique identifier for the Clumio organizational unit.
 - `user_count` (Number) Number of users to whom this organizational unit or any of its descendants have been assigned.
 - `users` (List of String, Deprecated) List of user ids to assign this organizational unit.
 - `users_with_role` (Attributes List) List of user ids, with role, to assign this organizational unit. (see [below for nested schema](#nestedatt--users_with_role))
@@ -47,8 +47,8 @@ resource "clumio_organizational_unit" "example" {
 
 Read-Only:
 
-- `assigned_role` (String) The Clumio-assigned ID of the role assigned to the user.
-- `user_id` (String) The Clumio-assigned ID of the user.
+- `assigned_role` (String) Identifier of the role to be associated with the user when assignedto the organizational unit.
+- `user_id` (String) Identifier of the user to assign to the organizational unit.
 
 ## Import
 

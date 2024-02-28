@@ -39,13 +39,13 @@ resource "clumio_post_process_aws_connection" "example" {
 
 ### Required
 
-- `account_id` (String) The AWS Customer Account ID.
+- `account_id` (String) Identifier of the AWS account to be linked with Clumio.
 - `clumio_event_pub_id` (String) Clumio Event Pub SNS topic ID.
 - `config_version` (String) Clumio Config version.
-- `region` (String) The AWS Region.
-- `role_arn` (String) Clumio IAM Role Arn.
-- `role_external_id` (String) A key that must be used by Clumio to assume the service role in your account. This should be a secure string, like a password, but it does not need to be remembered (random characters are best).
-- `token` (String) The AWS integration ID token.
+- `region` (String) Region of the AWS account to be linked with Clumio.
+- `role_arn` (String) ARN of the role which allows Clumio to access the linked account.
+- `role_external_id` (String) Unique identifier Clumio uses to access the service role within your account.
+- `token` (String) Distinct 36-character token used to identify resources set up by the Clumio AWS template installation on the account being connected.
 
 ### Optional
 
@@ -63,6 +63,4 @@ resource "clumio_post_process_aws_connection" "example" {
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
-
-
+- `id` (String) The unique identifier of the post process aws connection.

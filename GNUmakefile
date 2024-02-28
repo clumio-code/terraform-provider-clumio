@@ -4,7 +4,7 @@
 
 # If the version is being changed here, it should also be changed for the variable
 # clumioTfProviderVersionValue in the file clumio/plugin_framework/common/const.go.
-VERSION=0.5.9
+VERSION=0.6.0
 ifndef OS_ARCH
 OS_ARCH=darwin_amd64
 endif
@@ -17,8 +17,16 @@ default: testacc
 
 # Run acceptance tests
 .PHONY: testacc
-testacc:
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
+testacc: testacc_basic testacc_post_process
+
+testacc_basic:
+	TF_ACC=1 go test ./... -v $(TESTARGS) -tags="basic" -timeout 120m
+
+testacc_post_process:
+	TF_ACC=1 go test ./... -v $(TESTARGS) -tags="post_process" -timeout 120m
+
+testacc_sso:
+	TF_ACC=1 go test ./... -v $(TESTARGS) -tags="sso" -timeout 120m
 
 install:
 	go mod vendor

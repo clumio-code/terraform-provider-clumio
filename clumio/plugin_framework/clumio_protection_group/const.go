@@ -3,6 +3,8 @@
 package clumio_protection_group
 
 const (
+	// Constants used by the resource model for the clumio_protection_group Terraform resource. These
+	// values should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaId                   = "id"
 	schemaBucketRule           = "bucket_rule"
 	schemaDescription          = "description"

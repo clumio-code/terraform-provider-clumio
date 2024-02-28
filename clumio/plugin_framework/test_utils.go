@@ -4,6 +4,7 @@ package clumio_pf
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
@@ -25,6 +26,7 @@ func UtilTestAccPreCheckClumio(t *testing.T) {
 	UtilTestFailIfEmpty(t, common.ClumioApiToken, common.ClumioApiToken+" cannot be empty.")
 	UtilTestFailIfEmpty(t, common.ClumioApiBaseUrl, common.ClumioApiBaseUrl+" cannot be empty.")
 	UtilTestFailIfEmpty(t, common.AwsRegion, common.AwsRegion+" cannot be empty")
+	UtilTestFailIfEmpty(t, common.ClumioTestAwsAccountId2, common.ClumioTestAwsAccountId2+" cannot be empty")
 }
 
 // UtilTestAwsManualConnectionPreCheckClumio validates that the required environment variables are set before
@@ -53,4 +55,13 @@ func UtilTestFailIfEmpty(t *testing.T, name string, usageMessage string) string 
 	}
 
 	return value
+}
+
+// SkipIfSSONotConfigured determines if the test step needs to be skipped due to SSO not being
+// configured. It returns true if the environment variable IS_SSO_CONFIGURED is set to false.
+func SkipIfSSONotConfigured() (bool, error) {
+	if strings.ToLower(os.Getenv(common.ClumioTestIsSSOConfigured)) == "true" {
+		return false, nil
+	}
+	return true, nil
 }

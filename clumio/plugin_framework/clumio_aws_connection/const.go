@@ -3,6 +3,8 @@
 package clumio_aws_connection
 
 const (
+	// Constants used by the resource model for the clumio_aws_connection Terraform resource. These
+	// values should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaId                   = "id"
 	schemaAccountNativeId      = "account_native_id"
 	schemaAwsRegion            = "aws_region"
@@ -18,11 +20,9 @@ const (
 
 	awsEnvironment            = "aws_environment"
 	statusConnected           = "connected"
-	errorFmt                  = "Error: %v"
 	externalIDFmt             = "ExternalID_%s"
 	defaultDataPlaneAccountId = "*"
 
-	http202           = 202
 	pollTimeoutInSec  = 3600
 	pollIntervalInSec = 5
 )

@@ -67,18 +67,18 @@ resource "clumio_policy" "example_2" {
 
 ### Required
 
-- `name` (String) The name of the policy.
+- `name` (String) The user-assigned name of the policy. Note that having identical names for different policies is permissible.
 - `operations` (Block Set) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
 
 ### Optional
 
-- `activation_status` (String) The status of the policy. Valid values are:activated: Backups will take place regularly according to the policy SLA.deactivated: Backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
-- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit associated with the policy.
+- `activation_status` (String) The status of the policy. Valid values are: `activated` and `deactivated`. `activated` backups will take place regularly according to the policy SLA. `deactivated` backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
+- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the policy. If not provided, the policy will be associated with the default organizational unit associated with the credentials used to create the policy.
 - `timezone` (String) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
 ### Read-Only
 
-- `id` (String) Policy Id.
+- `id` (String) Unique identifier of the policy.
 - `lock_status` (String) Policy Lock Status.
 
 <a id="nestedblock--operations"></a>
@@ -86,7 +86,7 @@ resource "clumio_policy" "example_2" {
 
 Required:
 
-- `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values:immediate: to start backup process immediatelywindow: to start backup in the specified window
+- `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values are: `immediate` and `window`. `immediate` starts the backup process immediately while `window` starts the backup in the specified window.
 - `slas` (Block Set) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
 - `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the API Documentation for "List policies" for more information about the supported types.
 
@@ -140,7 +140,7 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `standard` and `frozen`. If not provided, the default is `standard`.
+- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `standard` (for Granular Record Retrieval) and `frozen` (for SecureVault Archive). To update existing policies with RDS Granular Record Retrieval, the default is `standard` if backup_tier is not provided. To update existing policies that do not have RDS Granular Record Retrieval, or to create new policies, the only supported option is `frozen`.
 
 
 <a id="nestedblock--operations--advanced_settings--ec2_mssql_database_backup"></a>

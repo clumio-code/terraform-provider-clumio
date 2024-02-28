@@ -1,22 +1,23 @@
 // Copyright 2023. Clumio, Inc.
 
-// clumio_policy_rule definition and CRUD implementation.
+// This file holds the resource implementation for the clumio_policy_rule Terraform resource.
+// This resource facilitates the creation of rules that specify which assets are to be protected
+// by particular policies.
+
 package clumio_policy_rule
 
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	policyRules "github.com/clumio-code/clumio-go-sdk/controllers/policy_rules"
+	sdkPolicyRules "github.com/clumio-code/clumio-go-sdk/controllers/policy_rules"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var (
@@ -25,86 +26,33 @@ var (
 	_ resource.ResourceWithImportState = &policyRuleResource{}
 )
 
+// policyRuleResource is the struct backing the clumio_policy_rule Terraform resource. It holds the
+// Clumio API client and any other required state needed to create a Clumio policy rule.
 type policyRuleResource struct {
+	name   string
 	client *common.ApiClient
 }
 
-// NewPolicyRuleResource is a helper function to simplify the provider implementation.
+// NewPolicyRuleResource creates a new instance of policyRuleResource. Its attributes are
+// initialized later by Terraform via Metadata and Configure once the Provider is
+// initialized.
 func NewPolicyRuleResource() resource.Resource {
 	return &policyRuleResource{}
 }
 
-type policyRuleResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	Name                 types.String `tfsdk:"name"`
-	Condition            types.String `tfsdk:"condition"`
-	BeforeRuleID         types.String `tfsdk:"before_rule_id"`
-	PolicyID             types.String `tfsdk:"policy_id"`
-	OrganizationalUnitID types.String `tfsdk:"organizational_unit_id"`
-}
-
-// Schema defines the schema for the data source.
-func (r *policyRuleResource) Schema(
-	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		// This description is used by the documentation generator and the language server.
-		Description: "Clumio Policy Rule Resource used to determine how" +
-			" a policy should be assigned to assets.",
-		Attributes: map[string]schema.Attribute{
-			schemaId: schema.StringAttribute{
-				Description: "Policy Rule Id.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			schemaName: schema.StringAttribute{
-				Description: "The name of the policy rule.",
-				Required:    true,
-			},
-			schemaCondition: schema.StringAttribute{
-				Description: "The condition of the policy rule. Possible conditions include: " +
-					"1) `entity_type` is required and supports `$eq` and `$in` filters. " +
-					"2) `aws_account_native_id` and `aws_region` are optional and both support " +
-					"`$eq` and `$in` filters. " +
-					"3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` " +
-					"filters.",
-				Required: true,
-			},
-			schemaBeforeRuleId: schema.StringAttribute{
-				Description: "The policy rule ID before which this policy rule should be " +
-					"inserted. An empty value will set the rule to have lowest priority. " +
-					"NOTE: If in the Global Organizational Unit, rules can also be prioritized " +
-					"against two virtual rules maintained by the system: `asset-level-rule` and " +
-					"`child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct " +
-					"Assignments (when a policy is applied directly to an asset) whereas " +
-					"`child-ou-rule` corresponds to the priority of rules created by child " +
-					"organizational units.",
-				Required: true,
-			},
-			schemaPolicyId: schema.StringAttribute{
-				Description: "The Clumio-assigned ID of the policy. ",
-				Required:    true,
-			},
-			schemaOrganizationalUnitId: schema.StringAttribute{
-				Description: "The Clumio-assigned ID of the organizational unit" +
-					" to use as the context for assigning the policy.",
-				Optional: true,
-				Computed: true,
-			},
-		},
-	}
-}
-
-// Metadata returns the data source type name.
+// Metadata returns the name of the resource type. This is used by Terraform configurations to
+// instantiate the resource.
 func (r *policyRuleResource) Metadata(
 	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_policy_rule"
+	r.name = req.ProviderTypeName + "_policy_rule"
+	resp.TypeName = r.name
 }
 
-// Configure adds the provider configured client to the data source.
+// Configure sets up the resource with the Clumio API client and any other required state. It is
+// called by Terraform once the Provider is initialized.
 func (r *policyRuleResource) Configure(
 	_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+
 	if req.ProviderData == nil {
 		return
 	}
@@ -112,15 +60,20 @@ func (r *policyRuleResource) Configure(
 	r.client = req.ProviderData.(*common.ApiClient)
 }
 
+// ImportState retrieves the resource via the Clumio API and sets the Terraform state. The import
+// is done by the ID of the resource.
 func (r *policyRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest,
 	resp *resource.ImportStateResponse) {
+
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// Create creates the resource and sets the initial Terraform state.
+// Create creates the resource via the Clumio API and sets the initial Terraform state.
 func (r *policyRuleResource) Create(
 	ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+
+	// Retrieve the schema from the Terraform plan.
 	var plan policyRuleResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -134,43 +87,55 @@ func (r *policyRuleResource) Create(
 		defer r.clearOUContext()
 	}
 
-	pr := policyRules.NewPolicyRulesV1(r.client.ClumioConfig)
-	condition := plan.Condition.ValueString()
-	name := plan.Name.ValueString()
-	beforeRuleId := plan.BeforeRuleID.ValueString()
+	// Initialize the SDK client. SDK client initialization is being done after the
+	// OrganizationalUnitContext is set in the ClumioConfig so that the API will get executed in the
+	// context of the OrganizationalUnit.
+	policyRules := sdkPolicyRules.NewPolicyRulesV1(r.client.ClumioConfig)
+
+	// Convert the schema to a Clumio API request to create a policy rule.
 	priority := &models.RulePriority{
-		BeforeRuleId: &beforeRuleId,
+		BeforeRuleId: plan.BeforeRuleID.ValueStringPointer(),
 	}
-	policyId := plan.PolicyID.ValueString()
 	action := &models.RuleAction{
 		AssignPolicy: &models.AssignPolicyAction{
-			PolicyId: &policyId,
+			PolicyId: plan.PolicyID.ValueStringPointer(),
 		},
 	}
 	prRequest := &models.CreatePolicyRuleV1Request{
 		Action:    action,
-		Condition: &condition,
-		Name:      &name,
+		Condition: plan.Condition.ValueStringPointer(),
+		Name:      plan.Name.ValueStringPointer(),
 		Priority:  priority,
 	}
-	res, apiErr := pr.CreatePolicyRule(prRequest)
+
+	// Call the Clumio API to create the policy rule.
+	res, apiErr := policyRules.CreatePolicyRule(prRequest)
 	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error starting task to create policy rule %v.", name),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		summary := fmt.Sprintf("Unable to create %s", r.name)
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
 		return
 
+	}
+	if res == nil {
+		resp.Diagnostics.AddError(
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+		return
 	}
 	err := common.PollTask(ctx, r.client, *res.TaskId, timeoutInSec, intervalInSec)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error creating policy rule %v.", name),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		summary := fmt.Sprintf("Unable to poll %s (Name: %v) for creation", r.name, plan.Name.ValueString())
+		detail := err.Error()
+		resp.Diagnostics.AddError(summary, detail)
 		return
 	}
 
-	plan.ID = types.StringValue(*res.Rule.Id)
-	plan.OrganizationalUnitID = types.StringValue(*res.Rule.OrganizationalUnitId)
+	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
+	// including the ID given that the resource is getting created.
+	plan.ID = types.StringPointerValue(res.Rule.Id)
+	plan.OrganizationalUnitID = types.StringPointerValue(res.Rule.OrganizationalUnitId)
+
+	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -178,9 +143,11 @@ func (r *policyRuleResource) Create(
 	}
 }
 
-// Update updates the resource and sets the updated Terraform state on success.
+// Update updates the resource via the Clumio API and updates the Terraform state.
 func (r *policyRuleResource) Update(
 	ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+
+	// Retrieve the schema from the Terraform plan.
 	var plan policyRuleResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -188,18 +155,21 @@ func (r *policyRuleResource) Update(
 		return
 	}
 
+	// If the OrganizationalUnitID is specified, then execute the API in that
+	// OrganizationalUnit context.
 	if plan.OrganizationalUnitID.ValueString() != "" {
 		r.client.ClumioConfig.OrganizationalUnitContext =
 			plan.OrganizationalUnitID.ValueString()
 		defer r.clearOUContext()
 	}
 
-	pr := policyRules.NewPolicyRulesV1(r.client.ClumioConfig)
-	condition := plan.Condition.ValueString()
-	name := plan.Name.ValueString()
-	beforeRuleId := plan.BeforeRuleID.ValueString()
+	// Initialize the SDK client. SDK client initialization is being done after the
+	// OrganizationalUnitContext is set in the ClumioConfig so that the API will get executed in the
+	// context of the OrganizationalUnit.
+	policyRules := sdkPolicyRules.NewPolicyRulesV1(r.client.ClumioConfig)
+
 	priority := &models.RulePriority{
-		BeforeRuleId: &beforeRuleId,
+		BeforeRuleId: plan.BeforeRuleID.ValueStringPointer(),
 	}
 	policyId := plan.PolicyID.ValueString()
 	action := &models.RuleAction{
@@ -209,25 +179,39 @@ func (r *policyRuleResource) Update(
 	}
 	prRequest := &models.UpdatePolicyRuleV1Request{
 		Action:    action,
-		Condition: &condition,
-		Name:      &name,
+		Condition: plan.Condition.ValueStringPointer(),
+		Name:      plan.Name.ValueStringPointer(),
 		Priority:  priority,
 	}
-	res, apiErr := pr.UpdatePolicyRule(plan.ID.ValueString(), prRequest)
+
+	// Call the Clumio API to update the policy rule.
+	res, apiErr := policyRules.UpdatePolicyRule(plan.ID.ValueString(), prRequest)
 	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error starting task to update policy rule %v.", name),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, plan.ID.ValueString())
+		detail := common.ParseMessageFromApiError(apiErr)
+		resp.Diagnostics.AddError(summary, detail)
 		return
 	}
+	if res == nil {
+		resp.Diagnostics.AddError(
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+		return
+	}
+
+	// As the update of a policy rule is an asynchronous operation, the task ID
+	// returned by the API is used to poll for the completion of the task.
 	err := common.PollTask(ctx, r.client, *res.TaskId, timeoutInSec, intervalInSec)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error updating policy rule %v.", name),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		summary := fmt.Sprintf("Unable to poll %s (ID: %v) for update", r.name, plan.ID.ValueString())
+		detail := err.Error()
+		resp.Diagnostics.AddError(summary, detail)
 		return
 	}
-	plan.OrganizationalUnitID = types.StringValue(*res.Rule.OrganizationalUnitId)
+
+	// Convert the Clumio API response back to a schema and populate all computed fields of the
+	// plan. ID however is not updated given that it is the field used to denote which resource to
+	// update in the backend.
+	plan.OrganizationalUnitID = types.StringPointerValue(res.Rule.OrganizationalUnitId)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -235,37 +219,62 @@ func (r *policyRuleResource) Update(
 	}
 }
 
-// Read refreshes the Terraform state with the latest data.
+// Read retrieves the resource from the Clumio API and sets the Terraform state.
 func (r *policyRuleResource) Read(
 	ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+
+	// Retrieve the schema from the current Terraform state.
 	var state policyRuleResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	pr := policyRules.NewPolicyRulesV1(r.client.ClumioConfig)
 
+	// If the OrganizationalUnitID is specified, then execute the API in that
+	// OrganizationalUnit context.
 	if state.OrganizationalUnitID.ValueString() != "" {
 		r.client.ClumioConfig.OrganizationalUnitContext =
 			state.OrganizationalUnitID.ValueString()
 		defer r.clearOUContext()
 	}
 
-	res, apiErr := pr.ReadPolicyRule(state.ID.ValueString())
+	// Initialize the SDK client. SDK client initialization is being done after the
+	// OrganizationalUnitContext is set in the ClumioConfig so that the API will get executed in the
+	// context of the OrganizationalUnit.
+	policyRules := sdkPolicyRules.NewPolicyRulesV1(r.client.ClumioConfig)
+
+	// Call the Clumio API to read the policy rule.
+	res, apiErr := policyRules.ReadPolicyRule(state.ID.ValueString())
 	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error retrieving policy rule %v.", state.Name.ValueString()),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		if apiErr.ResponseCode == http.StatusNotFound {
+			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state", r.name, state.ID.ValueString())
+			tflog.Warn(ctx, summary)
+			resp.State.RemoveResource(ctx)
+		} else {
+			summary := fmt.Sprintf("Unable to read %s (ID: %v)", r.name, state.ID.ValueString())
+			detail := common.ParseMessageFromApiError(apiErr)
+			resp.Diagnostics.AddError(summary, detail)
+		}
 		return
 	}
-	state.Name = types.StringValue(*res.Name)
-	state.Condition = types.StringValue(*res.Condition)
-	if res.Priority != nil && res.Priority.BeforeRuleId != nil {
-		state.BeforeRuleID = types.StringValue(*res.Priority.BeforeRuleId)
+	if res == nil {
+		resp.Diagnostics.AddError(
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+		return
 	}
-	state.PolicyID = types.StringValue(*res.Action.AssignPolicy.PolicyId)
-	state.OrganizationalUnitID = types.StringValue(*res.OrganizationalUnitId)
+
+	// Convert the Clumio API response back to a schema and update the state. In addition to
+	// computed fields, all fields are populated from the API response in case any values have been
+	// changed externally. ID is not updated however given that it is the field used to query the
+	// resource from the backend.
+	state.Name = types.StringPointerValue(res.Name)
+	state.Condition = types.StringPointerValue(res.Condition)
+	if res.Priority != nil {
+		state.BeforeRuleID = types.StringPointerValue(res.Priority.BeforeRuleId)
+	}
+	state.PolicyID = types.StringPointerValue(res.Action.AssignPolicy.PolicyId)
+	state.OrganizationalUnitID = types.StringPointerValue(res.OrganizationalUnitId)
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -273,9 +282,11 @@ func (r *policyRuleResource) Read(
 	}
 }
 
-// Delete deletes the resource and removes the Terraform state on success.
+// Delete deletes the resource via the Clumio API and removes it from the Terraform state.
 func (r *policyRuleResource) Delete(
 	ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+
+	// Retrieve the schema from the current Terraform state.
 	var state policyRuleResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -283,30 +294,41 @@ func (r *policyRuleResource) Delete(
 		return
 	}
 
+	// If the OrganizationalUnitID is specified, then execute the API in that
+	// OrganizationalUnit context.
 	if state.OrganizationalUnitID.ValueString() != "" {
 		r.client.ClumioConfig.OrganizationalUnitContext =
 			state.OrganizationalUnitID.ValueString()
 		defer r.clearOUContext()
 	}
 
-	pr := policyRules.NewPolicyRulesV1(r.client.ClumioConfig)
-	res, apiErr := pr.DeletePolicyRule(state.ID.ValueString())
+	// Initialize the SDK client. SDK client initialization is being done after the
+	// OrganizationalUnitContext is set in the ClumioConfig so that the API will get executed in the
+	// context of the OrganizationalUnit.
+	policyRules := sdkPolicyRules.NewPolicyRulesV1(r.client.ClumioConfig)
+
+	// Call the Clumio API to delete the policy rule.
+	res, apiErr := policyRules.DeletePolicyRule(state.ID.ValueString())
 	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error starting task to delete policy rule %v.",
-				state.Name.ValueString()),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		if apiErr.ResponseCode != http.StatusNotFound {
+			summary := fmt.Sprintf("Unable to delete %s (ID: %v)", r.name, state.ID.ValueString())
+			detail := common.ParseMessageFromApiError(apiErr)
+			resp.Diagnostics.AddError(summary, detail)
+		}
 		return
 	}
+	if res == nil {
+		resp.Diagnostics.AddError(
+			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+		return
+	}
+	// As the delete of a policy rule is an asynchronous operation, the task ID
+	// returned by the API is used to poll for the completion of the task.
 	err := common.PollTask(ctx, r.client, *res.TaskId, timeoutInSec, intervalInSec)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error deleting policy rule %v.", state.Name.ValueString()),
-			fmt.Sprintf(errorFmt, apiErr.Response))
+		summary := fmt.Sprintf("Unable to poll %s (ID: %v) for deletion", r.name, state.ID.ValueString())
+		detail := err.Error()
+		resp.Diagnostics.AddError(summary, detail)
 		return
 	}
-}
-
-func (r *policyRuleResource) clearOUContext() {
-	r.client.ClumioConfig.OrganizationalUnitContext = ""
 }

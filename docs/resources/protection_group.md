@@ -37,20 +37,20 @@ resource "clumio_protection_group" "example" {
 
 ### Required
 
-- `name` (String) The user-assigned name of the protection group.
+- `name` (String) The user-assigned name of the protection group. Must be globally-unique.
 
 ### Optional
 
-- `bucket_rule` (String) Describes the possible conditions for a bucket to be automatically added to a protection group. For example: {"aws_tag":{"$eq":{"key":"Environment", "value":"Prod"}}}
-- `description` (String) The user-assigned description of the protection group.
+- `bucket_rule` (String) Describes the possible conditions for a bucket to be  automatically added to a protection group. For example: {"aws_tag":{"$eq":{"key":"Environment", "value":"Prod"}}}
+- `description` (String) Brief description to denote details of the protection group.
 - `object_filter` (Block Set) (see [below for nested schema](#nestedblock--object_filter))
-- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit associated with the protection group.
+- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the protection group. If not provided, the protection group will be associated with the default organizational unit associated with the credentials used to create the protection group.
 
 ### Read-Only
 
-- `id` (String) Protection Group Id.
+- `id` (String) Unique identifier for the Clumio Protection Group.
 - `protection_info` (Attributes List) The protection policy applied to this resource. (see [below for nested schema](#nestedatt--protection_info))
-- `protection_status` (String) The protection status of the protection group. Possible values include "protected", "unprotected", and "unsupported". If the protection group does not support backups, then this field has a value of unsupported.
+- `protection_status` (String) The protection status of the protection group. Possible values include"protected", "unprotected", and "unsupported". If the protection group does notsupport backups, then this field has a value of unsupported.
 
 <a id="nestedblock--object_filter"></a>
 ### Nested Schema for `object_filter`
@@ -79,9 +79,9 @@ Optional:
 
 Read-Only:
 
-- `inheriting_entity_id` (String) The ID of the entity from which protection was inherited.
+- `inheriting_entity_id` (String) The identifier of the entity from which protection was inherited.
 - `inheriting_entity_type` (String) The type of the entity from which protection was inherited.
-- `policy_id` (String) ID of policy to apply on Protection Group
+- `policy_id` (String) Identifier of the policy to apply on Protection Group
 
 ## Import
 

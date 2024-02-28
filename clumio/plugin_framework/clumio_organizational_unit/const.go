@@ -3,6 +3,8 @@
 package clumio_organizational_unit
 
 const (
+	// Constants used by the resource model for the clumio_organizational_unit Terraform resource.
+	// These values should match the schema tfsdk tags on the resource model struct in schema.go.
 	schemaId                        = "id"
 	schemaName                      = "name"
 	schemaDescription               = "description"
@@ -15,9 +17,7 @@ const (
 	schemaUsersWithRole             = "users_with_role"
 	schemaUserId                    = "user_id"
 	schemaAssignedRole              = "assigned_role"
-	http200                         = 200
-	http202                         = 202
-	errorFmt                        = "Error: %v"
-	pollTimeoutInSec                = 3600
-	pollIntervalInSec               = 5
+
+	pollTimeoutInSec  = 3600
+	pollIntervalInSec = 5
 )

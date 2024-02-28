@@ -30,17 +30,19 @@ resource "clumio_post_process_kms" "example" {
 
 ### Required
 
-- `account_id` (String) The AWS Customer Account ID associated with the connection.
-- `region` (String) The AWS Region.
-- `role_arn` (String) The ARN of the IAM role to manage the CMK.
-- `role_external_id` (String) The external ID to use when assuming the IAM role.
-- `role_id` (String) The ID of the IAM role to manage the CMK.
-- `token` (String) The AWS integration ID token.
+- `account_id` (String) Identifier of the AWS account linked with Clumio.
+- `region` (String) Region of the AWS account linked with Clumio.
+- `role_arn` (String) The ARN of the IAM role to manage the customer-managed key.
+- `role_external_id` (String) Unique identifier Clumio uses to access the service role within your account.
+- `role_id` (String) Identifier of the IAM role to manage the customer-managed key.
+- `token` (String) Distinct 36-character token used to identify resources set up by the Clumio BYOK template installation on the account being connected.
 
 ### Optional
 
-- `created_multi_region_cmk` (Boolean) Whether a new CMK was created.
-- `multi_region_cmk_key_id` (String) Multi Region CMK Key ID.
-- `template_version` (Number) Template version
+- `created_multi_region_cmk` (Boolean) Indicates if a new customer-managed key was created.
+- `multi_region_cmk_key_id` (String) Identifier of the multi region customer-managed key.
+- `template_version` (Number) Version of the BYOK template which was created.
 
+### Read-Only
 
+- `id` (String) The unique identifier of the post process kms.

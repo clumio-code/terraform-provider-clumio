@@ -5,12 +5,6 @@
 package clumio_protection_group
 
 import (
-	"context"
-	"errors"
-	sdkProtectionGroups "github.com/clumio-code/clumio-go-sdk/controllers/protection_groups"
-	"strings"
-	"time"
-
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -57,37 +51,6 @@ func mapSchemaObjectFilterToClumioObjectFilter(
 		LatestVersionOnly: &latestVersionOnly,
 		PrefixFilters:     modelPrefixFilters,
 		StorageClasses:    storageClasses,
-	}
-}
-
-// pollForProtectionGroup polls till the protection group becomes available after create  or update
-// protection group as they are asynchronous operations.
-func pollForProtectionGroup(
-	ctx context.Context, id string, protectionGroup sdkProtectionGroups.ProtectionGroupsV1Client) error {
-
-	interval := time.Duration(intervalInSec) * time.Second
-	ticker := time.NewTicker(interval)
-	timeout := time.After(time.Duration(timeoutInSec) * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("context done")
-		case <-ticker.C:
-			_, err := protectionGroup.ReadProtectionGroup(id)
-			if err != nil {
-				errResponseStr := string(err.Response)
-				if !strings.Contains(errResponseStr,
-					"A resource with the requested ID could not be found.") {
-					return errors.New(
-						"error reading protection-group which was created")
-				}
-				continue
-			}
-			return nil
-		case <-timeout:
-			return errors.New("polling timeout")
-		}
 	}
 }
 
@@ -170,9 +133,4 @@ func mapClumioProtectionInfoToSchemaProtectionInfo(
 	listobj, listdiag := types.ListValue(objtype, []attr.Value{obj})
 	listdiag.Append(diags...)
 	return listobj, listdiag
-}
-
-// clearOUContext resets the OrganizationalUnitContext in the client.
-func (r *clumioProtectionGroupResource) clearOUContext() {
-	r.client.ClumioConfig.OrganizationalUnitContext = ""
 }

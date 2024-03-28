@@ -87,9 +87,6 @@ const (
 
 	errorPolicyReadMsg = "Unable to read %s (ID: %v)"
 
-	timeoutInSec  = 3600
-	intervalInSec = 5
-
 	// Constants for activation status allowed values
 	activationStatusActivated  = "activated"
 	activationStatusDectivated = "deactivated"

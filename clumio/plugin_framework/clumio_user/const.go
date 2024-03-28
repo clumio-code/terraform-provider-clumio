@@ -18,7 +18,8 @@ const (
 	schemaLastActivityTimestamp      = "last_activity_timestamp"
 	schemaOrganizationalUnitCount    = "organizational_unit_count"
 
+	// Common error messages used by the resource.
 	invalidUserMsg = "Invalid user id."
-	errorFmt       = "Error: %v"
 	invalidUserFmt = "Invalid user id: %v"
+	createErrorFmt = "Unable to create %s"
 )

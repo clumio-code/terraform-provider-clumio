@@ -16,11 +16,10 @@ import (
 )
 
 // getAccessControlCfgFromHTTPRes parses the accessControlCfg from the http response  and converts
-// it into the corresponding schema attribute value. Along with that it also returns the
-// assignedRole and OUIds.
+// it into the corresponding schema attribute value.
 func getAccessControlCfgFromHTTPRes(
 	ctx context.Context, accessControlCfg []*models.RoleForOrganizationalUnits,
-	diag *diag.Diagnostics) (basetypes.SetValue, basetypes.StringValue, basetypes.SetValue) {
+	diag *diag.Diagnostics) basetypes.SetValue {
 
 	accessControl := make([]roleForOrganizationalUnitModel, len(accessControlCfg))
 	organizationalUnitIds := make([]*string, 0)
@@ -42,9 +41,6 @@ func getAccessControlCfgFromHTTPRes(
 		}
 	}
 
-	ouIdSet, conversionDiags := types.SetValueFrom(ctx, types.StringType, organizationalUnitIds)
-	diag.Append(conversionDiags...)
-
 	accessControlList, conversionDiags := types.SetValueFrom(ctx, types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			schemaRoleId: types.StringType,
@@ -55,7 +51,7 @@ func getAccessControlCfgFromHTTPRes(
 	}, accessControl)
 	diag.Append(conversionDiags...)
 
-	return accessControlList, types.StringValue(assignedRole), ouIdSet
+	return accessControlList
 }
 
 // makeAccessControlCfgMap creates an access control config map from the schema attribute value for

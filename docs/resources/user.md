@@ -55,7 +55,7 @@ resource "clumio_user" "example" {
 <a id="nestedatt--access_control_configuration"></a>
 ### Nested Schema for `access_control_configuration`
 
-Required:
+Optional:
 
 - `organizational_unit_ids` (Set of String) Identifiers of the organizational units to be assigned to the user.The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
 - `role_id` (String) Identifier of the role to assign to the user.

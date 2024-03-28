@@ -30,7 +30,7 @@ resource "clumio_organizational_unit" "example" {
 ### Optional
 
 - `description` (String) Brief description to denote details of the organizational unit.
-- `parent_id` (String) The identifier of the parent organizational unit under which the neworganizational unit is to be created. If not provided, the resource will be createdunder the default organizational unit associated with the credentials used to createthe organizational unit.
+- `parent_id` (String) The identifier of the parent organizational unit under which the new organizational unit is to be created. If not provided, the resource will be created under the default organizational unit associated with the credentials used to create the organizational unit.
 
 ### Read-Only
 
@@ -47,7 +47,7 @@ resource "clumio_organizational_unit" "example" {
 
 Read-Only:
 
-- `assigned_role` (String) Identifier of the role to be associated with the user when assignedto the organizational unit.
+- `assigned_role` (String) Identifier of the role to be associated with the user when assigned to the organizational unit.
 - `user_id` (String) Identifier of the user to assign to the organizational unit.
 
 ## Import

@@ -112,7 +112,7 @@ resource "clumio_post_process_kms" "test" {
   region = "%s"
   multi_region_cmk_key_id = "test_multi_region_cmk_key_id"
   role_external_id = "test_role_external_id"
-  role_arn = "test_role_arn"
+  role_arn = "arn:aws:iam::${clumio_wallet.test_wallet.account_native_id}:role/testArn"
   role_id = "test_role_id"
   template_version = "%s"
 }

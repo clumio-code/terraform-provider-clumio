@@ -8,10 +8,12 @@ package clumio_post_process_aws_connection
 import (
 	"errors"
 	"fmt"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
 	"strings"
+
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
@@ -55,7 +57,7 @@ var (
 
 // GetTemplateConfiguration generates the template configuration from the schema.
 func GetTemplateConfiguration(
-	model postProcessAWSConnectionResourceModel, isCamelCase bool, isConsolidated bool) (
+	model postProcessAWSConnectionResourceModel, isCamelCase bool) (
 	map[string]interface{}, error) {
 
 	templateConfigs := make(map[string]interface{})
@@ -67,16 +69,6 @@ func GetTemplateConfiguration(
 		return templateConfigs, nil
 	}
 	templateConfigs["config"] = configMap
-	if !isConsolidated {
-		discoverMap, err := getConfigMapForKey(model.DiscoverVersion.ValueString(), true)
-		if err != nil {
-			return nil, err
-		}
-		if discoverMap == nil {
-			return templateConfigs, nil
-		}
-		templateConfigs["discover"] = discoverMap
-	}
 
 	protectMap, err := getConfigMapForKey(model.ProtectConfigVersion.ValueString(), true)
 	if err != nil {
@@ -100,11 +92,7 @@ func GetTemplateConfiguration(
 			return nil, err
 		}
 	}
-	if isConsolidated {
-		templateConfigs["consolidated"] = protectMap
-	} else {
-		templateConfigs["protect"] = protectMap
-	}
+	templateConfigs["consolidated"] = protectMap
 	return templateConfigs, nil
 }
 

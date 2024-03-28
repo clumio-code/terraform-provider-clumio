@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -60,7 +61,7 @@ func updateOrgUnitForConnection(
 	}
 
 	// Call the Clumio API to update the Organizational Unit (OU) for the AWS connection.
-	ouUpdateRequest := &models.PatchOrganizationalUnitV1Request{
+	ouUpdateRequest := &models.PatchOrganizationalUnitV2Request{
 		Entities: updateEntities,
 	}
 	res, apiErr := r.sdkOrgUnits.PatchOrganizationalUnit(orgUnitId, nil, ouUpdateRequest)
@@ -80,7 +81,7 @@ func updateOrgUnitForConnection(
 
 	// As the modification of the OU for a connection is an asynchronous operation, the task ID
 	// returned by the API is used to poll for the completion of the task.
-	err = common.PollTask(ctx, r.client, *res.Http202.TaskId, pollTimeoutInSec, pollIntervalInSec)
+	err = common.PollTask(ctx, r.sdkTasks, *res.Http202.TaskId, r.pollTimeout, r.pollInterval)
 	if err != nil {
 		return fmt.Errorf("unable to update the Organizational Unit for the connection (%v)", err)
 	}
@@ -92,7 +93,7 @@ func updateOrgUnitForConnection(
 // NOTE: An AWS connection only gets associated with an environment in the backend once it becomes
 // connected. As such, attempts to retrieve the environment for a non-connected AWS connection may
 // fail.
-func getEnvironmentForConnection(ctx context.Context, r *clumioAWSConnectionResource,
+func getEnvironmentForConnection(_ context.Context, r *clumioAWSConnectionResource,
 	state *clumioAWSConnectionResourceModel) (*models.AWSEnvironment, error) {
 
 	// Construct the filter string required to retrieve the environment using the state of the AWS
@@ -128,8 +129,8 @@ func getEnvironmentForConnection(ctx context.Context, r *clumioAWSConnectionReso
 
 // getOrgUnitForConnection returns the Organizational Unit (OU) associated with the given AWS
 // connection.
-func getOrgUnitForConnection(ctx context.Context, r *clumioAWSConnectionResource,
-	model *clumioAWSConnectionResourceModel) (*models.ReadOrganizationalUnitResponseV1, error) {
+func getOrgUnitForConnection(_ context.Context, r *clumioAWSConnectionResource,
+	model *clumioAWSConnectionResourceModel) (*models.ReadOrganizationalUnitResponse, error) {
 
 	// Retrieve the current Organizational Unit ID associated with the AWS connection.
 	orgUnitId := model.OrganizationalUnitID.ValueString()

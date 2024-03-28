@@ -14,11 +14,12 @@ import (
 	"regexp"
 	"testing"
 
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	policydefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
-	"github.com/clumio-code/clumio-go-sdk/models"
-	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -48,8 +49,8 @@ import (
 //   - Creates a policy without any operations and verifies that an error is returned.
 func TestAccResourceClumioPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				// Basic create policy test.
@@ -321,8 +322,8 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 //   - Updates the RDS compliance policy and verifies that the resource will be updated.
 func TestRdsComplianceClumioPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioPolicyRDSCompliance(false),
@@ -373,8 +374,8 @@ func TestRdsComplianceClumioPolicy(t *testing.T) {
 //     advanced setting and verifies that the resource will be updated.
 func TestRdsPitrClumioPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				// PITR only
@@ -454,8 +455,8 @@ func TestRdsPitrClumioPolicy(t *testing.T) {
 func TestAccResourceClumioPolicyRecreate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioPolicyWindow(false),
@@ -483,14 +484,23 @@ func TestAccResourceClumioPolicyRecreate(t *testing.T) {
 
 // Test imports a Policy by ID and ensures that the import is successful.
 func TestAccResourceClumioPolicyImport(t *testing.T) {
-	clumio_pf.UtilTestAccPreCheckClumio(t)
+
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
+
+	clumiopf.UtilTestAccPreCheckClumio(t)
 	id, err := createPolicyUsingSDK()
 	if err != nil {
 		t.Errorf("Error creating Policy using API: %v", err.Error())
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(
@@ -520,8 +530,8 @@ func TestAccResourceClumioPolicyImport(t *testing.T) {
 // Tests to check if creating a policy without operations returns error.
 func TestAccResourceClumioPolicyErrorMissingOperations(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(
@@ -535,8 +545,8 @@ func TestAccResourceClumioPolicyErrorMissingOperations(t *testing.T) {
 // Tests to check if creating a policy with empty organizational_unit_id returns error.
 func TestAccResourceClumioPolicyErrorEmptyOU(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestClumioPolicyEmptyParams("organizational_unit_id"),
@@ -550,8 +560,8 @@ func TestAccResourceClumioPolicyErrorEmptyOU(t *testing.T) {
 // Tests to check if creating a policy with empty timezone returns error.
 func TestAccResourceClumioPolicyErrorEmptyTimezone(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestClumioPolicyEmptyParams("timezone"),
@@ -565,8 +575,8 @@ func TestAccResourceClumioPolicyErrorEmptyTimezone(t *testing.T) {
 // Tests to check if creating a policy without operations returns error.
 func TestAccResourceClumioPolicyErrorEmptyActivationStatus(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      getTestClumioPolicyEmptyParams("activation_status"),
@@ -576,7 +586,7 @@ func TestAccResourceClumioPolicyErrorEmptyActivationStatus(t *testing.T) {
 	})
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource
+// getTestAccResourceClumioPolicyWindow returns the Terraform configuration for a clumio_policy resource
 // containing a backup window.
 func getTestAccResourceClumioPolicyWindow(update bool) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -599,7 +609,7 @@ func getTestAccResourceClumioPolicyWindow(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource
+// getTestAccResourceClumioPolicyFixedStart returns the Terraform configuration for a clumio_policy resource
 // containing a fixed start time in the backup window.
 func getTestAccResourceClumioPolicyFixedStart(update int) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -626,7 +636,7 @@ func getTestAccResourceClumioPolicyFixedStart(update int) string {
 	return fmt.Sprintf(testAccResourceClumioPolicy, baseUrl, name, timezone, window)
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a secure vault lite clumio_policy
+// getTestAccResourceClumioPolicySecureVaultLite returns the Terraform configuration for a secure vault lite clumio_policy
 // resource.
 func getTestAccResourceClumioPolicySecureVaultLite(update bool) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -648,7 +658,7 @@ func getTestAccResourceClumioPolicySecureVaultLite(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioPolicyVaultLite, baseUrl, name, sla)
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource
+// getTestAccResourceClumioPolicyHourlyMinutely returns the Terraform configuration for a clumio_policy resource
 // containing hourly and minutely SLA.
 func getTestAccResourceClumioPolicyHourlyMinutely(update bool) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -707,7 +717,7 @@ func getTestAccResourceClumioPolicyHourlyMinutely(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioPolicyHourlyMinutely, baseUrl, name, hourlySla, minutelySla)
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource
+// getTestAccResourceClumioPolicyWeekly returns the Terraform configuration for a clumio_policy resource
 // containing a weekly SLA.
 func getTestAccResourceClumioPolicyWeekly(update bool) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -744,7 +754,7 @@ func getTestAccResourceClumioPolicyWeekly(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioPolicyWeekly, baseUrl, name, weeklySla)
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource
+// getTestAccResourceClumioPolicyBackupRegion returns the Terraform configuration for a clumio_policy resource
 // containing a backup region.
 func getTestAccResourceClumioPolicyBackupRegion(scenario int) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -763,7 +773,7 @@ func getTestAccResourceClumioPolicyBackupRegion(scenario int) string {
 	return fmt.Sprintf(testAccResourceClumioPolicyBackupRegion, baseUrl, name, timezone, region)
 }
 
-// getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource to
+// getTestAccResourceClumioPolicyRDSCompliance returns the Terraform configuration for a clumio_policy resource to
 // support RDS backup for compliance.
 func getTestAccResourceClumioPolicyRDSCompliance(update bool) string {
 
@@ -905,7 +915,7 @@ func createPolicyUsingSDK() (string, error) {
 	clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
 	client := &common.ApiClient{
-		ClumioConfig: clumioConfig.Config{
+		ClumioConfig: sdkconfig.Config{
 			Token:                     clumioApiToken,
 			BaseUrl:                   clumioApiBaseUrl,
 			OrganizationalUnitContext: clumioOrganizationalUnitContext,
@@ -914,7 +924,7 @@ func createPolicyUsingSDK() (string, error) {
 			},
 		},
 	}
-	pd := policydefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
+	pd := sdkclients.NewPolicyDefinitionClient(client.ClumioConfig)
 	name := "acceptance-test-import"
 	timezone := "UTC"
 	actionSetting := "immediate"

@@ -13,12 +13,14 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	policyAssignments "github.com/clumio-code/clumio-go-sdk/controllers/policy_assignments"
-	"github.com/clumio-code/clumio-go-sdk/models"
-	clumioPf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,8 +30,8 @@ import (
 //   - Creates a policy assignment and verifies that the plan was applied properly.
 func TestAccResourceClumioPolicyAssignment(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioPolicyAssignment("test-1"),
@@ -64,8 +66,8 @@ func TestAccResourceClumioPolicyAssignmentRecreate(t *testing.T) {
 
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioPolicyAssignment("test-1"),
@@ -157,8 +159,8 @@ func TestAccResourceClumioPolicyAssignmentRecreate(t *testing.T) {
 // Tests that empty organizational_unit returns error
 func TestAccResourceClumioPolicyAssignmentWithEmptyOU(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioPolicyAssignmentEmptyOU,
@@ -197,7 +199,7 @@ func removePolicyFromProtectionGroup(pgResName string) resource.TestCheckFunc {
 		clumioApiToken := os.Getenv(common.ClumioApiToken)
 		clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 		clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
-		config := clumioConfig.Config{
+		config := sdkconfig.Config{
 			Token:                     clumioApiToken,
 			BaseUrl:                   clumioApiBaseUrl,
 			OrganizationalUnitContext: clumioOrganizationalUnitContext,
@@ -205,7 +207,7 @@ func removePolicyFromProtectionGroup(pgResName string) resource.TestCheckFunc {
 				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
 			},
 		}
-		pa := policyAssignments.NewPolicyAssignmentsV1(config)
+		pa := sdkclients.NewPolicyAssignmentClient(config)
 		entityType := "protection_group"
 		action := "unassign"
 		entity := &models.AssignmentEntity{
@@ -227,12 +229,13 @@ func removePolicyFromProtectionGroup(pgResName string) resource.TestCheckFunc {
 		if res == nil {
 			return fmt.Errorf(common.NilErrorMessageDetail)
 		}
-		client := &common.ApiClient{
-			ClumioConfig: config,
-		}
+
+		taskClient := sdkclients.NewTaskClient(config)
+
 		// As creating a policy assignment is an asynchronous operation, the task ID
 		// returned by the API is used to poll for the completion of the task.
-		err := common.PollTask(context.Background(), client, *res.TaskId, 3600, 5)
+		err := common.PollTask(
+			context.Background(), taskClient, *res.TaskId, 300*time.Second, 5*time.Second)
 		if err != nil {
 			return err
 		}

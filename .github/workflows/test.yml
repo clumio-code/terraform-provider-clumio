@@ -3,15 +3,17 @@
 name: Tests
 on:
   pull_request:
-    paths-ignore:
-      - 'README.md'
+    branches: [ '**' ]
   push:
+    branches: [ 'main', 'release/**' ]
     paths-ignore:
       - 'README.md'
   workflow_dispatch:
     # Allows us to trigger this action manually.
 env:
+  # This activates boringcrypto which provides FIPS compliant crypto libraries.
   GOEXPERIMENT: boringcrypto
+  ENABLE_TEST_REPORTS: false
 
 jobs:
   build-and-test:
@@ -26,6 +28,8 @@ jobs:
           - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'macos-latest' }}
           - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'windows-latest' }}
           - go: ${{ github.repository_owner == 'clumio-code' && '_' || '1.22' }}
+            # If updating the Go version to exclude here, ensure to update the
+            # SonarCloud Scan condition below.
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
@@ -37,24 +41,73 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v4
 
-    - name: Show Environment
+    - name: Extend environment for test reports
+      # When updating the Go versions in the excluded matrix, update the condition below.
+      if: github.repository_owner == 'clumio' && matrix.os == 'ubuntu-latest' && matrix.go == '1.21'
       run: |
+        echo "ENABLE_TEST_REPORTS=true" >> $GITHUB_ENV
+        echo "REPOSITORY_NAME=$(cut -d/ -f2 <<< ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
+        if [[ ! $GITHUB_BASE_REF ]]; then
+          # GITHUB_BASE_REF is only set for PRs, we are on a branch.
+          echo "SONAR_BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        fi
+
+    - name: Show Environment
+      shell: bash
+      run: |
+        echo "pwd: $(pwd)"
         echo "matrix.os=${{ matrix.os }}"
         echo "matrix.go=${{ matrix.go }}"
         echo "github.repository_owner=${{ github.repository_owner }}"
-        go version
+        echo "ENABLE_TEST_REPORTS=${ENABLE_TEST_REPORTS}"
+        echo "SONAR_BRANCH=${SONAR_BRANCH}"
 
     - name: Get dependencies
       run: go mod download
 
-    - name: Build
-      run: |
-        go build -v .
+    - name: Vet
+      run: go vet ./...
+      timeout-minutes: 3
 
-    - name: TF unit tests
+    - name: Build
+      run: go build -v .
+      timeout-minutes: 1
+
+    - name: Setup gotestsum
+      uses: autero1/action-gotestsum@v2.0.0
+      with:
+        gotestsum_version: 1.11.0
+        # https://github.com/gotestyourself/gotestsum/releases
+
+    - name: Unit Tests
       timeout-minutes: 5
       shell: bash
       run: |
-        for TF in '1.0.*' '1.1.*' '1.2.*' '1.3.*' '1.4.*' '1.5.*' '1.6.*' '1.7.*'; do
-          TF_ACC_TERRAFORM_VERSION=$TF go test -v -cover ./clumio/plugin_framework;
-        done
+        if [[ ${ENABLE_TEST_REPORTS} == 'true' ]]; then
+          # Delay failing the pipeline to allow the SonarCloud Scan to run.
+          make testcover || echo "TEST_FAILURE=true" >> $GITHUB_ENV
+          if [[ -e .git/shallow ]]; then
+            echo Unshallow the git clone to provide blame information to SonarCloud.
+            git fetch --unshallow
+          fi
+        else
+          make testunit
+        fi
+
+#    - name: TF Acceptance Tests
+      # https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests
+
+    - name: SonarCloud Scan
+      if: ${{ env.ENABLE_TEST_REPORTS == 'true' }}
+      uses: SonarSource/sonarcloud-github-action@v2
+      timeout-minutes: 5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_ORGANIZATION: ${{ github.repository_owner }}
+        SONAR_PROJECT_KEY: "${{ github.repository_owner }}_${{ env.REPOSITORY_NAME }}"
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        TEST_REPORTS_DIR: 'build/reports'
+
+    - name: Check Unit Tests failure
+      if: ${{ env.TEST_FAILURE == 'true' }}
+      run: echo "Tests failed during the Unit Test step."; exit 1

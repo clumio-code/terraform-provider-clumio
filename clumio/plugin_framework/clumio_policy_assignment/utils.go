@@ -4,7 +4,9 @@
 
 package clumio_policy_assignment
 
-import "github.com/clumio-code/clumio-go-sdk/models"
+import (
+	"github.com/clumio-code/clumio-go-sdk/models"
+)
 
 // mapSchemaPolicyAssignmentToClumioPolicyAssignment maps the schema policy assignment
 // to the Clumio API request policy assignment.
@@ -36,9 +38,4 @@ func mapSchemaPolicyAssignmentToClumioPolicyAssignment(
 			assignmentInput,
 		},
 	}
-}
-
-// clearOUContext resets the OrganizationalUnitContext in the client.
-func (r *clumioPolicyAssignmentResource) clearOUContext() {
-	r.client.ClumioConfig.OrganizationalUnitContext = ""
 }

@@ -8,17 +8,20 @@
 package clumio_protection_group_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	protectionGroups "github.com/clumio-code/clumio-go-sdk/controllers/protection_groups"
-	"github.com/clumio-code/clumio-go-sdk/models"
-	clumioPf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -29,8 +32,8 @@ import (
 //   - Updates the protection group and verifies that the resource will be updated.
 func TestAccResourceClumioProtectionGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioProtectionGroup(false),
@@ -74,8 +77,8 @@ func TestAccResourceClumioProtectionGroup(t *testing.T) {
 // refresh the state it generates an empty plan.
 func TestAccResourceClumioProtectionGroupNoOptional(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioProtectionGroupNoOptional,
@@ -100,8 +103,8 @@ func TestAccResourceClumioProtectionGroupNoOptional(t *testing.T) {
 // throw an error instead.
 func TestAccResourceClumioProtectionGroupDuplicateNameError(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioProtectionGroupDuplicateName,
@@ -110,7 +113,7 @@ func TestAccResourceClumioProtectionGroupDuplicateNameError(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"clumio_protection_group.test_pg", "description",
 						regexp.MustCompile("test_pg_1"))),
-				ExpectError: regexp.MustCompile("Error creating Protection Group test_pg_1"),
+				ExpectError: regexp.MustCompile("Unable to create"),
 			},
 		},
 	})
@@ -122,8 +125,8 @@ func TestAccResourceClumioProtectionGroupDuplicateNameError(t *testing.T) {
 func TestAccResourceClumioProtectionGroupRecreate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioProtectionGroup(false),
@@ -156,8 +159,8 @@ func TestAccResourceClumioProtectionGroupRecreate(t *testing.T) {
 // protection group
 func TestAccResourceClumioProtectionGroupWithOU(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioProtectionGroupWithOU(false),
@@ -180,8 +183,8 @@ func TestAccResourceClumioProtectionGroupWithOU(t *testing.T) {
 // Tests that empty organizational_unit returns error
 func TestAccResourceClumioProtectionGroupWithEmptyOU(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioProtectionGroupWithEmptyOU,
@@ -195,14 +198,23 @@ func TestAccResourceClumioProtectionGroupWithEmptyOU(t *testing.T) {
 
 // Tests importing a Protection Group by ID and ensuring that the import is successful.
 func TestAccResourceClumioAwsProtectionGroupImport(t *testing.T) {
-	clumioPf.UtilTestAccPreCheckClumio(t)
+
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
+
+	clumiopf.UtilTestAccPreCheckClumio(t)
 	id, err := createProtectionGroupUsingSDK()
 	if err != nil {
 		t.Errorf("Error creating Protection Group using API: %v", err.Error())
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        getTestAccResourceClumioProtectionGroup(false),
@@ -254,6 +266,7 @@ func getTestAccResourceClumioProtectionGroupWithOU(update bool) string {
 
 // createProtectionGroupUsingSDK creates a protection group using Clumio SDK for testing purpose
 func createProtectionGroupUsingSDK() (string, error) {
+
 	name := "test_pg_1"
 	bucket_rule := "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
 	description := "test_description"
@@ -261,7 +274,7 @@ func createProtectionGroupUsingSDK() (string, error) {
 	clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
 	client := &common.ApiClient{
-		ClumioConfig: clumioConfig.Config{
+		ClumioConfig: sdkconfig.Config{
 			Token:                     clumioApiToken,
 			BaseUrl:                   clumioApiBaseUrl,
 			OrganizationalUnitContext: clumioOrganizationalUnitContext,
@@ -270,7 +283,7 @@ func createProtectionGroupUsingSDK() (string, error) {
 			},
 		},
 	}
-	pg := protectionGroups.NewProtectionGroupsV1(client.ClumioConfig)
+	pg := sdkclients.NewProtectionGroupClient(client.ClumioConfig)
 	s3standard := "S3 Standard"
 	s3standardia := "S3 Standard-IA"
 	res, apiErr := pg.CreateProtectionGroup(models.CreateProtectionGroupV1Request{
@@ -286,6 +299,14 @@ func createProtectionGroupUsingSDK() (string, error) {
 	if apiErr != nil {
 		return "", apiErr
 	}
+
+	// Poll till the Protection Group is available for reading.
+	_, err := common.PollForProtectionGroup(
+		context.Background(), *res.Id, pg, 300*time.Second, 5*time.Second)
+	if err != nil {
+		return "", apiErr
+	}
+
 	return *res.Id, nil
 }
 

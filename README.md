@@ -2,6 +2,13 @@
 
 ![Clumio](.github/logo.svg)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=alert_status&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=security_rating&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=reliability_rating&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=sqale_rating&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=coverage&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=ncloc&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
+
 The Clumio provider for Terraform is a plugin designed to facilitate the lifecycle management of
 [Clumio](https://clumio.com/) resources. It simplifies the integration of Clumio's backup-as-a-service
 for AWS, streamlining various tasks. These tasks range from linking multiple AWS accounts and
@@ -77,7 +84,9 @@ Currently, that means Go **1.21** or later must be used when compiling the provi
 
 ## Running Tests
 
-To execute Acceptance tests, it's necessary to set the following environment variables:
+In order to run the full suite of unit tests, run `make testunit`.
+
+To execute acceptance tests, it's necessary to set the following environment variables:
 
 - `CLUMIO_API_TOKEN`
 - `CLUMIO_API_BASE_URL`
@@ -102,4 +111,4 @@ Furthermore, some acceptance tests necessitate the configuration of Single Sign-
 by default. To include these tests in the acceptance test suite, SSO must be set up in advance, and the CLUMIO_TEST_IS_SSO_CONFIGURED environment
 variable should be set to true. For guidance on configuring SSO, please consult the following documentation: [Authentication and Access](https://support.clumio.com/hc/en-us/sections/13440186425364-Authentication-and-Access)
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
+In order to run the full suite of acceptance tests, run `make testacc`.

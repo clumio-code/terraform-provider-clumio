@@ -3,7 +3,7 @@
 page_title: "clumio_wallet Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  Clumio Wallet Resource to create and manage wallets in Clumio. Wallets should be created "after" connecting an AWS account to Clumio.NOTE: To protect against accidental deletion, wallets cannot be destroyed. To remove a wallet, contact Clumio support.
+  Clumio Wallet Resource to create and manage wallets in Clumio. Wallets should be created "after" connecting an AWS account to Clumio.NOTE: To protect against accidental deletion, wallets cannot be destroyed once the byok-template module has been installed. To remove a wallet, contact Clumio support.
 ---
 
 # clumio_wallet (Resource)

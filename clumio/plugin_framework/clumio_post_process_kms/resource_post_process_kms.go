@@ -12,9 +12,7 @@ import (
 	"fmt"
 
 	sdkPostProcessKms "github.com/clumio-code/clumio-go-sdk/controllers/post_process_kms"
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -94,7 +92,7 @@ func (r *clumioPostProcessKmsResource) Create(
 // Read does not have an implementation as there is no API to read for post process kms.
 func (r *clumioPostProcessKmsResource) Read(
 	ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
+	// No implementation needed.
 }
 
 // Update updates the resource via the Clumio API and removes the Terraform state.
@@ -140,35 +138,4 @@ func (r *clumioPostProcessKmsResource) Delete(
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-// clumioPostProcessKmsCommon contains the common logic for all CRUD operations of PostProcessKms
-// resource.
-func (r *clumioPostProcessKmsResource) clumioPostProcessKmsCommon(
-	_ context.Context, state clumioPostProcessKmsResourceModel, eventType string) diag.Diagnostics {
-
-	templateVersion := uint64(*state.TemplateVersion.ValueInt64Pointer())
-
-	// Call the Clumio API to post process kms.
-	_, apiErr := r.sdkPostProcessKMS.PostProcessKms(
-		&models.PostProcessKmsV1Request{
-			AccountNativeId:       state.AccountId.ValueStringPointer(),
-			AwsRegion:             state.Region.ValueStringPointer(),
-			RequestType:           &eventType,
-			Token:                 state.Token.ValueStringPointer(),
-			MultiRegionCmkKeyId:   state.MultiRegionCMKKeyId.ValueStringPointer(),
-			RoleId:                state.RoleId.ValueStringPointer(),
-			RoleArn:               state.RoleArn.ValueStringPointer(),
-			RoleExternalId:        state.RoleExternalId.ValueStringPointer(),
-			CreatedMultiRegionCmk: state.CreatedMultiRegionCMK.ValueBoolPointer(),
-			Version:               &templateVersion,
-		})
-	if apiErr != nil {
-		diagnostics := diag.Diagnostics{}
-		summary := "Error in invoking Post-process Clumio KMS."
-		detail := common.ParseMessageFromApiError(apiErr)
-		diagnostics.AddError(summary, detail)
-		return diagnostics
-	}
-	return nil
 }

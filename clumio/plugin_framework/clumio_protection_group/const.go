@@ -21,10 +21,4 @@ const (
 	schemaInheritingEntityId   = "inheriting_entity_id"
 	schemaInheritingEntityType = "inheriting_entity_type"
 	schemaProtectionStatus     = "protection_status"
-
-	timeoutInSec  = 3600
-	intervalInSec = 5
-
-	errorFmt                    = "Error: %v"
-	errorProtectionGroupReadFmt = "Error reading Protection Group %v."
 )

@@ -12,21 +12,21 @@ import (
 	"context"
 	"fmt"
 
-	awsConnections "github.com/clumio-code/clumio-go-sdk/controllers/aws_connections"
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // clumioAWSConnectionResource is the struct backing the clumio_aws_connection Terraform resource.
 // It holds the Clumio API client and any other required state needed to manage AWS manual
 // connections within Clumio.
 type clumioAWSManualConnectionResource struct {
-	name              string
-	client            *common.ApiClient
-	awsConnections    awsConnections.AwsConnectionsV1Client
+	name           string
+	client         *common.ApiClient
+	sdkConnections sdkclients.AWSConnectionClient
 }
 
 // NewClumioAWSManualConnectionResource is a helper function to simplify the provider implementation.
@@ -49,7 +49,7 @@ func (r *clumioAWSManualConnectionResource) Configure(
 		return
 	}
 	r.client = req.ProviderData.(*common.ApiClient)
-	r.awsConnections = awsConnections.NewAwsConnectionsV1(r.client.ClumioConfig)
+	r.sdkConnections = sdkclients.NewAWSConnectionClient(r.client.ClumioConfig)
 }
 
 // Create creates the resource via the Clumio API and sets the initial Terraform state.
@@ -64,24 +64,15 @@ func (r *clumioAWSManualConnectionResource) Create(
 		return
 	}
 
-	// Call the common util to deploy the manually configured resources for the connection.
-	diags = r.clumioSetManualResourcesCommon(ctx, plan)
+	diags = r.createAWSManualConnection(ctx, &plan)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
 		return
 	}
-
-	accountId := plan.AccountId.ValueString()
-	awsRegion := plan.AwsRegion.ValueString()
-	plan.ID = types.StringValue(fmt.Sprintf("%v_%v", accountId, awsRegion))
 
 	// Set the schema into the Terraform state.
 	diags = res.State.Set(ctx, &plan)
 	res.Diagnostics.Append(diags...)
-	if res.Diagnostics.HasError() {
-		return
-	}
-
 }
 
 // Update updates the resource via the Clumio API and updates the Terraform state. Update only
@@ -105,48 +96,38 @@ func (r *clumioAWSManualConnectionResource) Update(
 		return
 	}
 
-	// Block update if downgrading of assets is attempted.
-	if isAssetConfigDowngraded(&plan, &state) {
-		summary := "Error updating manual connection."
-		detail := "Downgrading assets is not allowed."
-		res.Diagnostics.AddError(summary, detail)
-	}
-
-	// Call the Clumio API to update the manual connection.
-	diags = r.clumioSetManualResourcesCommon(ctx, plan)
+	diags = r.updateAWSManualConnection(ctx, &plan, &state)
 	res.Diagnostics.Append(diags...)
 	if res.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.StringValue(state.ID.ValueString())
 
 	// Set the schema into the Terraform state.
 	diags = res.State.Set(ctx, &plan)
 	res.Diagnostics.Append(diags...)
-	if res.Diagnostics.HasError() {
-		return
-	}
 }
 
 // Read does not have an implementation as there is no API to read for clumio_aws_manual_connection.
 func (*clumioAWSManualConnectionResource) Read(
 	context.Context, resource.ReadRequest, *resource.ReadResponse) {
+		// No implementation needed.
 }
 
 // Delete does not have an implementation as there is no API to delete for
 // clumio_aws_manual_connection.
 func (*clumioAWSManualConnectionResource) Delete(
 	context.Context, resource.DeleteRequest, *resource.DeleteResponse) {
+		// No implementation needed.
 }
 
 // clumioSetManualResourcesCommon contains the logic for updating resources of a manual connection
 // using Clumio API.
 func (r *clumioAWSManualConnectionResource) clumioSetManualResourcesCommon(
-	ctx context.Context, state clumioAWSManualConnectionResourceModel) diag.Diagnostics {
+	_ context.Context, state clumioAWSManualConnectionResourceModel) diag.Diagnostics {
 	accountId := state.AccountId.ValueString()
 	awsRegion := state.AwsRegion.ValueString()
 	connectionId := accountId + "_" + awsRegion
-	
+
 	// Determine which asset types are enabled fo the connection
 	assetsEnabled := []*string{}
 	if state.AssetsEnabled.EBS.ValueBool() {
@@ -175,8 +156,8 @@ func (r *clumioAWSManualConnectionResource) clumioSetManualResourcesCommon(
 	req := models.UpdateAwsConnectionV1Request{
 		AssetTypesEnabled: assetsEnabled,
 		Resources: &models.Resources{
-			ClumioIamRoleArn: state.Resources.ClumioIAMRoleArn.ValueStringPointer(),
-			ClumioEventPubArn: state.Resources.ClumioEventPubArn.ValueStringPointer(),
+			ClumioIamRoleArn:     state.Resources.ClumioIAMRoleArn.ValueStringPointer(),
+			ClumioEventPubArn:    state.Resources.ClumioEventPubArn.ValueStringPointer(),
 			ClumioSupportRoleArn: state.Resources.ClumioSupportRoleArn.ValueStringPointer(),
 			EventRules: &models.EventRules{
 				CloudtrailRuleArn: state.Resources.EventRules.CloudtrailRuleArn.ValueStringPointer(),
@@ -188,18 +169,19 @@ func (r *clumioAWSManualConnectionResource) clumioSetManualResourcesCommon(
 				},
 				Mssql: &models.MssqlServiceRoles{
 					Ec2SsmInstanceProfileArn: state.Resources.ServiceRoles.Mssql.Ec2SsmInstanceProfileArn.ValueStringPointer(),
-					SsmNotificationRoleArn: state.Resources.ServiceRoles.Mssql.SsmNotificationRoleArn.ValueStringPointer(),
+					SsmNotificationRoleArn:   state.Resources.ServiceRoles.Mssql.SsmNotificationRoleArn.ValueStringPointer(),
 				},
 			},
 		},
 	}
 
 	// Call the Clumio API to update the AWS manual connection.
-	_, apiErr := r.awsConnections.UpdateAwsConnection(connectionId, req)
+	_, apiErr := r.sdkConnections.UpdateAwsConnection(connectionId, req)
 	if apiErr != nil {
 		diagnostics := diag.Diagnostics{}
-		diagnostics.AddError("Error in updating resources of Clumio AWS Manual Connection.",
-		common.ParseMessageFromApiError(apiErr))
+		summary := fmt.Sprintf("Unable to update resources for %s", r.name)
+		detail := common.ParseMessageFromApiError(apiErr)
+		diagnostics.AddError(summary, detail)
 		return diagnostics
 	}
 	return nil

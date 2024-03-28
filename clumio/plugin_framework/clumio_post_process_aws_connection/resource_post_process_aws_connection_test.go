@@ -110,7 +110,7 @@ resource "clumio_post_process_aws_connection" "test" {
   role_arn = "arn:aws:iam::${clumio_aws_connection.test_conn.account_native_id}:role/testRoleArn"
   account_id = clumio_aws_connection.test_conn.account_native_id
   region = clumio_aws_connection.test_conn.aws_region
-  clumio_event_pub_id = "test_event_pub_id"
+  clumio_event_pub_id = "arn:aws:iam::${clumio_aws_connection.test_conn.account_native_id}:role/ev"
   config_version = "%s"
   discover_version = "4.1"
   protect_config_version = "19.2"

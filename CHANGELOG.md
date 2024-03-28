@@ -1,3 +1,11 @@
+## 0.6.1
+This update covers several improvements to enhance usability and testability. This includes:
+* Restructured resources and data sources for enhanced unit test compatibility.
+* Introduced unit tests for the provider and its associated resources and data sources.
+* Added Sonar badges to surface codebase metrics in README.md.
+* Fixes for minor bugs.
+* Updates to documentation.
+
 ## 0.6.0
 Multiple updates were applied across the provider, including, but not limited to:
   - Resolved Issue [#57](https://github.com/clumio-code/terraform-provider-clumio/issues/57) found in the GitHub public repository.

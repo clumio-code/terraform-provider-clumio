@@ -17,7 +17,4 @@ const (
 	schemaUsersWithRole             = "users_with_role"
 	schemaUserId                    = "user_id"
 	schemaAssignedRole              = "assigned_role"
-
-	pollTimeoutInSec  = 3600
-	pollIntervalInSec = 5
 )

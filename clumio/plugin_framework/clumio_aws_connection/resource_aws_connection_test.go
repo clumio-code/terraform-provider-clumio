@@ -10,17 +10,19 @@ package clumio_aws_connection_test
 import (
 	"errors"
 	"fmt"
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	aws_connections "github.com/clumio-code/clumio-go-sdk/controllers/aws_connections"
-	"github.com/clumio-code/clumio-go-sdk/models"
-	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"os"
 	"regexp"
 	"testing"
+
+	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Basic test of the clumio_aws_connection resource. It tests the following scenarios:
@@ -36,8 +38,8 @@ func TestAccResourceClumioAwsConnection(t *testing.T) {
 	accountNativeId2 := os.Getenv(common.ClumioTestAwsAccountId2)
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAwsConnection(
@@ -108,8 +110,8 @@ func TestAccResourceClumioAWSConnectionNoDescription(t *testing.T) {
 	testAwsRegion := os.Getenv(common.AwsRegion)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioAwsConnectionNoDesc,
@@ -137,8 +139,8 @@ func TestAccResourceClumioAWSConnectionInvalidOU(t *testing.T) {
 	testAwsRegion := os.Getenv(common.AwsRegion)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioAwsConnectionInvalidOU, baseUrl,
@@ -166,8 +168,8 @@ func TestAccResourceClumioAwsConnectionRecreate(t *testing.T) {
 
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAwsConnection(
@@ -204,13 +206,22 @@ func TestAccResourceClumioAwsConnectionRecreate(t *testing.T) {
 
 // Test imports an AWS connection by ID and ensures that the import is successful.
 func TestAccResourceClumioAwsConnectionImport(t *testing.T) {
+
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
+
 	// Retrieve the environment variables required for the test.
 	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId)
 	testAwsRegion := os.Getenv(common.AwsRegion)
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 
 	// Create the connection to import using the Clumio API.
-	clumio_pf.UtilTestAccPreCheckClumio(t)
+	clumiopf.UtilTestAccPreCheckClumio(t)
 	id, err := createAWSConnectionUsingSDK(
 		accountNativeId, testAwsRegion, "test_description")
 	if err != nil {
@@ -219,8 +230,8 @@ func TestAccResourceClumioAwsConnectionImport(t *testing.T) {
 
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAwsConnection(
@@ -252,17 +263,15 @@ func createAWSConnectionUsingSDK(accountID, region, description string) (string,
 	clumioApiToken := os.Getenv(common.ClumioApiToken)
 	clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
-	client := &common.ApiClient{
-		ClumioConfig: clumioConfig.Config{
-			Token:                     clumioApiToken,
-			BaseUrl:                   clumioApiBaseUrl,
-			OrganizationalUnitContext: clumioOrganizationalUnitContext,
-			CustomHeaders: map[string]string{
-				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
-			},
+	config := sdkconfig.Config{
+		Token:                     clumioApiToken,
+		BaseUrl:                   clumioApiBaseUrl,
+		OrganizationalUnitContext: clumioOrganizationalUnitContext,
+		CustomHeaders: map[string]string{
+			"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
 		},
 	}
-	awsConnection := aws_connections.NewAwsConnectionsV1(client.ClumioConfig)
+	awsConnection := sdkclients.NewAWSConnectionClient(config)
 	res, apiErr := awsConnection.CreateAwsConnection(&models.CreateAwsConnectionV1Request{
 		AccountNativeId: &accountID,
 		AwsRegion:       &region,
@@ -292,17 +301,15 @@ func deleteAWSConnection(resourceName string) resource.TestCheckFunc {
 		clumioApiToken := os.Getenv(common.ClumioApiToken)
 		clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 		clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
-		client := &common.ApiClient{
-			ClumioConfig: clumioConfig.Config{
-				Token:                     clumioApiToken,
-				BaseUrl:                   clumioApiBaseUrl,
-				OrganizationalUnitContext: clumioOrganizationalUnitContext,
-				CustomHeaders: map[string]string{
-					"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
-				},
+		config := sdkconfig.Config{
+			Token:                     clumioApiToken,
+			BaseUrl:                   clumioApiBaseUrl,
+			OrganizationalUnitContext: clumioOrganizationalUnitContext,
+			CustomHeaders: map[string]string{
+				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
 			},
 		}
-		awsConnection := aws_connections.NewAwsConnectionsV1(client.ClumioConfig)
+		awsConnection := sdkclients.NewAWSConnectionClient(config)
 		_, apiErr := awsConnection.DeleteAwsConnection(rs.Primary.ID)
 		if apiErr != nil {
 			return apiErr

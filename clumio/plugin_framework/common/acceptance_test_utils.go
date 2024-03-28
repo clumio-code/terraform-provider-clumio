@@ -8,10 +8,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 	"os"
+	"time"
 
 	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	policydefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
 	protectionGroups "github.com/clumio-code/clumio-go-sdk/controllers/protection_groups"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -47,14 +48,15 @@ func DeletePolicy(idOrResourceName string, isResourceName bool) resource.TestChe
 				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
 			},
 		}
-		pd := policydefinitions.NewPolicyDefinitionsV1(config)
+		pd := sdkclients.NewPolicyDefinitionClient(config)
 		res, apiErr := pd.DeletePolicyDefinition(id)
 		if apiErr != nil {
 			return apiErr
 		}
 		if res != nil && res.TaskId != nil {
-			client := &ApiClient{ClumioConfig: config}
-			err := PollTask(context.Background(), client, *res.TaskId, 3600, 5)
+			taskClient := sdkclients.NewTaskClient(config)
+			err := PollTask(
+				context.Background(), taskClient, *res.TaskId, 300*time.Second, 5*time.Second)
 			if err != nil {
 				return err
 			}

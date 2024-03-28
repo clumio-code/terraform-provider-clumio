@@ -12,9 +12,11 @@ Clumio Policy Resource used to schedule backups on Clumio supported data sources
 
 ## Example Usage
 
+### S3 Protection Group Example
+
 ```terraform
-resource "clumio_policy" "example_1" {
-  name              = "example-policy-1"
+resource "clumio_policy" "example_s3_protection_group" {
+  name              = "example-policy-S3-Protection-Group"
   activation_status = "activated"
   operations {
     action_setting = "immediate"
@@ -36,13 +38,173 @@ resource "clumio_policy" "example_1" {
     }
   }
 }
+```
 
-resource "clumio_policy" "example_2" {
-  name              = "example-policy-2"
+### EBS Volume Example
+
+```terraform
+resource "clumio_policy" "example_ebs" {
+  name              = "example-policy-EBS"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "aws_ebs_volume_backup"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 30
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      aws_ebs_volume_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+```
+
+### EC2 Instance Example
+
+```terraform
+resource "clumio_policy" "example_ec2" {
+  name              = "example-policy-EC2"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "aws_ec2_instance_backup"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 30
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      aws_ec2_instance_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+```
+
+### RDS Example
+
+```terraform
+resource "clumio_policy" "example_rds" {
+  name              = "example-policy-RDS"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "aws_rds_resource_granular_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 12
+      }
+      rpo_frequency {
+        unit  = "months"
+        value = 1
+      }
+    }
+    advanced_settings {
+      aws_rds_resource_granular_backup {
+        backup_tier = "frozen"
+      }
+    }
+  }
+}
+```
+
+### MSSQL on EC2 Example
+
+```terraform
+resource "clumio_policy" "example_mssql-ec2" {
+  name              = "example-policy-MSSQL-EC2"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "ec2_mssql_database_backup"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 30
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      ec2_mssql_database_backup {
+        alternative_replica = "sync_secondary"
+        preferred_replica = "primary"
+      }
+    }
+  }
+  operations {
+    action_setting = "immediate"
+    type = "ec2_mssql_log_backup"
+    slas {
+      retention_duration {
+        unit = "days"
+        value = 5
+      }
+      rpo_frequency {
+        unit = "minutes"
+        value = 15
+      }
+    }
+    advanced_settings {
+      ec2_mssql_log_backup {
+        alternative_replica = "sync_secondary"
+        preferred_replica = "primary"
+      }
+    }
+  }
+}
+```
+
+### DynamoDB Example
+
+```terraform
+resource "clumio_policy" "example_dynamodb" {
+  name              = "example-policy-DynamoDB"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "aws_dynamodb_table_backup"
+    slas {
+      retention_duration {
+        unit  = "days"
+        value = 7
+      }
+      rpo_frequency {
+        unit  = "hours"
+        value = 12
+      }
+    }
+  }
+}
+```
+
+### Fixed Start Time and Timezone Example
+
+```terraform
+resource "clumio_policy" "example_backup_windown_timezone" {
+  name              = "example-policy-Backup-Window-Timezone"
   activation_status = "activated"
   timezone          = "America/Los_Angeles"
   operations {
-    action_setting = "window"
+    action_setting = "immediate"
     type           = "aws_ebs_volume_backup"
     slas {
       retention_duration {
@@ -56,7 +218,6 @@ resource "clumio_policy" "example_2" {
     }
     backup_window_tz {
       start_time = "05:00"
-      end_time   = "07:00"
     }
   }
 }

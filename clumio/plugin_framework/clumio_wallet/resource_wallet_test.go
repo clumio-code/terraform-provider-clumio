@@ -120,6 +120,15 @@ func TestAccResourceClumioWalletRecreate(t *testing.T) {
 
 // Test imports a wallet by ID and ensures that the import is successful.
 func TestAccResourceClumioWalletImport(t *testing.T) {
+
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
+
 	// Retrieve the environment variables required for the test.
 	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId)
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)

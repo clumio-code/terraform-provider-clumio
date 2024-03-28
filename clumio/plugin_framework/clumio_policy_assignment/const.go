@@ -14,8 +14,8 @@ const (
 	entityTypeProtectionGroup = "protection_group"
 	protectionGroupBackup     = "protection_group_backup"
 
-	timeoutInSec  = 3600
-	intervalInSec = 5
+	//Common error messages used by the resource.
+	readProtectionGroupErrFmt = "Unable to read Protection Group %v."
 )
 
 var (

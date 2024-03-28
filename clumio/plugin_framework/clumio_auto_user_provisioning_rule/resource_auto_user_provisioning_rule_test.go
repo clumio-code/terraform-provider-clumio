@@ -15,23 +15,29 @@ import (
 	"strings"
 	"testing"
 
+	clumioPf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+
 	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
 	autoUserProvisioningRules "github.com/clumio-code/clumio-go-sdk/controllers/auto_user_provisioning_rules"
 	"github.com/clumio-code/clumio-go-sdk/models"
-	clumioPf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+)
+
+// Constant values used accross multiple tests
+var (
+	provisioningRuleName = "acceptance-test-auto-user-provisioning-rule"
+	superAdminRoleId     = "00000000-0000-0000-0000-000000000000"
+	ouAdminRoleId        = "10000000-0000-0000-0000-000000000000"
+	testResourceName     = "clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule"
 )
 
 // Basic test of the clumio_auto_user_provisioning_rule resource. It tests the following scenarios:
 //   - Creates an auto user provisioning rule and verifies that the plan was applied properly.
 //   - Updates the auto user provisioning rule and verifies that the resource will be updated.
 func TestAccClumioAutoUserProvisioningRule(t *testing.T) {
-	autoUserProvisioningRuleName := "acceptance-test-auto-user-provisioning-rule"
-	superAdminRole := "00000000-0000-0000-0000-000000000000"
-	ouAdminRole := "10000000-0000-0000-0000-000000000000"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
@@ -39,12 +45,12 @@ func TestAccClumioAutoUserProvisioningRule(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAutoUserProvisioningRule(
-					autoUserProvisioningRuleName, superAdminRole),
+					provisioningRuleName, superAdminRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(
-							"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+							testResourceName,
 							plancheck.ResourceActionCreate),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
@@ -53,40 +59,40 @@ func TestAccClumioAutoUserProvisioningRule(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 						plancheck.ExpectResourceAction(
-							"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+							testResourceName,
 							plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
-						"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
-						"name", regexp.MustCompile(autoUserProvisioningRuleName)),
+						testResourceName,
+						"name", regexp.MustCompile(provisioningRuleName)),
 					resource.TestMatchResourceAttr(
-						"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
-						"role_id", regexp.MustCompile(superAdminRole)),
+						testResourceName,
+						"role_id", regexp.MustCompile(superAdminRoleId)),
 				),
 				SkipFunc: clumioPf.SkipIfSSONotConfigured,
 			},
 			{
 				Config: getTestAccResourceClumioAutoUserProvisioningRule(
-					autoUserProvisioningRuleName, ouAdminRole),
+					provisioningRuleName, ouAdminRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(
-							"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+							testResourceName,
 							plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
-						"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+						testResourceName,
 						"name",
-						regexp.MustCompile(autoUserProvisioningRuleName)),
+						regexp.MustCompile(provisioningRuleName)),
 					resource.TestMatchResourceAttr(
-						"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+						testResourceName,
 						"role_id",
-						regexp.MustCompile(ouAdminRole)),
+						regexp.MustCompile(ouAdminRoleId)),
 				),
 				SkipFunc: clumioPf.SkipIfSSONotConfigured,
 			},
@@ -99,9 +105,6 @@ func TestAccClumioAutoUserProvisioningRule(t *testing.T) {
 // utilized to delete the resource using the Clumio API after the plan is applied.
 func TestAccResourceClumioAutoUserProvisioningRuleRecreate(t *testing.T) {
 
-	autoUserProvisioningRuleName := "acceptance-test-auto-user-provisioning-rule"
-	superAdminRole := "00000000-0000-0000-0000-000000000000"
-
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
@@ -109,7 +112,7 @@ func TestAccResourceClumioAutoUserProvisioningRuleRecreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAutoUserProvisioningRule(
-					autoUserProvisioningRuleName, superAdminRole),
+					provisioningRuleName, superAdminRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -120,18 +123,18 @@ func TestAccResourceClumioAutoUserProvisioningRuleRecreate(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(
-							"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+							testResourceName,
 							plancheck.ResourceActionCreate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
-						"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+						testResourceName,
 						"name",
-						regexp.MustCompile(autoUserProvisioningRuleName)),
+						regexp.MustCompile(provisioningRuleName)),
 					// Delete the resource using the Clumio API after the plan is applied.
 					deleteAutoUserProvisioningRule(
-						"clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule"),
+						testResourceName),
 				),
 				// This attribute is used to denote that the test expects that after the plan is
 				// applied and a refresh is run, a non-empty plan is expected due to differences
@@ -147,8 +150,13 @@ func TestAccResourceClumioAutoUserProvisioningRuleRecreate(t *testing.T) {
 // Test imports an auto user provisioning rule by ID and ensures that the import is successful.
 func TestAccResourceClumioAutoUserProvisioningRuleImport(t *testing.T) {
 
-	autoUserProvisioningRuleName := "acceptance-test-auto-user-provisioning-rule"
-	superAdminRole := "00000000-0000-0000-0000-000000000000"
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
 
 	// Create the auto user provisioning rule to import using the Clumio API.
 	clumioPf.UtilTestAccPreCheckClumio(t)
@@ -164,9 +172,9 @@ func TestAccResourceClumioAutoUserProvisioningRuleImport(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAutoUserProvisioningRule(
-					autoUserProvisioningRuleName, superAdminRole),
+					provisioningRuleName, superAdminRoleId),
 				ImportState:   true,
-				ResourceName:  "clumio_auto_user_provisioning_rule.test_auto_user_provisioning_rule",
+				ResourceName:  testResourceName,
 				ImportStateId: id,
 				ImportStateCheck: func(instStates []*terraform.InstanceState) error {
 					if len(instStates) != 1 {
@@ -210,19 +218,17 @@ func createAutoUserProvisioningRoleUsingSDK() (string, error) {
 	}
 	aupRules := autoUserProvisioningRules.NewAutoUserProvisioningRulesV1(config)
 	condition := "{\"user.groups\":{\"$in\":[\"Group1\",\"Group2\"]}}"
-	name := "acceptance-test-auto-user-provisioning-rule"
 	orgUnitId := "00000000-0000-0000-0000-000000000000"
-	roleId := "00000000-0000-0000-0000-000000000000"
 	provision := &models.RuleProvision{
 		OrganizationalUnitIds: []*string{
 			&orgUnitId,
 		},
-		RoleId: &roleId,
+		RoleId: &superAdminRoleId,
 	}
 	res, apiErr := aupRules.CreateAutoUserProvisioningRule(
 		&models.CreateAutoUserProvisioningRuleV1Request{
 			Condition: &condition,
-			Name:      &name,
+			Name:      &provisioningRuleName,
 			Provision: provision,
 		})
 	if apiErr != nil {
@@ -270,11 +276,11 @@ func deleteAutoUserProvisioningRule(resourceName string) resource.TestCheckFunc 
 // getTestAccResourceClumioAutoUserProvisioningRule returns the Terraform configuration for a basic
 // clumio_auto_user_provisioning_rule resource.
 func getTestAccResourceClumioAutoUserProvisioningRule(
-	autoUserProvisioningRuleName string, roleId string) string {
+	provisioningRuleName string, roleId string) string {
 
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	return fmt.Sprintf(testAccResourceClumioAutoUserProvisioningRule, baseUrl,
-		autoUserProvisioningRuleName, roleId)
+		provisioningRuleName, roleId)
 }
 
 // testAccResourceClumioAutoUserProvisioningRule is the Terraform configuration for a basic

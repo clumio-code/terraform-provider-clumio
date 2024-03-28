@@ -7,16 +7,12 @@ package clumio_wallet
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
-	sdkWallets "github.com/clumio-code/clumio-go-sdk/controllers/wallets"
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -31,7 +27,7 @@ var (
 type clumioWalletResource struct {
 	name       string
 	client     *common.ApiClient
-	sdkWallets sdkWallets.WalletsV1Client
+	sdkWallets sdkclients.WalletClient
 }
 
 // NewClumioWalletResource creates a new instance of clumioWalletResource. Its attributes are
@@ -59,7 +55,7 @@ func (r *clumioWalletResource) Configure(
 	}
 
 	r.client = req.ProviderData.(*common.ApiClient)
-	r.sdkWallets = sdkWallets.NewWalletsV1(r.client.ClumioConfig)
+	r.sdkWallets = sdkclients.NewWalletClient(r.client.ClumioConfig)
 }
 
 // Create creates the resource via the Clumio API and sets the initial Terraform state.
@@ -74,35 +70,15 @@ func (r *clumioWalletResource) Create(
 		return
 	}
 
-	// Call the Clumio API to create the wallet.
-	res, apiErr := r.sdkWallets.CreateWallet(&models.CreateWalletV1Request{
-		AccountNativeId: plan.AccountNativeId.ValueStringPointer(),
-	})
-	if apiErr != nil {
-		summary := "Unable to create Clumio wallet"
-		detail := common.ParseMessageFromApiError(apiErr)
-		resp.Diagnostics.AddError(summary, detail)
-		return
-	}
-	if res == nil {
-		resp.Diagnostics.AddError(
-			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
-		return
-	}
-
-	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
-	// including the ID given that the resource is getting created.
-	plan.Id = types.StringPointerValue(res.Id)
-	plan.State = types.StringPointerValue(res.State)
-	plan.Token = types.StringPointerValue(res.Token)
-	plan.ClumioAccountId = types.StringPointerValue(res.ClumioAwsAccountId)
-
-	// Set the schema into the Terraform state.
-	diags = resp.State.Set(ctx, &plan)
+	diags = r.createWallet(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Set the schema into the Terraform state.
+	diags = resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Read retrieves the resource from the Clumio API and sets the Terraform state.
@@ -117,43 +93,19 @@ func (r *clumioWalletResource) Read(
 		return
 	}
 
-	// Call the Clumio API to read the wallet.
-	res, apiErr := r.sdkWallets.ReadWallet(state.Id.ValueString())
-	if apiErr != nil {
-		if apiErr.ResponseCode == http.StatusNotFound {
-			msgStr := fmt.Sprintf(
-				"Clumio Wallet with ID %s not found. Removing from state.",
-				state.Id.ValueString())
-			tflog.Warn(ctx, msgStr)
-			resp.State.RemoveResource(ctx)
-		} else {
-			summary := "Unable to read the Clumio wallet."
-			detail := common.ParseMessageFromApiError(apiErr)
-			resp.Diagnostics.AddError(summary, detail)
-		}
-		return
-	}
-	if res == nil {
-		resp.Diagnostics.AddError(
-			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
-		return
-	}
-
-	// Convert the Clumio API response back to a schema and update the state. In addition to
-	// computed fields, all fields are populated from the API response in case any values have been
-	// changed externally. ID is not updated however given that it is the field used to query the
-	// resource from the backend.
-	state.State = types.StringPointerValue(res.State)
-	state.AccountNativeId = types.StringPointerValue(res.AccountNativeId)
-	state.Token = types.StringPointerValue(res.Token)
-	state.ClumioAccountId = types.StringPointerValue(res.ClumioAwsAccountId)
-
-	// Set the schema into the Terraform state.
-	diags = resp.State.Set(ctx, &state)
+	remove, diags := r.readWallet(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if remove {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	// Set the schema into the Terraform state.
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -177,15 +129,8 @@ func (r *clumioWalletResource) Delete(
 		return
 	}
 
-	// Call the Clumio API to delete the wallet.
-	_, apiErr := r.sdkWallets.DeleteWallet(state.Id.ValueString())
-	if apiErr != nil {
-		if apiErr.ResponseCode != http.StatusNotFound {
-			summary := "Unable to delete the Clumio wallet"
-			detail := common.ParseMessageFromApiError(apiErr)
-			resp.Diagnostics.AddError(summary, detail)
-		}
-	}
+	diags = r.deleteWallet(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
 
 // ImportState retrieves the resource via the Clumio API and sets the Terraform state. The import

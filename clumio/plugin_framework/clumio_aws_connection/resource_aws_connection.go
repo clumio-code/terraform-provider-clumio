@@ -7,18 +7,13 @@ package clumio_aws_connection
 
 import (
 	"context"
-	"fmt"
-	"net/http"
+	"time"
 
-	sdkConnections "github.com/clumio-code/clumio-go-sdk/controllers/aws_connections"
-	sdkEnvironments "github.com/clumio-code/clumio-go-sdk/controllers/aws_environments"
-	sdkOrgUnits "github.com/clumio-code/clumio-go-sdk/controllers/organizational_units"
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the following Resource interfaces.
@@ -34,9 +29,12 @@ var (
 type clumioAWSConnectionResource struct {
 	name            string
 	client          *common.ApiClient
-	sdkConnections  sdkConnections.AwsConnectionsV1Client
-	sdkEnvironments sdkEnvironments.AwsEnvironmentsV1Client
-	sdkOrgUnits     sdkOrgUnits.OrganizationalUnitsV1Client
+	sdkConnections  sdkclients.AWSConnectionClient
+	sdkEnvironments sdkclients.AWSEnvironmentClient
+	sdkOrgUnits     sdkclients.OrganizationalUnitClient
+	sdkTasks        sdkclients.TaskClient
+	pollTimeout     time.Duration
+	pollInterval    time.Duration
 }
 
 // NewClumioAWSConnectionResource creates a new instance of clumioAWSConnectionResource. Its
@@ -65,9 +63,12 @@ func (r *clumioAWSConnectionResource) Configure(
 	}
 
 	r.client = req.ProviderData.(*common.ApiClient)
-	r.sdkConnections = sdkConnections.NewAwsConnectionsV1(r.client.ClumioConfig)
-	r.sdkEnvironments = sdkEnvironments.NewAwsEnvironmentsV1(r.client.ClumioConfig)
-	r.sdkOrgUnits = sdkOrgUnits.NewOrganizationalUnitsV1(r.client.ClumioConfig)
+	r.sdkConnections = sdkclients.NewAWSConnectionClient(r.client.ClumioConfig)
+	r.sdkEnvironments = sdkclients.NewAWSEnvironmentClient(r.client.ClumioConfig)
+	r.sdkOrgUnits = sdkclients.NewOrganizationalUnitClient(r.client.ClumioConfig)
+	r.sdkTasks = sdkclients.NewTaskClient(r.client.ClumioConfig)
+	r.pollTimeout = 3600 * time.Second
+	r.pollInterval = 5 * time.Second
 }
 
 // Create creates the resource via the Clumio API and sets the initial Terraform state.
@@ -82,48 +83,12 @@ func (r *clumioAWSConnectionResource) Create(
 		return
 	}
 
-	if !plan.OrganizationalUnitID.IsNull() {
-		_, err := getOrgUnitForConnection(ctx, r, &plan)
-		if err != nil {
-			summary := fmt.Sprintf("invalid %s", schemaOrganizationalUnitId)
-			detail := err.Error()
-			resp.Diagnostics.AddError(summary, detail)
-			return
-		}
-	}
-	// Convert the schema to a Clumio API request to create an AWS connection.
-	createReq := &models.CreateAwsConnectionV1Request{
-		AccountNativeId:      plan.AccountNativeID.ValueStringPointer(),
-		AwsRegion:            plan.AWSRegion.ValueStringPointer(),
-		Description:          plan.Description.ValueStringPointer(),
-		OrganizationalUnitId: plan.OrganizationalUnitID.ValueStringPointer(),
-	}
-
 	// Call the Clumio API to create the AWS connection.
-	res, apiErr := r.sdkConnections.CreateAwsConnection(createReq)
-	if apiErr != nil {
-		summary := fmt.Sprintf("Unable to create %s", r.name)
-		detail := common.ParseMessageFromApiError(apiErr)
-		resp.Diagnostics.AddError(summary, detail)
+	diags = r.createAWSConnection(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	if res == nil {
-		resp.Diagnostics.AddError(
-			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
-		return
-	}
-
-	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
-	// including the ID given that the resource is getting created.
-	plan.ID = types.StringPointerValue(res.Id)
-	plan.OrganizationalUnitID = types.StringPointerValue(res.OrganizationalUnitId)
-	plan.ConnectionStatus = types.StringPointerValue(res.ConnectionStatus)
-	plan.Token = types.StringPointerValue(res.Token)
-	plan.Namespace = types.StringPointerValue(res.Namespace)
-	plan.ClumioAWSAccountID = types.StringPointerValue(res.ClumioAwsAccountId)
-	plan.ClumioAWSRegion = types.StringPointerValue(res.ClumioAwsRegion)
-	setExternalId(&plan, res.ExternalId, res.Token)
-	setDataPlaneAccountId(&plan, res.DataPlaneAccountId)
 
 	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
@@ -146,48 +111,15 @@ func (r *clumioAWSConnectionResource) Read(
 	}
 
 	// Call the Clumio API to read the AWS connection.
-	returnExternalId := "true"
-	res, apiErr := r.sdkConnections.ReadAwsConnection(state.ID.ValueString(), &returnExternalId)
-	if apiErr != nil {
-		if apiErr.ResponseCode == http.StatusNotFound {
-			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state", r.name, state.ID.ValueString())
-			tflog.Warn(ctx, summary)
-			resp.State.RemoveResource(ctx)
-		} else {
-			summary := fmt.Sprintf("Unable to read %s (ID: %v)", r.name, state.ID.ValueString())
-			detail := common.ParseMessageFromApiError(apiErr)
-			resp.Diagnostics.AddError(summary, detail)
-		}
+	remove, diags := r.readAWSConnection(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	if res == nil {
-		resp.Diagnostics.AddError(
-			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+	if remove {
+		resp.State.RemoveResource(ctx)
 		return
 	}
-
-	// Convert the Clumio API response back to a schema and update the state. In addition to
-	// computed fields, all fields are populated from the API response in case any values have been
-	// changed externally. ID is not updated however given that it is the field used to query the
-	// resource from the backend.
-	state.AccountNativeID = types.StringPointerValue(res.AccountNativeId)
-	state.AWSRegion = types.StringPointerValue(res.AwsRegion)
-
-	// Since the Description field is optional, it should only be populated if it initially
-	// contained a non-null value or if there is a specific value that needs to be assigned.
-	description := types.StringPointerValue(res.Description)
-	if !state.Description.IsNull() || description.ValueString() != "" {
-		state.Description = description
-	}
-	state.OrganizationalUnitID = types.StringPointerValue(res.OrganizationalUnitId)
-	state.ConnectionStatus = types.StringPointerValue(res.ConnectionStatus)
-	state.Token = types.StringPointerValue(res.Token)
-	state.Namespace = types.StringPointerValue(res.Namespace)
-	state.ClumioAWSAccountID = types.StringPointerValue(res.ClumioAwsAccountId)
-	state.ClumioAWSRegion = types.StringPointerValue(res.ClumioAwsRegion)
-	setExternalId(&state, res.ExternalId, res.Token)
-	setDataPlaneAccountId(&state, res.DataPlaneAccountId)
-
 	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -220,61 +152,11 @@ func (r *clumioAWSConnectionResource) Update(
 		return
 	}
 
-	// Update the Organizational Unit (OU) associated with the AWS connection if it has been
-	// explicitly set and is different from the current OU.
-	if !plan.OrganizationalUnitID.IsUnknown() &&
-		plan.OrganizationalUnitID != state.OrganizationalUnitID {
-
-		err := updateOrgUnitForConnection(ctx, r, &plan, &state)
-		if err != nil {
-			summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, state.ID.ValueString())
-			detail := err.Error()
-			resp.Diagnostics.AddError(summary, detail)
-			return
-		}
-		// "description" is the only field within the schema that can cause an update to the
-		// resource. As such, if this has not changed, update the Terraform state with the change
-		// to the Organization Unit and return.
-		if plan.Description == state.Description {
-			diags = resp.State.Set(ctx, plan)
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-	}
-
-	// Call the Clumio API to update the AWS connection. The "Description" parameter, while optional
-	// in the REST API, is deliberately provided to ensure the update process is executed, even in
-	// the absence of a specified description. This approach is necessary as the API's response
-	// varies when a description is omitted.
-	description := plan.Description.ValueString()
-	updateReq := models.UpdateAwsConnectionV1Request{
-		Description: &description,
-	}
-	res, apiErr := r.sdkConnections.UpdateAwsConnection(plan.ID.ValueString(), updateReq)
-	if apiErr != nil {
-		summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, state.ID.ValueString())
-		detail := common.ParseMessageFromApiError(apiErr)
-		resp.Diagnostics.AddError(summary, detail)
+	diags = r.updateAWSConnection(ctx, &plan, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	if res == nil {
-		resp.Diagnostics.AddError(
-			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
-		return
-	}
-
-	// Convert the Clumio API response back to a schema and populate all computed fields of the
-	// plan. ID however is not updated given that it is the field used to denote which resource to
-	// update in the backend. Additionally the external ID is currently not returned during an
-	// update call and thus is not updated below. This is okay however as the external ID is not
-	// expected to change once a connection is created.
-	plan.OrganizationalUnitID = types.StringPointerValue(res.OrganizationalUnitId)
-	plan.ConnectionStatus = types.StringPointerValue(res.ConnectionStatus)
-	plan.Token = types.StringPointerValue(res.Token)
-	plan.Namespace = types.StringPointerValue(res.Namespace)
-	plan.ClumioAWSAccountID = types.StringPointerValue(res.ClumioAwsAccountId)
-	plan.ClumioAWSRegion = types.StringPointerValue(res.ClumioAwsRegion)
-	setDataPlaneAccountId(&plan, res.DataPlaneAccountId)
 
 	// Set the schema into the Terraform state.
 	diags = resp.State.Set(ctx, plan)
@@ -297,15 +179,8 @@ func (r *clumioAWSConnectionResource) Delete(
 	}
 
 	// Call the Clumio API to delete the AWS connection.
-	_, apiErr := r.sdkConnections.DeleteAwsConnection(state.ID.ValueString())
-	if apiErr != nil {
-		if apiErr.ResponseCode != http.StatusNotFound {
-			summary := fmt.Sprintf("Unable to delete %s (ID: %v)", r.name, state.ID.ValueString())
-			detail := common.ParseMessageFromApiError(apiErr)
-			resp.Diagnostics.AddError(summary, detail)
-		}
-	}
-
+	diags = r.deleteAWSConnection(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
 
 // ImportState retrieves the resource via the Clumio API and sets the Terraform state. The import

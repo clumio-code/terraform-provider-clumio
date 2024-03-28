@@ -22,7 +22,4 @@ const (
 	statusConnected           = "connected"
 	externalIDFmt             = "ExternalID_%s"
 	defaultDataPlaneAccountId = "*"
-
-	pollTimeoutInSec  = 3600
-	pollIntervalInSec = 5
 )

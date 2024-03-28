@@ -64,7 +64,7 @@ func TestAccResourceClumioUser(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
-						"clumio_user.test_user", "assigned_role",
+						"clumio_user.test_user", "access_control_configuration.0.role_id",
 						regexp.MustCompile(assignedRoleBefore)),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccResourceClumioUser(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
-						"clumio_user.test_user", "assigned_role",
+						"clumio_user.test_user", "access_control_configuration.0.role_id",
 						regexp.MustCompile(assignedRoleAfter)),
 				),
 			},
@@ -100,6 +100,63 @@ func TestAccResourceClumioUser(t *testing.T) {
 							"clumio_user.test_user", plancheck.ResourceActionReplace),
 					},
 				},
+			},
+		},
+	})
+}
+
+// Test of the clumio_user resource with assigned_role and organizational_unit_ids schema attributes
+// populated. It tests the following scenarios:
+//   - Creates a user and verifies that the plan was applied properly.
+//   - Updates the user and verifies that the resource will be updated.
+func TestAccResourceClumioUserOURole(t *testing.T) {
+
+	// Run the acceptance test.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioUserRoleIdAndOus(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_user.test_user", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(
+						"clumio_user.test_user", "assigned_role",
+						regexp.MustCompile(assignedRoleBefore)),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioUserRoleIdAndOus(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_user.test_user", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(
+						"clumio_user.test_user", "assigned_role",
+						regexp.MustCompile(assignedRoleAfter)),
+				),
 			},
 		},
 	})
@@ -148,6 +205,14 @@ func TestAccResourceClumioUserRecreate(t *testing.T) {
 
 // Test imports a user by ID and ensures that the import is successful.
 func TestAccResourceClumioPolicyImport(t *testing.T) {
+
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
 
 	// Create the user to import using the Clumio API.
 	clumioPf.UtilTestAccPreCheckClumio(t)
@@ -259,8 +324,7 @@ func createUserUsingSDK() (string, error) {
 	return *res.Id, nil
 }
 
-// getTestAccResourceClumioUser returns the Terraform configuration for a basic
-// clumio_user resource.
+// getTestAccResourceClumioUser returns the Terraform configuration for a basic clumio_user resource.
 func getTestAccResourceClumioUser(baseUrl string, name string, email string, update bool) string {
 	orgUnitId := "clumio_organizational_unit.test_ou1.id"
 	assignedRole := assignedRoleBefore
@@ -271,8 +335,20 @@ func getTestAccResourceClumioUser(baseUrl string, name string, email string, upd
 	return fmt.Sprintf(testAccResourceClumioUser, baseUrl, name, email, assignedRole, orgUnitId)
 }
 
-// testAccResourceClumioUser is the Terraform configuration for a basic
-// clumio_user resource.
+// getTestAccResourceClumioUser returns the Terraform configuration for creating a clumio_user
+// resource using role_id and organizational_unit_ids instead of access_control_configuration.
+func getTestAccResourceClumioUserRoleIdAndOus(update bool) string {
+
+	orgUnitId := "clumio_organizational_unit.test_ou1.id"
+	assignedRole := assignedRoleBefore
+	if update {
+		orgUnitId = "clumio_organizational_unit.test_ou2.id"
+		assignedRole = assignedRoleAfter
+	}
+	return fmt.Sprintf(testAccResourceClumioUserRoleIdAndOus, assignedRole, orgUnitId)
+}
+
+// testAccResourceClumioUser is the Terraform configuration for a basic clumio_user resource.
 const testAccResourceClumioUser = `
 provider clumio{
    clumio_api_base_url = "%s"
@@ -300,8 +376,7 @@ resource "clumio_user" "test_user" {
 }
 `
 
-// testAccResourceClumioUser is the Terraform configuration for a importing a
-// clumio_user resource.
+// testAccResourceClumioUser is the Terraform configuration for importing a clumio_user resource.
 const testAccResourceClumioUserImport = `
 provider clumio{
    clumio_api_base_url = "%s"
@@ -310,5 +385,29 @@ provider clumio{
 resource "clumio_user" "test_user" {
   full_name = "acceptance-test-user"
   email = "test@clumio.com"
+}
+`
+
+// testAccResourceClumioUserRoleIdAndOus is the Terraform configuration for creating a clumio_user
+// resource using role_id and organizational_unit_ids instead of access_control_configuration.
+const testAccResourceClumioUserRoleIdAndOus = `
+provider clumio{
+}
+
+resource "clumio_organizational_unit" "test_ou1" {
+  name = "test_ou1"
+  description = "test-ou-1"
+}
+
+resource "clumio_organizational_unit" "test_ou2" {
+  name = "test_ou2"
+  description = "test-ou-2"
+}
+
+resource "clumio_user" "test_user" {
+  full_name = "acceptance-test-user"
+  email = "test@clumio.com"
+  assigned_role = "%s"
+  organizational_unit_ids = [%s]
 }
 `

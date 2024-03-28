@@ -14,13 +14,14 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	policydefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
-	policyrules "github.com/clumio-code/clumio-go-sdk/controllers/policy_rules"
-	"github.com/clumio-code/clumio-go-sdk/models"
-	clumioPf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,8 +40,8 @@ func TestAccResourceClumioPolicyRule(t *testing.T) {
 
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioPolicyRule(policyName, policyRuleName, policyRuleTwoName),
@@ -99,11 +100,19 @@ func TestAccResourceClumioPolicyRule(t *testing.T) {
 // Test imports a policy rule by ID and ensures that the import is successful.
 func TestAccResourceClumioPolicyRuleImport(t *testing.T) {
 
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
+
 	// Retrieve the environment variables required for the test.
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 
 	// Create the policy rule to import using the Clumio API.
-	clumioPf.UtilTestAccPreCheckClumio(t)
+	clumiopf.UtilTestAccPreCheckClumio(t)
 	policy_id, id, err := createPolicyRuleUsingSDK()
 	if err != nil {
 		t.Errorf("Error creating policy rule using API: %v", err.Error())
@@ -111,8 +120,8 @@ func TestAccResourceClumioPolicyRuleImport(t *testing.T) {
 
 	// Run the acceptance test.
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(
@@ -143,8 +152,8 @@ func TestAccResourceClumioPolicyRuleImport(t *testing.T) {
 // Tests that empty organizational_unit returns error
 func TestAccResourceClumioPolicyRuleWithEmptyOU(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumioPf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumioPf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccResourceClumioPolicyRuleEmptyOU,
@@ -165,17 +174,15 @@ func createPolicyRuleUsingSDK() (string, string, error) {
 	clumioApiToken := os.Getenv(common.ClumioApiToken)
 	clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
-	client := &common.ApiClient{
-		ClumioConfig: clumioConfig.Config{
-			Token:                     clumioApiToken,
-			BaseUrl:                   clumioApiBaseUrl,
-			OrganizationalUnitContext: clumioOrganizationalUnitContext,
-			CustomHeaders: map[string]string{
-				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
-			},
+	config := sdkconfig.Config{
+		Token:                     clumioApiToken,
+		BaseUrl:                   clumioApiBaseUrl,
+		OrganizationalUnitContext: clumioOrganizationalUnitContext,
+		CustomHeaders: map[string]string{
+			"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
 		},
 	}
-	pd := policydefinitions.NewPolicyDefinitionsV1(client.ClumioConfig)
+	pd := sdkclients.NewPolicyDefinitionClient(config)
 	name := "acceptance-test-import"
 	timezone := "UTC"
 	actionSetting := "immediate"
@@ -211,7 +218,7 @@ func createPolicyRuleUsingSDK() (string, string, error) {
 		return "", "", apiErr
 	}
 
-	policyRules := policyrules.NewPolicyRulesV1(client.ClumioConfig)
+	policyRules := sdkclients.NewPolicyRuleClient(config)
 	condition := "{\"entity_type\":{\"$in\":[\"aws_ebs_volume\",\"aws_ec2_instance\"]}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
 	action := &models.RuleAction{
 		AssignPolicy: &models.AssignPolicyAction{
@@ -231,9 +238,12 @@ func createPolicyRuleUsingSDK() (string, string, error) {
 	if apiErr != nil {
 		return "", "", apiErr
 	}
+
+	taskClient := sdkclients.NewTaskClient(config)
 	// As creating a policy rule is an asynchronous operation, the task ID
 	// returned by the API is used to poll for the completion of the task.
-	err := common.PollTask(context.Background(), client, *res.TaskId, 3600, 5)
+	err := common.PollTask(
+		context.Background(), taskClient, *res.TaskId, 300*time.Second, 5*time.Second)
 	if err != nil {
 		return "", "", err
 	}

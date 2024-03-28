@@ -15,14 +15,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
-	organizationalunits "github.com/clumio-code/clumio-go-sdk/controllers/organizational_units"
-	"github.com/clumio-code/clumio-go-sdk/models"
-	clumio_pf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -39,8 +39,8 @@ const (
 func TestAccResourceClumioOrganizationalUnit(t *testing.T) {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioOrganizationalUnit(baseUrl, false, false),
@@ -77,8 +77,8 @@ func TestAccResourceClumioOrganizationalUnitNoDescription(t *testing.T) {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(getTestAccResourceClumioOrganizationalUnit(
@@ -97,15 +97,24 @@ func TestAccResourceClumioOrganizationalUnitNoDescription(t *testing.T) {
 
 // Test imports an organizational unit by ID and ensures that the import is successful.
 func TestAccResourceClumioOrganizationalUnitImport(t *testing.T) {
+
+	// Return if it is not an acceptance test
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc))
+		return
+	}
+
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	clumio_pf.UtilTestAccPreCheckClumio(t)
+	clumiopf.UtilTestAccPreCheckClumio(t)
 	id, err := createOrganizationalUnitUsingSDK()
 	if err != nil {
 		t.Errorf("Error creating AWS Connection using API: %v", err.Error())
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:        getTestAccResourceClumioOrganizationalUnit(baseUrl, false, false),
@@ -134,8 +143,8 @@ func TestAccResourceClumioOrganizationalUnitImport(t *testing.T) {
 // Tests to check if creating a OU with empty parent id returns error.
 func TestAccResourceClumioOrganizationalUnitEmptyParentID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumio_pf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumio_pf.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioOrganizationalUnitEmptyParentId(),
@@ -184,7 +193,7 @@ func createOrganizationalUnitUsingSDK() (string, error) {
 	clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
 	client := &common.ApiClient{
-		ClumioConfig: clumioConfig.Config{
+		ClumioConfig: sdkconfig.Config{
 			Token:                     clumioApiToken,
 			BaseUrl:                   clumioApiBaseUrl,
 			OrganizationalUnitContext: clumioOrganizationalUnitContext,
@@ -193,7 +202,7 @@ func createOrganizationalUnitUsingSDK() (string, error) {
 			},
 		},
 	}
-	ou := organizationalunits.NewOrganizationalUnitsV2(client.ClumioConfig)
+	ou := sdkclients.NewOrganizationalUnitClient(client.ClumioConfig)
 	name := "acceptance-test-ou"
 	res, apiErr := ou.CreateOrganizationalUnit(nil,
 		&models.CreateOrganizationalUnitV2Request{

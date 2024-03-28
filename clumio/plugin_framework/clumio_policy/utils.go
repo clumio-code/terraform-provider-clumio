@@ -8,10 +8,11 @@ import (
 	"context"
 	"fmt"
 
-	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
-	sdkPolicyDefinitions "github.com/clumio-code/clumio-go-sdk/controllers/policy_definitions"
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,16 +23,23 @@ import (
 // populated from the API response in case any values have been changed externally. ID is not
 // updated however given that it is the field used to query the resource from the backend.
 func readPolicyAndUpdateModel(ctx context.Context,
-	state *policyResourceModel, pd sdkPolicyDefinitions.PolicyDefinitionsV1Client) (
+	state *policyResourceModel, pd sdkclients.PolicyDefinitionClient) (
 	*apiutils.APIError, diag.Diagnostics) {
 
+	var diags diag.Diagnostics
 	// Call the Clumio API to read the policy.
 	res, apiErr := pd.ReadPolicyDefinition(state.ID.ValueString(), nil)
 	if apiErr != nil {
 		errMsg := fmt.Sprintf(
 			"Error retrieving policy with ID: %s. Error: %v", state.ID.ValueString(), apiErr)
 		tflog.Error(ctx, errMsg)
-		return apiErr, nil
+		return apiErr, diags
+	}
+	if res == nil {
+		summary := common.NilErrorMessageSummary
+		detail := common.NilErrorMessageDetail
+		diags.AddError(summary, detail)
+		return nil, diags
 	}
 	state.LockStatus = types.StringPointerValue(res.LockStatus)
 	state.Name = types.StringPointerValue(res.Name)
@@ -124,7 +132,26 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 		}
 
 		if operation.Slas != nil {
-			backupSlas := make([]*slaModel, 0)
+			buildSchemaOperationBackupSlas(ctx, operation, schemaOperation, &diags)
+		}
+
+		if operation.AdvancedSettings != nil {
+			
+			buildSchemaOperationAdvancedSettings(operation, schemaOperation)
+		}
+		schemaOperations = append(schemaOperations, schemaOperation)
+	}
+
+	return schemaOperations, diags
+}
+
+// buildSchemaOperationBackupSla maps the Slas field from the SDK PolicyOperation model to the
+// schema format.
+func buildSchemaOperationBackupSlas(
+	ctx context.Context, operation *models.PolicyOperation, 
+	schemaOperation *policyOperationModel, diags *diag.Diagnostics) {
+
+	backupSlas := make([]*slaModel, 0)
 			for _, sla := range operation.Slas {
 				backupSla := &slaModel{}
 				if sla.RetentionDuration != nil {
@@ -138,7 +165,7 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 				if sla.RpoFrequency != nil {
 					offsets, rpoDiags := types.ListValueFrom(ctx,
 						types.Int64Type, sla.RpoFrequency.Offsets)
-					diags = rpoDiags
+					diags = &rpoDiags
 					backupSla.RPOFrequency = []*rpoModel{
 						{
 							Unit:    types.StringPointerValue(sla.RpoFrequency.Unit),
@@ -150,95 +177,95 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 				backupSlas = append(backupSlas, backupSla)
 			}
 			schemaOperation.Slas = backupSlas
-		}
-		if operation.AdvancedSettings != nil {
-			advSettings := &advancedSettingsModel{}
-			if operation.AdvancedSettings.Ec2MssqlDatabaseBackup != nil {
-				advSettings.EC2MssqlDatabaseBackup = []*replicaModel{
-					{
-						AlternativeReplica: types.StringPointerValue(
-							operation.AdvancedSettings.Ec2MssqlDatabaseBackup.AlternativeReplica),
-						PreferredReplica: types.StringPointerValue(
-							operation.AdvancedSettings.Ec2MssqlDatabaseBackup.PreferredReplica),
-					},
-				}
-			}
-			if operation.AdvancedSettings.Ec2MssqlLogBackup != nil {
-				advSettings.EC2MssqlLogBackup = []*replicaModel{
-					{
-						AlternativeReplica: types.StringPointerValue(
-							operation.AdvancedSettings.Ec2MssqlLogBackup.AlternativeReplica),
-						PreferredReplica: types.StringPointerValue(
-							operation.AdvancedSettings.Ec2MssqlLogBackup.PreferredReplica),
-					},
-				}
-			}
-			if operation.AdvancedSettings.MssqlDatabaseBackup != nil {
-				advSettings.MssqlDatabaseBackup = []*replicaModel{
-					{
-						AlternativeReplica: types.StringPointerValue(
-							operation.AdvancedSettings.MssqlDatabaseBackup.AlternativeReplica),
-						PreferredReplica: types.StringPointerValue(
-							operation.AdvancedSettings.MssqlDatabaseBackup.PreferredReplica),
-					},
-				}
-			}
-			if operation.AdvancedSettings.MssqlLogBackup != nil {
-				advSettings.MssqlLogBackup = []*replicaModel{
-					{
-						AlternativeReplica: types.StringPointerValue(
-							operation.AdvancedSettings.MssqlLogBackup.AlternativeReplica),
-						PreferredReplica: types.StringPointerValue(
-							operation.AdvancedSettings.MssqlLogBackup.PreferredReplica),
-					},
-				}
-			}
-			if operation.AdvancedSettings.ProtectionGroupBackup != nil {
-				advSettings.ProtectionGroupBackup = []*backupTierModel{
-					{
-						BackupTier: types.StringPointerValue(
-							operation.AdvancedSettings.ProtectionGroupBackup.BackupTier),
-					},
-				}
-			}
-			if operation.AdvancedSettings.AwsEbsVolumeBackup != nil {
-				advSettings.EBSVolumeBackup = []*backupTierModel{
-					{
-						BackupTier: types.StringPointerValue(
-							operation.AdvancedSettings.AwsEbsVolumeBackup.BackupTier),
-					},
-				}
-			}
-			if operation.AdvancedSettings.AwsEc2InstanceBackup != nil {
-				advSettings.EC2InstanceBackup = []*backupTierModel{
-					{
-						BackupTier: types.StringPointerValue(
-							operation.AdvancedSettings.AwsEc2InstanceBackup.BackupTier),
-					},
-				}
-			}
-			if operation.AdvancedSettings.AwsRdsConfigSync != nil {
-				advSettings.RDSPitrConfigSync = []*pitrConfigModel{
-					{
-						Apply: types.StringPointerValue(
-							operation.AdvancedSettings.AwsRdsConfigSync.Apply),
-					},
-				}
-			}
-			if operation.AdvancedSettings.AwsRdsResourceGranularBackup != nil {
-				advSettings.RDSLogicalBackup = []*backupTierModel{
-					{
-						BackupTier: types.StringPointerValue(
-							operation.AdvancedSettings.AwsRdsResourceGranularBackup.BackupTier),
-					},
-				}
-			}
-			schemaOperation.AdvancedSettings = []*advancedSettingsModel{advSettings}
-		}
-		schemaOperations = append(schemaOperations, schemaOperation)
-	}
+}
 
-	return schemaOperations, diags
+// buildSchemaOperationAdvancedSettings maps the AdvancedSettings field from SDK PolicyOperation 
+// model to the schema format.
+func buildSchemaOperationAdvancedSettings(
+	operation *models.PolicyOperation, schemaOperation *policyOperationModel) {
+
+	advSettings := &advancedSettingsModel{}
+	if operation.AdvancedSettings.Ec2MssqlDatabaseBackup != nil {
+		advSettings.EC2MssqlDatabaseBackup = []*replicaModel{
+			{
+				AlternativeReplica: types.StringPointerValue(
+					operation.AdvancedSettings.Ec2MssqlDatabaseBackup.AlternativeReplica),
+				PreferredReplica: types.StringPointerValue(
+					operation.AdvancedSettings.Ec2MssqlDatabaseBackup.PreferredReplica),
+			},
+		}
+	}
+	if operation.AdvancedSettings.Ec2MssqlLogBackup != nil {
+		advSettings.EC2MssqlLogBackup = []*replicaModel{
+			{
+				AlternativeReplica: types.StringPointerValue(
+					operation.AdvancedSettings.Ec2MssqlLogBackup.AlternativeReplica),
+				PreferredReplica: types.StringPointerValue(
+					operation.AdvancedSettings.Ec2MssqlLogBackup.PreferredReplica),
+			},
+		}
+	}
+	if operation.AdvancedSettings.MssqlDatabaseBackup != nil {
+		advSettings.MssqlDatabaseBackup = []*replicaModel{
+			{
+				AlternativeReplica: types.StringPointerValue(
+					operation.AdvancedSettings.MssqlDatabaseBackup.AlternativeReplica),
+				PreferredReplica: types.StringPointerValue(
+					operation.AdvancedSettings.MssqlDatabaseBackup.PreferredReplica),
+			},
+		}
+	}
+	if operation.AdvancedSettings.MssqlLogBackup != nil {
+		advSettings.MssqlLogBackup = []*replicaModel{
+			{
+				AlternativeReplica: types.StringPointerValue(
+					operation.AdvancedSettings.MssqlLogBackup.AlternativeReplica),
+				PreferredReplica: types.StringPointerValue(
+					operation.AdvancedSettings.MssqlLogBackup.PreferredReplica),
+			},
+		}
+	}
+	if operation.AdvancedSettings.ProtectionGroupBackup != nil {
+		advSettings.ProtectionGroupBackup = []*backupTierModel{
+			{
+				BackupTier: types.StringPointerValue(
+					operation.AdvancedSettings.ProtectionGroupBackup.BackupTier),
+			},
+		}
+	}
+	if operation.AdvancedSettings.AwsEbsVolumeBackup != nil {
+		advSettings.EBSVolumeBackup = []*backupTierModel{
+			{
+				BackupTier: types.StringPointerValue(
+					operation.AdvancedSettings.AwsEbsVolumeBackup.BackupTier),
+			},
+		}
+	}
+	if operation.AdvancedSettings.AwsEc2InstanceBackup != nil {
+		advSettings.EC2InstanceBackup = []*backupTierModel{
+			{
+				BackupTier: types.StringPointerValue(
+					operation.AdvancedSettings.AwsEc2InstanceBackup.BackupTier),
+			},
+		}
+	}
+	if operation.AdvancedSettings.AwsRdsConfigSync != nil {
+		advSettings.RDSPitrConfigSync = []*pitrConfigModel{
+			{
+				Apply: types.StringPointerValue(
+					operation.AdvancedSettings.AwsRdsConfigSync.Apply),
+			},
+		}
+	}
+	if operation.AdvancedSettings.AwsRdsResourceGranularBackup != nil {
+		advSettings.RDSLogicalBackup = []*backupTierModel{
+			{
+				BackupTier: types.StringPointerValue(
+					operation.AdvancedSettings.AwsRdsResourceGranularBackup.BackupTier),
+			},
+		}
+	}
+	schemaOperation.AdvancedSettings = []*advancedSettingsModel{advSettings}
 }
 
 // getOperationAdvancedSettings returns the models.PolicyAdvancedSettings after parsing

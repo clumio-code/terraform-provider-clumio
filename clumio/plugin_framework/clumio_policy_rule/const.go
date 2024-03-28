@@ -11,7 +11,4 @@ const (
 	schemaBeforeRuleId         = "before_rule_id"
 	schemaPolicyId             = "policy_id"
 	schemaOrganizationalUnitId = "organizational_unit_id"
-
-	timeoutInSec  = 3600
-	intervalInSec = 5
 )

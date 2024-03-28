@@ -13,8 +13,10 @@ import (
 
 	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	"github.com/clumio-code/clumio-go-sdk/controllers/tasks"
+	"github.com/clumio-code/clumio-go-sdk/models"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -32,21 +34,20 @@ func SnakeCaseToCamelCase(key string) string {
 	return newKey
 }
 
-// PollTask polls created tasks to ensure that the resource
-// was created successfully.
-func PollTask(ctx context.Context, apiClient *ApiClient,
-	taskId string, timeoutInSec int64, intervalInSec int64) error {
-	t := tasks.NewTasksV1(apiClient.ClumioConfig)
-	interval := time.Duration(intervalInSec) * time.Second
+// PollTask polls created tasks till it completes either with success, aborted, failed
+// or it returns an error.
+func PollTask(ctx context.Context, taskClient tasks.TasksV1Client,
+	taskId string, timeout time.Duration, interval time.Duration) error {
+
 	ticker := time.NewTicker(interval)
-	timeout := time.After(time.Duration(timeoutInSec) * time.Second)
+	tickerTimeout := time.After(timeout)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			resp, apiErr := t.ReadTask(taskId)
+			resp, apiErr := taskClient.ReadTask(taskId)
 			if apiErr != nil {
 				return errors.New(ParseMessageFromApiError(apiErr))
 			} else if *resp.Status == TaskSuccess {
@@ -56,41 +57,10 @@ func PollTask(ctx context.Context, apiClient *ApiClient,
 			} else if *resp.Status == TaskFailed {
 				return errors.New("task failed")
 			}
-		case <-timeout:
+		case <-tickerTimeout:
 			return errors.New("polling task timeout")
 		}
 	}
-}
-
-// SliceDifferenceAttrValue returns the slice difference in attribute value slices.
-func SliceDifferenceAttrValue(slice1 []attr.Value, slice2 []attr.Value) []attr.Value {
-	var diff []attr.Value
-
-	for _, s1 := range slice1 {
-		found := false
-		for _, s2 := range slice2 {
-			if s1 == s2 {
-				found = true
-				break
-			}
-		}
-		// String not found. We add it to return slice
-		if !found {
-			diff = append(diff, s1)
-		}
-	}
-
-	return diff
-}
-
-// GetStringSliceFromAttrValueSlice returns the string slice from attribute value slice.
-func GetStringSliceFromAttrValueSlice(input []attr.Value) []*string {
-	strSlice := make([]*string, 0)
-	for _, val := range input {
-		strVal := val.String()
-		strSlice = append(strSlice, &strVal)
-	}
-	return strSlice
 }
 
 // SliceDifferenceString returns the slice difference in string slices.
@@ -147,8 +117,50 @@ func ParseMessageFromApiError(apiError *apiutils.APIError) string {
 func GetFieldNameFromNestedBlockPath(req validator.SetRequest) string {
 	// A nested block path looks something like this -
 	// operations[Value({"backup_window_tz":[{"end_time":"07:00","start_time":"05:00"}],
-	// "slas":[{"retention_duration":<null>,"rpo_frequency":[{"offsets":<null>,"unit":"days","value":1}]}],"type":"aws_ebs_volume_backup"})]
-	// .slas[Value({"retention_duration":<null>,"rpo_frequency":[{"offsets":<null>,"unit":"days","value":1}]})].retention_duration
+	// "slas":[{"retention_duration":<null>,"rpo_frequency":[{"offsets":<null>,
+	// 	"unit":"days","value":1}]}],"type":"aws_ebs_volume_backup"})]
+	// .slas[Value({"retention_duration":<null>,"rpo_frequency":[{"offsets":<null>,
+	// 	"unit":"days","value":1}]})].retention_duration
 	// "retention_duration" is extracted from it as the lowest level field name
 	return req.Path.String()[strings.LastIndex(req.Path.String(), ".")+1:]
+}
+
+// PollForProtectionGroup polls till the protection group becomes available after create or update
+// protection group as they are asynchronous operations.
+func PollForProtectionGroup(
+	ctx context.Context, id string, protectionGroup sdkclients.ProtectionGroupClient,
+	timeout time.Duration, interval time.Duration) (*models.ReadProtectionGroupResponse, error) {
+
+	ticker := time.NewTicker(interval)
+	tickerTimeout := time.After(timeout)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, errors.New("context canceled or timed out")
+		case <-ticker.C:
+			readResponse, err := protectionGroup.ReadProtectionGroup(id)
+			if err != nil {
+				if err.ResponseCode != http.StatusNotFound {
+					return nil, errors.New(ParseMessageFromApiError(err))
+				}
+				continue
+			}
+			return readResponse, nil
+		case <-tickerTimeout:
+			return nil, errors.New("polling timed out")
+		}
+	}
+}
+
+// GetSDKConfigForOU returns a copy of the given SDK config with the OrganizationalUnitContext set
+// to the specified organizationalUnitId.
+func GetSDKConfigForOU(clumioConfig sdkconfig.Config, organizationalUnitId string) sdkconfig.Config {
+
+	return sdkconfig.Config{
+		Token:                     clumioConfig.Token,
+		BaseUrl:                   clumioConfig.BaseUrl,
+		OrganizationalUnitContext: organizationalUnitId,
+		CustomHeaders:             clumioConfig.CustomHeaders,
+	}
 }

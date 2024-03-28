@@ -12,11 +12,27 @@ Clumio S3 Protection Group Resource used to create and manage Protection Groups.
 
 ## Example Usage
 
+### Basic Example
+
 ```terraform
-resource "clumio_protection_group" "example" {
-  name                   = "example-protection_group"
-  description            = "example protection group"
-  organizational_unit_id = "organizational_unit_id"
+resource "clumio_protection_group" "basic_example" {
+  name                   = "example-protection_group-1"
+  description            = "example protection group-1"
+  bucket_rule            = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
+  object_filter {
+    storage_classes = [
+      "S3 Standard"
+    ]
+  }
+}
+```
+
+### Advanced Example
+
+```terraform
+resource "clumio_protection_group" "advanced_example" {
+  name                   = "example-protection_group-2"
+  description            = "example protection group-2"
   bucket_rule            = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   object_filter {
     latest_version_only = false
@@ -25,7 +41,7 @@ resource "clumio_protection_group" "example" {
       prefix                = "prefix"
     }
     storage_classes = [
-      "S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA",
+      "S3 Standard", "S3 Standard-IA", "S3 Intelligent-Tiering", "S3 One Zone-IA", 
       "S3 Reduced Redundancy"
     ]
   }
@@ -57,7 +73,7 @@ resource "clumio_protection_group" "example" {
 
 Required:
 
-- `storage_classes` (Set of String) Storage class to include in the backup. If not specified, then all objects across all storage classes will be backed up. Valid values are: S3 Standard, S3 Standard-IA, S3 Intelligent-Tiering, and S3 One Zone-IA.
+- `storage_classes` (Set of String) Storage class to include in the backup. If not specified, then all objects across all storage classes will be backed up. Valid values are: S3 Standard, S3 Standard-IA, S3 Intelligent-Tiering, S3 One Zone-IA, and S3 Reduced Redundancy.
 
 Optional:
 

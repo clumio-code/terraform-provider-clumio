@@ -1,0 +1,41 @@
+#
+# Config file for mockery.
+# https://vektra.github.io/mockery/
+#
+# While `go generate` is 'recommended' in the v2 documentation it is actually
+# deprecated in favor of the packages list in the .mockery.yaml file in v3.
+#
+
+inpackage: True
+with-expecter: True
+# Do not include the version string to avoid useless diffs and files rewrites.
+disable-version-string: True
+# Ensure that the generated files are lowercase and always end with `_mock.go`.
+# By default, Mockery generates mixed case files but on case-insensitive
+# filesystems such as on Windows and macOS `foo.go` and `Foo.go` are the same
+# file while git considers them to be different files, leading to problems.
+filename: "{{.InterfaceNameSnake}}_mock.go"
+# Mock files should be published next to the source files.
+dir: "{{.InterfaceDir}}"
+# List of packages and interfaces to mock.
+# See https://vektra.github.io/mockery/features/#packages-configuration
+# Please keep the packages and interfaces sorted.
+packages:
+  github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients:
+    interfaces:
+      AWSConnectionClient:
+      AWSEnvironmentClient:
+      OrganizationalUnitClient:
+      PolicyDefinitionClient:
+      TaskClient:
+      ProtectionGroupClient:
+      PolicyAssignmentClient:
+      PolicyRuleClient:
+      WalletClient:
+      UserClient:
+      PostProcessAWSConnectionClient:
+      PostProcessKMSClient:
+      AutoUserProvisioningRuleClient:
+      AutoUserProvisioningSettingClient:
+      RoleClient:
+      AWSTemplatesClient:

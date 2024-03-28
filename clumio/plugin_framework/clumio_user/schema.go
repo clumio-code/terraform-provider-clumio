@@ -99,12 +99,14 @@ func (r *clumioUserResource) Schema(
 					Attributes: map[string]schema.Attribute{
 						schemaRoleId: schema.StringAttribute{
 							Description: "Identifier of the role to assign to the user.",
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 						},
 						schemaOrganizationalUnitIds: schema.SetAttribute{
 							Description: "Identifiers of the organizational units to be assigned to the user." +
 								"The Global Organizational Unit ID is \"00000000-0000-0000-0000-000000000000\"",
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 							ElementType: types.StringType,
 						},
 					},

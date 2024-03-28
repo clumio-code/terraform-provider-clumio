@@ -7,14 +7,11 @@ package clumio_role
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/clumio-code/clumio-go-sdk/controllers/roles"
-	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -23,15 +20,15 @@ var (
 	_ datasource.DataSourceWithConfigure = &clumioRoleDataSource{}
 )
 
-// clumioRoleDataSource is the struct backing the clumio_role Terraform datasource. It holds the 
+// clumioRoleDataSource is the struct backing the clumio_role Terraform datasource. It holds the
 // Clumio API client and any other required state needed to manage roles within Clumio.
 type clumioRoleDataSource struct {
-	name            string
-	client          *common.ApiClient
-	roles           roles.RolesV1Client
+	name   string
+	client *common.ApiClient
+	roles  sdkclients.RoleClient
 }
 
-// NewClumioRoleDataSource creates a new instance of clumioRoleDataSource. Its attributes are 
+// NewClumioRoleDataSource creates a new instance of clumioRoleDataSource. Its attributes are
 // initialized later by Terraform via Metadata and Configure once the Provider is initialized.
 func NewClumioRoleDataSource() datasource.DataSource {
 	return &clumioRoleDataSource{}
@@ -53,7 +50,7 @@ func (r *clumioRoleDataSource) Configure(
 		return
 	}
 	r.client = req.ProviderData.(*common.ApiClient)
-	r.roles = roles.NewRolesV1(r.client.ClumioConfig)
+	r.roles = sdkclients.NewRoleClient(r.client.ClumioConfig)
 }
 
 // Read retrieves the datasource from the Clumio API and sets the Terraform state.
@@ -68,59 +65,13 @@ func (r *clumioRoleDataSource) Read(
 		return
 	}
 
-	// Call the Clumio API to read the list of roles.
-	res, apiErr := r.roles.ListRoles()
-	if apiErr != nil {
-		resp.Diagnostics.AddError(
-			"Error listing Clumio roles.",
-			fmt.Sprintf("Error: %v", common.ParseMessageFromApiError(apiErr)))
-		return
-	}
-	if res == nil {
-		resp.Diagnostics.AddError(
-			common.NilErrorMessageSummary, common.NilErrorMessageDetail)
-		return
-	}
-
-	// Find the expected role from the list of fetched roles via its name.
-	var expectedRole *models.RoleWithETag
-	for _, roleItem := range res.Embedded.Items {
-		if *roleItem.Name == state.Name.ValueString() {
-			expectedRole = roleItem
-			break
-		}
-	}
-	// Throw error if role with provided name was not found.
-	if expectedRole == nil {
-			summary := "Role not found"
-			detail := fmt.Sprintf("Couldn't find a role with the provided name %s", state.Name.ValueString())
-			resp.Diagnostics.AddError(summary, detail)
-			return
-	}
-
-	// Convert the Clumio API response for the expected role into a schema and update the state.
-	state.Id = types.StringPointerValue(expectedRole.Id)
-	state.Name = types.StringPointerValue(expectedRole.Name)
-	state.Description = types.StringPointerValue(expectedRole.Description)
-	state.UserCount = types.Int64PointerValue(expectedRole.UserCount)
-
-	// Go through all permissions inside the expected role API response and map it to permissionModel.
-	// Then update the state with it.
-	permissions := make([]*permissionModel, len(expectedRole.Permissions))
-	for ind, permission := range expectedRole.Permissions {
-		permissionModel := &permissionModel{}
-		permissionModel.Description = types.StringPointerValue(permission.Description)
-		permissionModel.Id = types.StringPointerValue(permission.Id)
-		permissionModel.Name = types.StringPointerValue(permission.Name)
-		permissions[ind] = permissionModel
-	}
-	state.Permissions = permissions
-
-	// Set the schema into the Terraform state.
-	diags = resp.State.Set(ctx, &state)
+	diags = r.readRole(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	return
+
+	// Set the schema into the Terraform state.
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }

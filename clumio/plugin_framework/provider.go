@@ -48,12 +48,15 @@ func New() provider.Provider {
 }
 
 // Metadata returns the provider type name.
-func (p *clumioProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *clumioProvider) Metadata(
+	_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "clumio"
 }
 
 // Configure prepares a Clumio API client for data sources and resources.
-func (p *clumioProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+func (p *clumioProvider) Configure(
+	ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+
 	tflog.Info(ctx, "Configuring Clumio client")
 
 	// Retrieve provider data from configuration

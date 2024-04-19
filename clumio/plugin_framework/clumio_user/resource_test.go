@@ -40,12 +40,19 @@ var (
 	isEnabled             = false
 	lastActivityTimestamp = "test-timestamp"
 	ouCount               = int64(1)
+	invalidId             = "invalid"
+	invalidIdInt          = int64(0)
 )
 
 // Unit test for the following cases:
 //   - Create user success scenario.
+//   - Create user success with assigned_role/organizational_unit_ids
 //   - SDK API for create user returns an error.
 //   - SDK API for create user returns an empty response.
+//   - Configure both access_control_configuration and assigned_role/organizational_unit_ids
+//     returns an error.
+//   - Not configure both access_control_configuration and assigned_role/organizational_unit_ids
+//     returns an error.
 func TestCreateUser(t *testing.T) {
 
 	ctx := context.Background()
@@ -123,6 +130,46 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, ouCount, urm.OrganizationalUnitCount.ValueInt64())
 	})
 
+	// Tests the success scenario for user create with assigned_role/organizational_unit_ids.
+	// It should not return Diagnostics.
+	t.Run("success scenario with assigned_role/ou_ids for create user", func(t *testing.T) {
+
+		urmDeprecated := &clumioUserResourceModel{
+			Email:                      basetypes.NewStringValue(email),
+			FullName:                   basetypes.NewStringValue(fullName),
+			AccessControlConfiguration: basetypes.NewSetUnknown(types.StringType),
+			AssignedRole:               basetypes.NewStringValue(roleId),
+			OrganizationalUnitIds:      ouIds,
+		}
+
+		createUserResponse := &models.CreateUserResponse{
+			AccessControlConfiguration: []*models.RoleForOrganizationalUnits{
+				{
+					RoleId:                &roleId,
+					OrganizationalUnitIds: ouIdsList,
+				},
+			},
+			Id:                      &id,
+			Inviter:                 &inviter,
+			IsConfirmed:             &isConfirmed,
+			IsEnabled:               &isEnabled,
+			LastActivityTimestamp:   &lastActivityTimestamp,
+			OrganizationalUnitCount: &ouCount,
+		}
+
+		//Setup expectations.
+		mockUser.EXPECT().CreateUser(mock.Anything).Times(1).Return(createUserResponse, nil)
+
+		diags := ur.createUser(ctx, urmDeprecated)
+		assert.Nil(t, diags)
+		assert.Equal(t, id, urmDeprecated.Id.ValueString())
+		assert.Equal(t, inviter, urmDeprecated.Inviter.ValueString())
+		assert.Equal(t, lastActivityTimestamp, urmDeprecated.LastActivityTimestamp.ValueString())
+		assert.Equal(t, isEnabled, urmDeprecated.IsEnabled.ValueBool())
+		assert.Equal(t, isConfirmed, urmDeprecated.IsConfirmed.ValueBool())
+		assert.Equal(t, ouCount, urmDeprecated.OrganizationalUnitCount.ValueInt64())
+	})
+
 	// Tests that Diagnostics is returned in case the create user API call returns an error.
 	t.Run("create user returns an error", func(t *testing.T) {
 
@@ -147,6 +194,38 @@ func TestCreateUser(t *testing.T) {
 		diags := ur.createUser(ctx, urm)
 		assert.NotNil(t, diags)
 	})
+
+	// Tests that Diagnostics is returned in case configuring both access_control_configuration and
+	// assigned_role/organizational_unit_ids.
+	t.Run("create user with both configure returns an error", func(t *testing.T) {
+
+		urmBothConfigure := &clumioUserResourceModel{
+			Email:                      basetypes.NewStringValue(email),
+			FullName:                   basetypes.NewStringValue(fullName),
+			AccessControlConfiguration: accessControlList,
+			AssignedRole:               basetypes.NewStringValue(roleId),
+			OrganizationalUnitIds:      ouIds,
+		}
+
+		diags := ur.createUser(ctx, urmBothConfigure)
+		assert.NotNil(t, diags)
+	})
+
+	// Tests that Diagnostics is returned in case not configuring both access_control_configuration
+	// and assigned_role/organizational_unit_ids.
+	t.Run("create user with no configure returns an error", func(t *testing.T) {
+
+		urmNoConfigure := &clumioUserResourceModel{
+			Email:                      basetypes.NewStringValue(email),
+			FullName:                   basetypes.NewStringValue(fullName),
+			AccessControlConfiguration: basetypes.NewSetUnknown(types.StringType),
+			AssignedRole:               basetypes.NewStringUnknown(),
+			OrganizationalUnitIds:      basetypes.NewSetUnknown(types.StringType),
+		}
+
+		diags := ur.createUser(ctx, urmNoConfigure)
+		assert.NotNil(t, diags)
+	})
 }
 
 // Unit test for the following cases:
@@ -154,6 +233,7 @@ func TestCreateUser(t *testing.T) {
 //   - SDK API for read user returns not found error.
 //   - SDK API for read user returns an error.
 //   - SDK API for read user returns an empty response.
+//   - Using invalid user id retunrs an error.
 func TestReadUser(t *testing.T) {
 
 	ctx := context.Background()
@@ -273,12 +353,31 @@ func TestReadUser(t *testing.T) {
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
 	})
+
+	// Tests that Diagnostics is returned in case using invalid user id.
+	t.Run("using invalid user id returns an error.", func(t *testing.T) {
+
+		invalidUrm := &clumioUserResourceModel{
+			Id: basetypes.NewStringValue(invalidId),
+		}
+
+		// Setup expectations.
+		mockUser.EXPECT().ReadUser(invalidIdInt).Times(1).Return(nil, apiError)
+
+		remove, diags := ur.readUser(ctx, invalidUrm)
+		assert.NotNil(t, diags)
+		assert.False(t, remove)
+	})
 }
 
 // Unit test for the following cases:
 //   - Update user success scenario.
+//   - Update user success with assigned_role/organizational_unit_ids
 //   - SDK API for update user returns an error.
 //   - SDK API for update user returns an empty response.
+//   - Using invalid user id retunrs an error.
+//   - Configure both access_control_configuration and assigned_role/organizational_unit_ids
+//     returns an error.
 func TestUpdateUser(t *testing.T) {
 
 	ctx := context.Background()
@@ -380,6 +479,42 @@ func TestUpdateUser(t *testing.T) {
 		assert.Equal(t, fullNameUpdated, plan.FullName.ValueString())
 	})
 
+	// Tests the success scenario for user update with assigned_role/organizational_unit_ids.
+	// It should not return Diagnostics.
+	t.Run("success scenario with assigned_role/ou_ids for update user", func(t *testing.T) {
+
+		planDeprecated := &clumioUserResourceModel{
+			Id:                         basetypes.NewStringValue(id),
+			Email:                      basetypes.NewStringValue(email),
+			FullName:                   basetypes.NewStringValue(fullNameUpdated),
+			AccessControlConfiguration: basetypes.NewSetUnknown(types.StringType),
+			AssignedRole:               basetypes.NewStringValue(roleId),
+			OrganizationalUnitIds:      ouIds,
+		}
+
+		updateUserResponse := &models.UpdateUserResponse{
+			AccessControlConfiguration: []*models.RoleForOrganizationalUnits{
+				{
+					RoleId:                &roleId,
+					OrganizationalUnitIds: ouIdsList,
+				},
+			},
+			Id:                      &id,
+			Inviter:                 &inviter,
+			IsConfirmed:             &isConfirmed,
+			IsEnabled:               &isEnabled,
+			LastActivityTimestamp:   &lastActivityTimestamp,
+			OrganizationalUnitCount: &ouCount,
+		}
+
+		//Setup expectations.
+		mockUser.EXPECT().UpdateUser(idInt, mock.Anything).Times(1).Return(updateUserResponse, nil)
+
+		diags := ur.updateUser(ctx, planDeprecated, state)
+		assert.Nil(t, diags)
+		assert.Equal(t, fullNameUpdated, planDeprecated.FullName.ValueString())
+	})
+
 	// Tests that Diagnostics is returned in case the update user API call returns an error.
 	t.Run("update user returns an error", func(t *testing.T) {
 
@@ -404,6 +539,42 @@ func TestUpdateUser(t *testing.T) {
 		diags := ur.updateUser(ctx, plan, state)
 		assert.NotNil(t, diags)
 	})
+
+	// Tests that Diagnostics is returned when using invalid user id.
+	t.Run("Using invalid user id returns an error", func(t *testing.T) {
+
+		invalidPlan := &clumioUserResourceModel{
+			Id:                         basetypes.NewStringValue(invalidId),
+			Email:                      basetypes.NewStringValue(email),
+			FullName:                   basetypes.NewStringValue(fullNameUpdated),
+			AccessControlConfiguration: accessControlList,
+			AssignedRole:               basetypes.NewStringUnknown(),
+			OrganizationalUnitIds:      basetypes.NewSetUnknown(types.StringType),
+		}
+
+		// Setup Expectations
+		mockUser.EXPECT().UpdateUser(invalidIdInt, mock.Anything).Times(1).Return(nil, nil)
+
+		diags := ur.updateUser(ctx, invalidPlan, state)
+		assert.NotNil(t, diags)
+	})
+
+	// Tests that Diagnostics is returned in case configuring both access_control_configuration and
+	// assigned_role/organizational_unit_ids.
+	t.Run("update user with both configure returns an error", func(t *testing.T) {
+
+		planBothConfigure := &clumioUserResourceModel{
+			Id:                         basetypes.NewStringValue(id),
+			Email:                      basetypes.NewStringValue(email),
+			FullName:                   basetypes.NewStringValue(fullNameUpdated),
+			AccessControlConfiguration: accessControlList,
+			AssignedRole:               basetypes.NewStringValue(roleId),
+			OrganizationalUnitIds:      ouIds,
+		}
+
+		diags := ur.updateUser(ctx, planBothConfigure, state)
+		assert.NotNil(t, diags)
+	})
 }
 
 // Unit test for the following cases:
@@ -411,6 +582,7 @@ func TestUpdateUser(t *testing.T) {
 //   - SDK API for delete user returns an not found error.
 //   - SDK API for delete user returns an error.
 //   - Polling of delete user task returns an error.
+//   - Using invalid user id returns an error.
 func TestDeleteUser(t *testing.T) {
 
 	ctx := context.Background()
@@ -448,7 +620,7 @@ func TestDeleteUser(t *testing.T) {
 	})
 
 	// Tests that no error is returned if the user does not exist.
-	t.Run("Policy rule not found should not return error", func(t *testing.T) {
+	t.Run("User not found should not return error", func(t *testing.T) {
 
 		// Setup Expectations
 		mockUser.EXPECT().DeleteUser(idInt).Times(1).Return(nil, apiNotFoundError)
@@ -459,10 +631,25 @@ func TestDeleteUser(t *testing.T) {
 
 	// Tests that Diagnostics is returned when delete user API call returns error.
 	t.Run("delete user returns an error", func(t *testing.T) {
+
 		// Setup Expectations
 		mockUser.EXPECT().DeleteUser(idInt).Times(1).Return(nil, apiError)
 
 		diags := ur.deleteUser(ctx, urm)
+		assert.NotNil(t, diags)
+	})
+
+	// Tests that Diagnostics is returned when using invalid user id.
+	t.Run("Using invalid user id returns an error", func(t *testing.T) {
+
+		invalidUrm := &clumioUserResourceModel{
+			Id: basetypes.NewStringValue(invalidId),
+		}
+
+		// Setup Expectations
+		mockUser.EXPECT().DeleteUser(invalidIdInt).Times(1).Return(nil, nil)
+
+		diags := ur.deleteUser(ctx, invalidUrm)
 		assert.NotNil(t, diags)
 	})
 }

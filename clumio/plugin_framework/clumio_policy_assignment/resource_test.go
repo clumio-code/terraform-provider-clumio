@@ -24,13 +24,14 @@ import (
 )
 
 var (
-	resourceName = "test_policy_assignment"
-	entityId     = "test-pg-id"
-	policyId     = "test-policy-id"
-	policyType   = protectionGroupBackup
-	ou           = "test-ou"
-	testError    = "Test Error"
-	taskId       = "test-task-id"
+	resourceName  = "test_policy_assignment"
+	entityId      = "test-pg-id"
+	policyId      = "test-policy-id"
+	otherPolicyId = "other-policy-id"
+	policyType    = protectionGroupBackup
+	ou            = "test-ou"
+	testError     = "Test Error"
+	taskId        = "test-task-id"
 )
 
 const (
@@ -50,6 +51,7 @@ const (
 //   - SDK API for read task returns an error.
 //   - SDK API for read protection group returns an error.
 //   - SDK API for read protection group returns an empty response.
+//   - protection group assigned policy does not match the given policy.
 func TestCreatePolicyAssignment(t *testing.T) {
 
 	ctx := context.Background()
@@ -311,13 +313,59 @@ func TestCreatePolicyAssignment(t *testing.T) {
 		assert.NotNil(t, diags)
 	})
 
+	// Tests that Diagnostics is returned in case the read protection group API call returns a
+	// protection group which has a policy that is different to the one in the state.
+	t.Run(readProtectionGroupError, func(t *testing.T) {
+
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+		}
+
+		paResp := &models.SetAssignmentsResponse{
+			TaskId: &taskId,
+		}
+
+		taskStatus := common.TaskSuccess
+		readTaskResponse := &models.ReadTaskResponse{
+			Status: &taskStatus,
+		}
+
+		readPgResp := &models.ReadProtectionGroupResponse{
+			Id: &entityId,
+			ProtectionInfo: &models.ProtectionInfoWithRule{
+				PolicyId: &otherPolicyId,
+			},
+			OrganizationalUnitId: &ou,
+		}
+
+		// Setup Expectations.
+		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+			Return(pdResp, nil)
+		mockPolicyAssignments.EXPECT().SetPolicyAssignments(mock.Anything).Times(1).Return(
+			paResp, nil)
+		mockTasks.EXPECT().ReadTask(taskId).Times(1).Return(readTaskResponse, nil)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
+			readPgResp, nil)
+
+		model.OrganizationalUnitID = basetypes.NewStringNull()
+		diags := par.createPolicyAssignment(ctx, model)
+		assert.NotNil(t, diags)
+	})
+
 }
 
 // Unit test for the following cases:
 //   - Read policy assignment success scenario.
+//   - Read policy assignment with invalid entity type returns an error.
 //   - SDK API for read policy definition returns an error.
 //   - SDK API for read policy definition returns not found error.
 //   - SDK API for read protection group returns an error.
+//   - SDK API for read protection group returns an empty response.
 //   - SDK API for read protection group returns not found error.
 //   - protection group assigned policy does not match the given policy.
 func TestReadPolicyAssignment(t *testing.T) {
@@ -378,6 +426,28 @@ func TestReadPolicyAssignment(t *testing.T) {
 		assert.False(t, remove)
 	})
 
+	// Tests that Diagnostics is returned in case the read policy assignment with invalid entity
+	// type.
+	t.Run(readPolicyError, func(t *testing.T) {
+
+		invalidType := "invalid-type"
+		modelWithInvalidType := &policyAssignmentResourceModel{
+			ID:         basetypes.NewStringValue(id),
+			EntityID:   basetypes.NewStringValue(entityId),
+			EntityType: basetypes.NewStringValue(invalidType),
+			PolicyID:   basetypes.NewStringValue(policyId),
+		}
+
+		// Setup Expectations
+		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+			Return(nil, nil)
+
+		modelWithInvalidType.OrganizationalUnitID = basetypes.NewStringNull()
+		remove, diags := par.readPolicyAssignment(ctx, modelWithInvalidType)
+		assert.NotNil(t, diags)
+		assert.False(t, remove)
+	})
+
 	// Tests that Diagnostics is returned in case the read policy definition API call returns an
 	// error.
 	t.Run(readPolicyError, func(t *testing.T) {
@@ -422,6 +492,22 @@ func TestReadPolicyAssignment(t *testing.T) {
 		assert.False(t, remove)
 	})
 
+	// Tests that Diagnostics is returned in case the read protection group API call returns an
+	// empty response.
+	t.Run(readProtectionGroupError, func(t *testing.T) {
+
+		// Setup Expectations
+		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+			Return(nil, nil)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
+			nil, nil)
+
+		model.OrganizationalUnitID = basetypes.NewStringNull()
+		remove, diags := par.readPolicyAssignment(ctx, model)
+		assert.NotNil(t, diags)
+		assert.False(t, remove)
+	})
+
 	// Tests that read policy assignment returns true to indicate that the resource should be
 	// removed when read protection group API call returns not found error.
 	t.Run(readProtectionGroupEmptyResponse, func(t *testing.T) {
@@ -443,11 +529,10 @@ func TestReadPolicyAssignment(t *testing.T) {
 	// that is different to the one in the state.
 	t.Run("Protection group assigned policy does not match given policy", func(t *testing.T) {
 
-		somePolicyId := "some-policy"
 		readPgResp := &models.ReadProtectionGroupResponse{
 			Id: &entityId,
 			ProtectionInfo: &models.ProtectionInfoWithRule{
-				PolicyId: &somePolicyId,
+				PolicyId: &otherPolicyId,
 			},
 			OrganizationalUnitId: &ou,
 		}
@@ -473,6 +558,7 @@ func TestReadPolicyAssignment(t *testing.T) {
 //   - SDK API for read task returns an error.
 //   - SDK API for read protection group returns an error.
 //   - SDK API for read protection group returns an empty response.
+//   - protection group assigned policy does not match the given policy.
 func TestUpdatePolicyAssignment(t *testing.T) {
 
 	ctx := context.Background()
@@ -728,6 +814,50 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 		mockTasks.EXPECT().ReadTask(taskId).Times(1).Return(readTaskResponse, nil)
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
 			nil, nil)
+
+		model.OrganizationalUnitID = basetypes.NewStringNull()
+		diags := par.updatePolicyAssignment(ctx, model)
+		assert.NotNil(t, diags)
+	})
+
+	// Tests that Diagnostics is returned in case the read protection group API call returns a
+	// protection group which has a policy that is different to the one in the state.
+	t.Run(readProtectionGroupEmptyResponse, func(t *testing.T) {
+
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+		}
+
+		paResp := &models.SetAssignmentsResponse{
+			TaskId: &taskId,
+		}
+
+		taskStatus := common.TaskSuccess
+		readTaskResponse := &models.ReadTaskResponse{
+			Status: &taskStatus,
+		}
+
+		readPgResp := &models.ReadProtectionGroupResponse{
+			Id: &entityId,
+			ProtectionInfo: &models.ProtectionInfoWithRule{
+				PolicyId: &otherPolicyId,
+			},
+			OrganizationalUnitId: &ou,
+		}
+
+		// Setup Expectations.
+		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+			Return(pdResp, nil)
+		mockPolicyAssignments.EXPECT().SetPolicyAssignments(mock.Anything).Times(1).Return(
+			paResp, nil)
+		mockTasks.EXPECT().ReadTask(taskId).Times(1).Return(readTaskResponse, nil)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
+			readPgResp, nil)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.updatePolicyAssignment(ctx, model)

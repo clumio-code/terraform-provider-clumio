@@ -126,4 +126,45 @@ func TestMapSchemaObjectFilterToClumioObjectFilter(t *testing.T) {
 		modelOF := mapSchemaObjectFilterToClumioObjectFilter(schemaOF)
 		assert.Equal(t, 0, len(modelOF.PrefixFilters))
 	})
+
+	t.Run("Test with empty object filter", func(t *testing.T) {
+		modelOF := mapSchemaObjectFilterToClumioObjectFilter(nil)
+		assert.Nil(t, modelOF)
+	})
+}
+
+// Unit test for the utility function to convert the Protection Info from the API to the schema
+// protection_info.
+func TestMapClumioProtectionInfoToSchemaProtectionInfo(t *testing.T) {
+
+	modelProtectionInfo := &models.ProtectionInfoWithRule{
+		InheritingEntityId:   &entityId,
+		InheritingEntityType: &entityType,
+		PolicyId:             &policyId,
+	}
+
+	t.Run("All protection info attributes populated", func(t *testing.T) {
+		schemaList, diags := mapClumioProtectionInfoToSchemaProtectionInfo(modelProtectionInfo)
+		assert.Nil(t, diags)
+		assert.Equal(t, 1, len(schemaList.Elements()))
+
+		schemaProtectionInfoObject := schemaList.Elements()[0].(types.Object)
+		schemaProtectionInfo := make(map[string]*string)
+		for key, val := range schemaProtectionInfoObject.Attributes() {
+			valStr := val.(types.String).ValueString()
+			schemaProtectionInfo[key] = &valStr
+		}
+
+		assert.Equal(t, *schemaProtectionInfo[schemaInheritingEntityId],
+			*modelProtectionInfo.InheritingEntityId)
+		assert.Equal(t, *schemaProtectionInfo[schemaInheritingEntityType],
+			*modelProtectionInfo.InheritingEntityType)
+		assert.Equal(t, *schemaProtectionInfo[schemaPolicyId], *modelProtectionInfo.PolicyId)
+	})
+
+	t.Run("Test for empty protection info", func(t *testing.T) {
+		schemaList, diags := mapClumioProtectionInfoToSchemaProtectionInfo(nil)
+		assert.Nil(t, diags)
+		assert.Equal(t, 0, len(schemaList.Elements()))
+	})
 }

@@ -11,4 +11,5 @@ const (
 	schemaBeforeRuleId         = "before_rule_id"
 	schemaPolicyId             = "policy_id"
 	schemaOrganizationalUnitId = "organizational_unit_id"
+	schemaPolicyRules          = "policy_rules"
 )

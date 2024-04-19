@@ -17,4 +17,5 @@ const (
 	schemaUsersWithRole             = "users_with_role"
 	schemaUserId                    = "user_id"
 	schemaAssignedRole              = "assigned_role"
+	schemaOrganizationalUnits       = "organizational_units"
 )

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+	"net/http"
 	"os"
 	"time"
 
@@ -102,6 +103,21 @@ func DeleteProtectionGroup(idOrResourceName string, isResourceName bool) resourc
 		_, apiErr := pd.DeleteProtectionGroup(id)
 		if apiErr != nil {
 			return apiErr
+		}
+		time.Sleep(3 * time.Second)
+		for {
+			pg, apiErr := pd.ReadProtectionGroup(id)
+			if apiErr != nil {
+				if apiErr.ResponseCode == http.StatusNotFound {
+					break
+				}
+				return apiErr
+			}
+			if !*pg.IsDeleted {
+				time.Sleep(2 * time.Second)
+			} else {
+				break
+			}
 		}
 		return nil
 	}

@@ -1,3 +1,15 @@
+## 0.6.2
+This update contains the following changes:
+* Data sources added for the following:
+    - clumio_aws_connection
+    - clumio_organizational_unit
+    - clumio_policy
+    - clumio_policy_rule
+    - clumio_protection_group
+    - clumio_user
+* Additional units tests were added to improve code coverage.
+* Improvements to resolve a race condition in acceptance tests.
+
 ## 0.6.1
 This update covers several improvements to enhance usability and testability. This includes:
 * Restructured resources and data sources for enhanced unit test compatibility.

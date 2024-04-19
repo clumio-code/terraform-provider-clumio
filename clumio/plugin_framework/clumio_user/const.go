@@ -17,6 +17,8 @@ const (
 	schemaIsEnabled                  = "is_enabled"
 	schemaLastActivityTimestamp      = "last_activity_timestamp"
 	schemaOrganizationalUnitCount    = "organizational_unit_count"
+	schemaName                       = "name"
+	schemaUsers                      = "users"
 
 	// Common error messages used by the resource.
 	invalidUserMsg = "Invalid user id."

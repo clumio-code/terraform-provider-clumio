@@ -43,6 +43,7 @@ var (
 // Unit test for the following cases:
 //   - Create organizational unit success scenario with HTTP 200 API response status.
 //   - Create organizational unit success scenario with HTTP 202 API response status.
+//   - Create organizational unit returns error with an empty HTTP response.
 //   - SDK API for create organizational unit returns error.
 //   - SDK API for create organizational unit returns nil response.
 func TestCreateOrganizationalUnit(t *testing.T) {
@@ -164,6 +165,24 @@ func TestCreateOrganizationalUnit(t *testing.T) {
 			dataSources := make([]*string, 0)
 			diags = orm.ConfiguredDatasourceTypes.ElementsAs(ctx, &dataSources, false)
 			assert.Equal(t, dataSource, *dataSources[0])
+		})
+
+	// Tests that Diagnostics is returned in case the create organizational unit API call returns
+	// an empty HTTP response.
+	t.Run("CreateOrganizationalUnit returns error with empty HTTP response",
+		func(t *testing.T) {
+
+			createResponse := &models.CreateOrganizationalUnitResponseWrapper{
+				StatusCode: 202,
+				Http202:    nil,
+			}
+
+			//Setup expectations.
+			mockOU.EXPECT().CreateOrganizationalUnit(mock.Anything, mock.Anything).Times(1).
+				Return(createResponse, nil)
+
+			diags := or.createOrganizationalUnit(ctx, orm)
+			assert.NotNil(t, diags)
 		})
 
 	// Tests that Diagnostics is returned in case the create organizational unit API call returns
@@ -301,6 +320,7 @@ func TestReadOrganizationalUnit(t *testing.T) {
 // Unit test for the following cases:
 //   - Update organizational unit success scenario with HTTP 200 API response status.
 //   - Update organizational unit success scenario with HTTP 202 API response status.
+//   - Update organizational unit returns error with an empty HTTP response.
 //   - SDK API for update organizational unit returns error.
 //   - SDK API for update organizational unit returns nil response.
 func TestUpdateOrganizationalUnit(t *testing.T) {
@@ -421,6 +441,24 @@ func TestUpdateOrganizationalUnit(t *testing.T) {
 			dataSources := make([]*string, 0)
 			diags = orm.ConfiguredDatasourceTypes.ElementsAs(ctx, &dataSources, false)
 			assert.Equal(t, dataSource, *dataSources[0])
+		})
+
+	// Tests that Diagnostics is returned in case the update organizational unit API call returns
+	// an empty HTTP response.
+	t.Run("PatchOrganizationalUnit returns error with empty HTTP response",
+		func(t *testing.T) {
+
+			updateResponse := &models.PatchOrganizationalUnitResponseWrapper{
+				StatusCode: 202,
+				Http202:    nil,
+			}
+
+			//Setup expectations.
+			mockOU.EXPECT().PatchOrganizationalUnit(id, mock.Anything, mock.Anything).Times(1).
+				Return(updateResponse, nil)
+
+			diags := or.updateOrganizationalUnit(ctx, orm)
+			assert.NotNil(t, diags)
 		})
 
 	// Tests that Diagnostics is returned in case the patch organizational unit API call returns

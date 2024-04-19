@@ -304,7 +304,7 @@ func createProtectionGroupUsingSDK() (string, error) {
 	_, err := common.PollForProtectionGroup(
 		context.Background(), *res.Id, pg, 300*time.Second, 5*time.Second)
 	if err != nil {
-		return "", apiErr
+		return "", err
 	}
 
 	return *res.Id, nil
@@ -360,15 +360,15 @@ provider clumio{
    clumio_api_base_url = "%s"
 }
 
-resource "clumio_organizational_unit" "test_ou2" {
-  name = "test_ou2"
+resource "clumio_organizational_unit" "test_ou_pg" {
+  name = "test_ou_pg"
 }
 
 resource "clumio_protection_group" "test_pg"{
   bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   name = "test_pg_1"
   description = "%s"
-  organizational_unit_id = clumio_organizational_unit.test_ou2.id
+  organizational_unit_id = clumio_organizational_unit.test_ou_pg.id
   object_filter {
 	storage_classes = ["S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA", "S3 Reduced Redundancy"]
   }

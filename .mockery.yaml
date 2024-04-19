@@ -39,3 +39,4 @@ packages:
       AutoUserProvisioningSettingClient:
       RoleClient:
       AWSTemplatesClient:
+      S3BucketClient:

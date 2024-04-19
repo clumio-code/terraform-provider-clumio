@@ -65,4 +65,7 @@ func TestClientInitialization(t *testing.T) {
 
 	templatesClient := NewAWSTemplatesClient(config)
 	assert.NotNil(t, templatesClient)
+
+	s3BucketClient := NewS3BucketClient(config)
+	assert.NotNil(t, s3BucketClient)
 }

@@ -8,6 +8,7 @@ package clumio_aws_connection
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,9 +25,12 @@ import (
 
 // Unit test for the following cases:
 //   - Update OU for the connection success scenario.
+//   - Update OU to current parent OU success scenario.
 //   - SDK API for listing AWS environments returns an error.
 //   - SDK API for reading organizational unit returns an error.
 //   - SDK API for patching organizational unit returns an error.
+//   - SDK API for patching organizational unit returns HTTP bad request.
+//   - SDK API for patching organizational unit returns an empty response.
 //   - SDK API for polling task after OU update returns an error.
 func TestUpdateOrgUnitForConnection(t *testing.T) {
 
@@ -107,6 +111,51 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	// Tests that the OU update to current parent OU is successful.
+	t.Run("Success scenario for ou update to current parent ou", func(t *testing.T) {
+
+		updateOU := "updated-ou"
+		planUpdateOU := &clumioAWSConnectionResourceModel{
+			ID:                   basetypes.NewStringValue(id),
+			AccountNativeID:      basetypes.NewStringValue(accountId),
+			AWSRegion:            basetypes.NewStringValue(region),
+			Description:          basetypes.NewStringValue(description),
+			OrganizationalUnitID: basetypes.NewStringValue(updateOU),
+		}
+
+		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{
+					{
+						Id: &envId,
+					},
+				},
+			},
+		}
+
+		// Setup Expectations
+		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{
+				Id:       &ou,
+				ParentId: &updateOU,
+			}, nil)
+		mockOrgUnitsCient.EXPECT().PatchOrganizationalUnit(ou, mock.Anything, mock.Anything).
+			Times(1).Return(&models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 202,
+			Http202: &models.PatchOrganizationalUnitResponse{
+				TaskId: &taskId,
+			},
+		}, nil)
+		mockTaskClient.EXPECT().ReadTask(taskId).Times(1).Return(&models.ReadTaskResponse{
+			Status: &status,
+		}, nil)
+
+		err := updateOrgUnitForConnection(ctx, cr, planUpdateOU, state)
+		assert.Nil(t, err)
+	})
+
 	// Tests that the OU update fails due to ListAwsEnvironments API returning an error.
 	t.Run("list aws environments returns an error", func(t *testing.T) {
 
@@ -142,7 +191,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 	})
 
 	// Tests that the OU update fails due to PatchOrganizationalUnit API returning an error.
-	t.Run("Patch OU returns an error", func(t *testing.T) {
+	t.Run("Patch OU returns an error due to API Error", func(t *testing.T) {
 
 		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
 			Embedded: &models.AWSEnvironmentListEmbedded{
@@ -163,6 +212,67 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 			}, nil)
 		mockOrgUnitsCient.EXPECT().PatchOrganizationalUnit(ou, mock.Anything, mock.Anything).
 			Times(1).Return(nil, apiError)
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.NotNil(t, err)
+	})
+
+	// Tests that the OU update fails due to PatchOrganizationalUnit API returning an HTTP Bad
+	// Request.
+	t.Run("Patch OU returns an error due to HTTP bad request", func(t *testing.T) {
+
+		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{
+					{
+						Id: &envId,
+					},
+				},
+			},
+		}
+
+		// Setup Expectations
+		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{
+				Id: &ou,
+			}, nil)
+		mockOrgUnitsCient.EXPECT().PatchOrganizationalUnit(ou, mock.Anything, mock.Anything).
+			Times(1).Return(&models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 400,
+		}, apiError)
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.NotNil(t, err)
+	})
+
+	// Tests that the OU update fails due to PatchOrganizationalUnit API returning an empty
+	// response.
+	t.Run("Patch OU returns an error due to an empty response", func(t *testing.T) {
+
+		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{
+					{
+						Id: &envId,
+					},
+				},
+			},
+		}
+
+		// Setup Expectations
+		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{
+				Id: &ou,
+			}, nil)
+		mockOrgUnitsCient.EXPECT().PatchOrganizationalUnit(ou, mock.Anything, mock.Anything).
+			Times(1).Return(&models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 202,
+			Http202:    nil,
+		}, apiError)
 
 		err := updateOrgUnitForConnection(ctx, cr, plan, state)
 		assert.NotNil(t, err)
@@ -372,4 +482,30 @@ func TestGetOrgUnitForConnection(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Nil(t, ouResp)
 	})
+}
+
+// Unit test for setExternalId that checks and sets the ExternalID.
+func TestSetExternalId(t *testing.T) {
+
+	// Populate the Clumio AWS connection resource model to be used as input for
+	// setExternalId().
+	state := &clumioAWSConnectionResourceModel{
+		ExternalID: basetypes.NewStringValue(externalId),
+	}
+
+	setExternalId(state, nil, &token)
+	assert.Equal(t, fmt.Sprintf(externalIDFmt, token), state.ExternalID.ValueString())
+}
+
+// Unit test for setDataPlaneAccountId that checks and sets the DataPlaneAccountID.
+func TestSetDataPlaneAccountId(t *testing.T) {
+
+	// Populate the Clumio AWS connection resource model to be used as input for
+	// setExternalId().
+	state := &clumioAWSConnectionResourceModel{
+		DataPlaneAccountID: basetypes.NewStringValue(dataplaneAccountId),
+	}
+
+	setDataPlaneAccountId(state, nil)
+	assert.Equal(t, defaultDataPlaneAccountId, state.DataPlaneAccountID.ValueString())
 }

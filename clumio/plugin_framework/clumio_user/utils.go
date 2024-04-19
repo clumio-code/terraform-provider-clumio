@@ -1,6 +1,7 @@
 // Copyright 2024. Clumio, Inc.
 
-// This file hold various utility functions used by the clumio_user Terraform resource.
+// This file hold various utility functions used by the clumio_user Terraform resource and
+// data source.
 
 package clumio_user
 
@@ -108,4 +109,82 @@ func getAccessControlCfgUpdates(ctx context.Context, oldCfg, newCfg []attr.Value
 	remove := getAccessControlCfgMapDiff(oldCfgMap, newCfgMap)
 
 	return add, remove
+}
+
+// populateUsersInDataSourceModel is used to populate the users schema attribute in the data source
+// model from the results in the API response.
+func populateUsersInDataSourceModel(ctx context.Context, model *clumioUserDataSourceModel,
+	items []*models.UserWithETag) diag.Diagnostics {
+
+	var diags diag.Diagnostics
+
+	acObjType := types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			schemaRoleId:                types.StringType,
+			schemaOrganizationalUnitIds: types.SetType{ElemType: types.StringType},
+		},
+	}
+	objtype := types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			schemaId:                         types.StringType,
+			schemaFullName:                   types.StringType,
+			schemaAccessControlConfiguration: types.SetType{ElemType: acObjType},
+		},
+	}
+	attrVals := make([]attr.Value, 0)
+	for _, item := range items {
+		attrTypes := make(map[string]attr.Type)
+		attrTypes[schemaId] = types.StringType
+		attrTypes[schemaFullName] = types.StringType
+		attrTypes[schemaAccessControlConfiguration] = types.SetType{ElemType: acObjType}
+
+		attrValues := make(map[string]attr.Value)
+		attrValues[schemaId] = basetypes.NewStringPointerValue(item.Id)
+		attrValues[schemaFullName] = basetypes.NewStringPointerValue(item.FullName)
+
+		if item.AccessControlConfiguration == nil {
+			attrValues[schemaAccessControlConfiguration] = basetypes.NewSetNull(acObjType)
+		} else {
+			acAttrVals := make([]attr.Value, 0)
+			for _, accCtrlConf := range item.AccessControlConfiguration {
+				acAttrTypes := make(map[string]attr.Type)
+				acAttrTypes[schemaRoleId] = types.StringType
+				acAttrTypes[schemaOrganizationalUnitIds] = types.SetType{
+					ElemType: types.StringType}
+
+				acAttrValues := make(map[string]attr.Value)
+				acAttrValues[schemaRoleId] = basetypes.NewStringPointerValue(accCtrlConf.RoleId)
+				orgUnits := make([]string, 0)
+				for _, orgUnit := range accCtrlConf.OrganizationalUnitIds {
+					orgUnits = append(orgUnits, *orgUnit)
+				}
+				ous, conversionDiags := types.SetValueFrom(ctx, types.StringType, orgUnits)
+				diags.Append(conversionDiags...)
+				acAttrValues[schemaOrganizationalUnitIds] = ous
+				acObj, conversionDiags := types.ObjectValue(acAttrTypes, acAttrValues)
+				diags.Append(conversionDiags...)
+				if diags.HasError() {
+					return diags
+				}
+				acAttrVals = append(attrVals, acObj)
+			}
+			acSetObj, setDiag := types.SetValue(acObjType, acAttrVals)
+			diags.Append(setDiag...)
+			if diags.HasError() {
+				return diags
+			}
+			attrValues[schemaAccessControlConfiguration] = acSetObj
+		}
+		obj, conversionDiags := types.ObjectValue(attrTypes, attrValues)
+		diags.Append(conversionDiags...)
+		if diags.HasError() {
+			return diags
+		}
+		attrVals = append(attrVals, obj)
+	}
+	setObj, listdiag := types.SetValue(objtype, attrVals)
+	diags.Append(listdiag...)
+	model.Users = setObj
+
+	return diags
 }

@@ -11,9 +11,10 @@ const (
 	ClumioTestAwsAccountId2         = "CLUMIO_TEST_AWS_ACCOUNT_ID2"
 	ClumioTestIsSSOConfigured       = "CLUMIO_TEST_IS_SSO_CONFIGURED"
 
-	TaskSuccess = "completed"
-	TaskAborted = "aborted"
-	TaskFailed  = "failed"
+	TaskSuccess    = "completed"
+	TaskAborted    = "aborted"
+	TaskFailed     = "failed"
+	TaskInProgress = "in_progress"
 
 	// AWS Manual Connection Resources
 	ClumioIAMRoleArn         = "clumio_iam_role_arn"

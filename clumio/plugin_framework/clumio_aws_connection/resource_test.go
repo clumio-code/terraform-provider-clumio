@@ -23,21 +23,21 @@ import (
 )
 
 var (
-	accountId           = "test-aws-account"
-	region              = "test-region"
-	clumioAccountId     = "test-clumio-account-id"
-	description         = "test-description"
-	resourceName        = "test_aws_connection"
-	id                  = "mock-connection-id"
-	ou                  = "mock-ou"
-	connStatus          = "test-status"
-	token               = "test-token"
-	externalId          = "test-external-id"
-	namespace           = "test-namespace"
-	dataplaneAccounttId = "test-dataplane-account-id"
-	envId               = "test-env-id"
-	taskId              = "test-task-id"
-	status              = common.TaskSuccess
+	accountId          = "test-aws-account"
+	region             = "test-region"
+	clumioAccountId    = "test-clumio-account-id"
+	description        = "test-description"
+	resourceName       = "test_aws_connection"
+	id                 = "mock-connection-id"
+	ou                 = "mock-ou"
+	connStatus         = "test-status"
+	token              = "test-token"
+	externalId         = "test-external-id"
+	namespace          = "test-namespace"
+	dataplaneAccountId = "test-dataplane-account-id"
+	envId              = "test-env-id"
+	taskId             = "test-task-id"
+	status             = common.TaskSuccess
 
 	testError = "Test Error"
 )
@@ -86,7 +86,7 @@ func TestCreateAWSConnection(t *testing.T) {
 			ClumioAwsAccountId:   &clumioAccountId,
 			ClumioAwsRegion:      &region,
 			ConnectionStatus:     &connStatus,
-			DataPlaneAccountId:   &dataplaneAccounttId,
+			DataPlaneAccountId:   &dataplaneAccountId,
 			Description:          &description,
 			ExternalId:           &externalId,
 			Id:                   &id,
@@ -194,7 +194,7 @@ func TestReadAWSConnection(t *testing.T) {
 			ClumioAwsAccountId:   &clumioAccountId,
 			ClumioAwsRegion:      &region,
 			ConnectionStatus:     &connStatus,
-			DataPlaneAccountId:   &dataplaneAccounttId,
+			DataPlaneAccountId:   &dataplaneAccountId,
 			Description:          &description,
 			ExternalId:           &externalId,
 			Id:                   &id,
@@ -311,7 +311,7 @@ func TestUpdateAWSConnection(t *testing.T) {
 			ClumioAwsAccountId:   &clumioAccountId,
 			ClumioAwsRegion:      &region,
 			ConnectionStatus:     &connStatus,
-			DataPlaneAccountId:   &dataplaneAccounttId,
+			DataPlaneAccountId:   &dataplaneAccountId,
 			Description:          &description,
 			ExternalId:           &externalId,
 			Id:                   &id,

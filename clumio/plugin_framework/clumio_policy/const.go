@@ -38,6 +38,9 @@ const (
 	schemaRDSPitrConfigSync      = "aws_rds_config_sync"
 	schemaApply                  = "apply"
 	schemaRdsLogicalBackup       = "aws_rds_resource_granular_backup"
+	schemaNameBeginsWith         = "name_begins_with"
+	schemaOperationTypes         = "operation_types"
+	schemaPolicies               = "policies"
 
 	alternativeReplicaDescFmt = "The alternative replica for MSSQL %s backups. This" +
 		" setting only applies to Availability Group databases. Possible" +

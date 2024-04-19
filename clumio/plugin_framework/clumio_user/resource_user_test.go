@@ -204,7 +204,7 @@ func TestAccResourceClumioUserRecreate(t *testing.T) {
 }
 
 // Test imports a user by ID and ensures that the import is successful.
-func TestAccResourceClumioPolicyImport(t *testing.T) {
+func TestAccResourceClumioUserImport(t *testing.T) {
 
 	// Return if it is not an acceptance test
 	if os.Getenv("TF_ACC") == "" {
@@ -218,7 +218,7 @@ func TestAccResourceClumioPolicyImport(t *testing.T) {
 	clumioPf.UtilTestAccPreCheckClumio(t)
 	id, err := createUserUsingSDK()
 	if err != nil {
-		t.Errorf("Error creating Policy using API: %v", err.Error())
+		t.Errorf("Error creating User using API: %v", err.Error())
 	}
 
 	// Run the acceptance test.
@@ -238,7 +238,7 @@ func TestAccResourceClumioPolicyImport(t *testing.T) {
 					}
 					if instStates[0].ID != id {
 						errMsg := fmt.Sprintf(
-							"Imported policy has different ID. Expected: %v, Actual: %v",
+							"Imported user has different ID. Expected: %v, Actual: %v",
 							id, instStates[0].ID)
 						return errors.New(errMsg)
 					}

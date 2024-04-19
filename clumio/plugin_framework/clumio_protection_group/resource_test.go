@@ -37,6 +37,9 @@ var (
 	storageClass     = "test-storage-class-1"
 	storageClass2    = "test-storage-class-2"
 	protectionStatus = "protection-status"
+	entityId         = "test-entity-id"
+	entityType       = "test-entity-type"
+	policyId         = "test-policy-id"
 )
 
 // Unit test for the following cases:

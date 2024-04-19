@@ -6,8 +6,6 @@ on:
     branches: [ '**' ]
   push:
     branches: [ 'main', 'release/**' ]
-    paths-ignore:
-      - 'README.md'
   workflow_dispatch:
     # Allows us to trigger this action manually.
 env:

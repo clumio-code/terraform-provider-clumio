@@ -31,6 +31,8 @@ var (
 	eventPubId          = "test-event-pub-id"
 	roleArn             = "test-role-arn"
 	version             = "1.0"
+	invalidVersion      = "1.2.3"
+	emptyVersion        = ""
 	intermediateRoleArn = "test-intermediate-role-arn"
 	eventType           = "test-event-type"
 
@@ -41,7 +43,8 @@ var (
 
 // Unit test for the following cases:
 //   - Post-process AWS connection success scenario.
-//   - SDK API for post-process AWS connection returns error.
+//   - Get template configuration returns an error.
+//   - SDK API for post-process AWS connection returns an error.
 func TestClumioPostProcessAWSConnectionCommon(t *testing.T) {
 
 	ctx := context.Background()
@@ -97,6 +100,18 @@ func TestClumioPostProcessAWSConnectionCommon(t *testing.T) {
 
 		diags = pr.clumioPostProcessAWSConnectionCommon(ctx, prm, eventType)
 		assert.Nil(t, diags)
+	})
+
+	// Tests that Diagnostics is returned in case getting the template configuration returns an
+	// error.
+	t.Run("GetTemplateConfiguration returns an error", func(t *testing.T) {
+
+		prmWithInvalidVersion := postProcessAWSConnectionResourceModel{
+			ConfigVersion: basetypes.NewStringValue(invalidVersion),
+		}
+
+		diags = pr.clumioPostProcessAWSConnectionCommon(ctx, prmWithInvalidVersion, eventType)
+		assert.NotNil(t, diags)
 	})
 
 	// Tests that Diagnostics is returned in case the post-process aws connection API call returns

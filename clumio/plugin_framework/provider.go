@@ -7,6 +7,7 @@ package clumio_pf
 
 import (
 	"context"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket"
 	"os"
 	"strings"
 
@@ -148,6 +149,13 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 	return []func() datasource.DataSource{
 		clumio_role.NewClumioRoleDataSource,
 		clumio_aws_manual_connection_resources.NewAwsManualConnectionResourcesDataSource,
+		clumio_policy.NewClumioPolicyDataSource,
+		clumio_policy_rule.NewClumioPolicyRuleDataSource,
+		clumio_protection_group.NewClumioProtectionGroupDataSource,
+		clumio_aws_connection.NewClumioAWSConnectionDataSource,
+		clumio_user.NewClumioUserDataSource,
+		clumio_organizational_unit.NewClumioOrganizationalUnitDataSource,
+		clumio_s3_bucket.NewClumioS3BucketDataSource,
 	}
 }
 

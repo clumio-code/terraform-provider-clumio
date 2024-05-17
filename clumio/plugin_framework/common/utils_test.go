@@ -229,7 +229,7 @@ func TestPGPollingTimedOut(t *testing.T) {
 	t.Run("Polling timeout", func(t *testing.T) {
 		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
 		pgClient.EXPECT().ReadProtectionGroup(pgId).Return(nil, notFoundError)
-		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 5, 100)
+		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 100, 10)
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling timed out", err.Error())
 		assert.Nil(t, res)
@@ -345,7 +345,7 @@ func TestPGUpdatePollingTimedOut(t *testing.T) {
 	t.Run("Polling timeout", func(t *testing.T) {
 		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
 		pgClient.EXPECT().ReadProtectionGroup(pgId).Return(nil, notFoundError)
-		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient, 5, 100)
+		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient, 100, 10)
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling timed out", err.Error())
 		assert.Nil(t, res)

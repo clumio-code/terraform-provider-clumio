@@ -153,6 +153,59 @@ func PollForProtectionGroup(
 	}
 }
 
+// PollForProtectionGroupUpdate polls till the protection group becomes available after create or update
+// protection group as they are asynchronous operations.
+func PollForProtectionGroupUpdate(
+	ctx context.Context, id string, oldVersion *int64,
+	updateReq *models.UpdateProtectionGroupV1Request,
+	protectionGroup sdkclients.ProtectionGroupClient, timeout time.Duration,
+	interval time.Duration) (*models.ReadProtectionGroupResponse, error) {
+
+	ticker := time.NewTicker(interval)
+	tickerTimeout := time.After(timeout)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, errors.New("context canceled or timed out")
+		case <-ticker.C:
+			readResponse, err := protectionGroup.ReadProtectionGroup(id)
+			if err != nil {
+				if err.ResponseCode != http.StatusNotFound {
+					return nil, errors.New(ParseMessageFromApiError(err))
+				}
+				continue
+			}
+			if readResponse != nil {
+				if *oldVersion == *readResponse.Version && CompareUnversionAttrDiff(updateReq,
+					readResponse) {
+					continue
+				}
+			}
+			return readResponse, nil
+		case <-tickerTimeout:
+			return nil, errors.New("polling timed out")
+		}
+	}
+}
+
+// CompareUnversionAttrDiff returns a bool whether the given update request differ with response in
+// unversioned attributes: name, description.
+func CompareUnversionAttrDiff(req *models.UpdateProtectionGroupV1Request,
+	resp *models.ReadProtectionGroupResponse) bool {
+
+	if req.Description == nil && *resp.Description != "" {
+		return true
+	}
+	if req.Description != nil && *req.Description != *resp.Description {
+		return true
+	}
+	if *req.Name != *resp.Name {
+		return true
+	}
+	return false
+}
+
 // GetSDKConfigForOU returns a copy of the given SDK config with the OrganizationalUnitContext set
 // to the specified organizationalUnitId.
 func GetSDKConfigForOU(clumioConfig sdkconfig.Config, organizationalUnitId string) sdkconfig.Config {

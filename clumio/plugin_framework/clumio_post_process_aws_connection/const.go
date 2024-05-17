@@ -25,4 +25,16 @@ const (
 	schemaClumioEventPubId               = "clumio_event_pub_id"
 	schemaProperties                     = "properties"
 	schemaIntermediateRoleArn            = "intermediate_role_arn"
+	schemaWaitForIngestion               = "wait_for_ingestion"
+	schemaWaitForDataPlaneResources      = "wait_for_data_plane_resources"
+
+	eventTypeCreate = "Create"
+	eventTypeUpdate = "Update"
+
+	inProgress = "in_progress"
+	completed  = "completed"
+	failed     = "failed"
+
+	//Connected connection status
+	connected = "connected"
 )

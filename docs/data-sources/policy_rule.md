@@ -3,7 +3,7 @@
 page_title: "clumio_policy_rule Data Source - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  clumiopolicyrule data source is used to retrieve details of the policy rules for use in other resources.
+  clumio_policy_rule data source is used to retrieve details of the policy rules for use in other resources.
 ---
 
 # clumio_policy_rule (Data Source)

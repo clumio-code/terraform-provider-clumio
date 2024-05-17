@@ -81,8 +81,7 @@ func (r *clumioProtectionGroupResource) Schema(
 			},
 		},
 		schemaStorageClasses: schema.SetAttribute{
-			Description: "Storage class to include in the backup. If not specified, then all objects" +
-				" across all storage classes will be backed up. Valid values are: S3 Standard," +
+			Description: "Storage class to include in the backup. Valid values are: S3 Standard," +
 				" S3 Standard-IA, S3 Intelligent-Tiering, and S3 One Zone-IA.",
 			ElementType: types.StringType,
 			Required:    true,
@@ -130,6 +129,9 @@ func (r *clumioProtectionGroupResource) Schema(
 					"to create the protection group.",
 				Optional: true,
 				Computed: true,
+				DeprecationMessage: "Use the provider schema attribute " +
+					"clumio_organizational_unit_context to create the resource in the context of " +
+					"an Organizational Unit.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

@@ -168,7 +168,7 @@ func TestPollTask(t *testing.T) {
 		doneCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(-1*time.Hour))
 		cancelFunc()
 		assert.NotNil(t, doneCtx.Done())
-		err := PollTask(doneCtx, mockTaskClient, taskId, 1, 1)
+		err := PollTask(doneCtx, mockTaskClient, taskId, 1*time.Second, 1)
 		assert.NotNil(t, err)
 		assert.Equal(t, "context deadline exceeded", err.Error())
 	})
@@ -197,16 +197,6 @@ func TestPollForProtectionGroup(t *testing.T) {
 		assert.Equal(t, pgId, *res.Id)
 	})
 
-	// Read protection group returns HTTP 404 leading to polling timeout.
-	t.Run("Polling timeout", func(t *testing.T) {
-		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(nil, notFoundError)
-		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 1, 1)
-		assert.NotNil(t, err)
-		assert.Equal(t, "polling timed out", err.Error())
-		assert.Nil(t, res)
-	})
-
 	// Read protection group returns an error.
 	t.Run("Read protection group returns an error", func(t *testing.T) {
 		apiError := apiutils.NewAPIError("Test Error", http.StatusInternalServerError, nil)
@@ -218,12 +208,146 @@ func TestPollForProtectionGroup(t *testing.T) {
 
 	// Read protection group with canceled context returns an error.
 	t.Run("Context canceled", func(t *testing.T) {
-		doneCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(-1*time.Hour))
+		doneCtx, cancelFunc := context.WithCancel(context.Background())
 		cancelFunc()
 		assert.NotNil(t, doneCtx.Done())
 		res, err := PollForProtectionGroup(doneCtx, pgId, pgClient, 1, 1)
 		assert.NotNil(t, err)
 		assert.Equal(t, "context canceled or timed out", err.Error())
+		assert.Nil(t, res)
+	})
+}
+
+// Test for timeout during polling of protection group.
+func TestPGPollingTimedOut(t *testing.T) {
+
+	pgClient := sdkclients.NewMockProtectionGroupClient(t)
+	ctx := context.Background()
+	pgId := "12345"
+
+	// Read protection group returns HTTP 404 leading to polling timeout.
+	t.Run("Polling timeout", func(t *testing.T) {
+		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
+		pgClient.EXPECT().ReadProtectionGroup(pgId).Return(nil, notFoundError)
+		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 5, 100)
+		assert.NotNil(t, err)
+		assert.Equal(t, "polling timed out", err.Error())
+		assert.Nil(t, res)
+	})
+}
+
+// Unit test for the utility function PollForProtectionGroupUpdate.
+// Tests the following scenarios:
+//   - Success scenario for protection group polling.
+//   - Read protection group returns HTTP 404 leading to polling timeout.
+//   - Read protection group returns an error.
+//   - Read protection group with canceled context returns an error.
+func TestPollForProtectionGroupUpdate(t *testing.T) {
+
+	pgClient := sdkclients.NewMockProtectionGroupClient(t)
+	ctx := context.Background()
+	pgId := "12345"
+	bucketRule := "test_bucket_rule"
+	description := "test_description"
+	name := "test_name"
+	s3standard := "S3 Standard"
+	updateReq := &models.UpdateProtectionGroupV1Request{
+		BucketRule:  &bucketRule,
+		Description: &description,
+		Name:        &name,
+		ObjectFilter: &models.ObjectFilter{
+			StorageClasses: []*string{
+				&s3standard,
+			},
+		},
+	}
+	oldVersion := int64(1)
+	newVersion := int64(2)
+	firstResponse := models.ReadProtectionGroupResponse{
+		Id:          &pgId,
+		Name:        &name,
+		Description: &description,
+		Version:     &oldVersion,
+	}
+	readResponse := models.ReadProtectionGroupResponse{
+		Id:          &pgId,
+		Name:        &name,
+		Description: &description,
+		Version:     &newVersion,
+	}
+
+	// Success scenario for protection group polling.
+	t.Run("Success scenario", func(t *testing.T) {
+		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(&readResponse, nil)
+		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient,
+			5*time.Second, 1)
+		assert.Nil(t, err)
+		assert.Equal(t, pgId, *res.Id)
+	})
+
+	// Success scenario for protection group polling with the first API call not returning expected
+	// result.
+	t.Run("Success scenario with second API call", func(t *testing.T) {
+		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(&firstResponse, nil).Return(
+			&readResponse, nil)
+		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient,
+			5*time.Second, 1)
+		assert.Nil(t, err)
+		assert.Equal(t, pgId, *res.Id)
+	})
+
+	// Read protection group while Polling returns an error.
+	t.Run("Read protection group returns an error", func(t *testing.T) {
+		apiError := apiutils.NewAPIError("Test Error", http.StatusInternalServerError, nil)
+		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(nil, apiError)
+		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient,
+			5*time.Second, 1)
+		assert.NotNil(t, err)
+		assert.Nil(t, res)
+	})
+
+	// Read protection group with canceled context returns an error.
+	t.Run("Context canceled", func(t *testing.T) {
+		doneCtx, cancelFunc := context.WithCancel(context.Background())
+		cancelFunc()
+		assert.NotNil(t, doneCtx.Done())
+		res, err := PollForProtectionGroupUpdate(doneCtx, pgId, &oldVersion, updateReq, pgClient, 1,
+			1)
+		assert.NotNil(t, err)
+		assert.Equal(t, "context canceled or timed out", err.Error())
+		assert.Nil(t, res)
+	})
+}
+
+// Test for timeout during polling of protection group.
+func TestPGUpdatePollingTimedOut(t *testing.T) {
+
+	pgClient := sdkclients.NewMockProtectionGroupClient(t)
+	ctx := context.Background()
+	pgId := "12345"
+	bucketRule := "test_bucket_rule"
+	description := "test_description"
+	name := "test_name"
+	s3standard := "S3 Standard"
+	updateReq := &models.UpdateProtectionGroupV1Request{
+		BucketRule:  &bucketRule,
+		Description: &description,
+		Name:        &name,
+		ObjectFilter: &models.ObjectFilter{
+			StorageClasses: []*string{
+				&s3standard,
+			},
+		},
+	}
+	oldVersion := int64(1)
+
+	// Read protection group returns HTTP 404 leading to polling timeout.
+	t.Run("Polling timeout", func(t *testing.T) {
+		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
+		pgClient.EXPECT().ReadProtectionGroup(pgId).Return(nil, notFoundError)
+		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient, 5, 100)
+		assert.NotNil(t, err)
+		assert.Equal(t, "polling timed out", err.Error())
 		assert.Nil(t, res)
 	})
 }
@@ -241,4 +365,61 @@ func TestSliceDifferenceString(t *testing.T) {
 	diff = SliceDifferenceString(slice2, slice1)
 	assert.Equal(t, 1, len(diff))
 	assert.Equal(t, "test4", diff[0])
+}
+
+// Unit test for the utility function CompareUnversionAttrDiff.
+// Tests the following scenarios:
+//   - Compare with same request and response returns false.
+//   - Compare with nil description returns true.
+//   - Compare with different description between request and response returns true.
+//   - Compare with different name between request and response returns true.
+func TestCompareUnversionAttrDiff(t *testing.T) {
+	description := "test_description"
+	name := "test_name"
+	updateResp := &models.ReadProtectionGroupResponse{
+		Description: &description,
+		Name:        &name,
+	}
+
+	// Compare with same request and response returns false.
+	t.Run("Request and response are same", func(t *testing.T) {
+		updateReq := &models.UpdateProtectionGroupV1Request{
+			Description: &description,
+			Name:        &name,
+		}
+
+		assert.False(t, CompareUnversionAttrDiff(updateReq, updateResp))
+	})
+
+	// Compare with nil description returns true.
+	t.Run("Request description is nil", func(t *testing.T) {
+		updateReq := &models.UpdateProtectionGroupV1Request{
+			Description: nil,
+			Name:        &name,
+		}
+
+		assert.True(t, CompareUnversionAttrDiff(updateReq, updateResp))
+	})
+
+	// Compare with different description between request and response returns true.
+	t.Run("Description of request and response are different", func(t *testing.T) {
+		diffDesc := "different descriiption"
+		updateDiffDesc := &models.UpdateProtectionGroupV1Request{
+			Description: &diffDesc,
+			Name:        &name,
+		}
+
+		assert.True(t, CompareUnversionAttrDiff(updateDiffDesc, updateResp))
+	})
+
+	// Compare with different name between request and response returns true.
+	t.Run("Name of request and response are different", func(t *testing.T) {
+		diffName := "diff name"
+		updateDiffName := &models.UpdateProtectionGroupV1Request{
+			Description: &description,
+			Name:        &diffName,
+		}
+
+		assert.True(t, CompareUnversionAttrDiff(updateDiffName, updateResp))
+	})
 }

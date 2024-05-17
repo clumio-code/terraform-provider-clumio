@@ -3,7 +3,7 @@
 page_title: "clumio_protection_group Data Source - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  clumioprotectiongroup data source is used to retrieve details of a protection group for use in other resources.
+  clumio_protection_group data source is used to retrieve details of a protection group for use in other resources.
 ---
 
 # clumio_protection_group (Data Source)

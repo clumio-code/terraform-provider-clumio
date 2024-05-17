@@ -77,6 +77,7 @@ type policyOperationModel struct {
 	Slas             []*slaModel              `tfsdk:"slas"`
 	AdvancedSettings []*advancedSettingsModel `tfsdk:"advanced_settings"`
 	BackupAwsRegion  types.String             `tfsdk:"backup_aws_region"`
+	Timezone         types.String             `tfsdk:"timezone"`
 }
 
 // unitValueModel maps tho the RetentionDuration attribute in slaModel and and it provides the unit
@@ -348,9 +349,10 @@ func (r *policyResource) Schema(
 		},
 		schemaOperationType: schema.StringAttribute{
 			Description: "The type of operation to be performed. Depending on the type " +
-				"selected, `advanced_settings` may also be required. See the API " +
-				"Documentation for \"List policies\" for more information about the " +
-				"supported types.",
+				"selected, `advanced_settings` may also be required. See the [API " +
+				"Documentation for List policies]" +
+				"(https://help.clumio.com/reference/list-policy-definitions) for more information " +
+				"about the supported types.",
 			Required: true,
 		},
 		schemaBackupAwsRegion: schema.StringAttribute{
@@ -359,6 +361,21 @@ func (r *policyResource) Schema(
 				"example: `us-east-1`, `us-west-2`, .... If no value is provided, it " +
 				"defaults to in-region (the asset's source region).",
 			Optional: true,
+		},
+		schemaTimezone: schema.StringAttribute{
+			Description: "The time zone for the policy, in IANA format. For example: " +
+				"`America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. " +
+				"For more information, see the Time Zone Database " +
+				"(https://www.iana.org/time-zones) on the IANA website.",
+			Optional: true,
+			// Use computed property to accept null value.
+			Computed: true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+			Validators: []validator.String{
+				stringvalidator.LengthAtLeast(1),
+			},
 		},
 	}
 
@@ -426,6 +443,8 @@ func (r *policyResource) Schema(
 					"For more information, see the Time Zone Database " +
 					"(https://www.iana.org/time-zones) on the IANA website.",
 				Optional: true,
+				DeprecationMessage: "Global timezone is deprecated. Instead, use the timezone " +
+					"attribute within each policy operation.",
 				// Use computed property to accept null value.
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -458,6 +477,9 @@ func (r *policyResource) Schema(
 				Optional: true,
 				// Use computed property to accept null value.
 				Computed: true,
+				DeprecationMessage: "Use the provider schema attribute " +
+					"clumio_organizational_unit_context to create the resource in the context of " +
+					"an Organizational Unit.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

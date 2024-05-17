@@ -3,7 +3,7 @@
 page_title: "clumio_policy Data Source - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  clumiopolicy data source is used to retrieve details of the policies for use in other resources. At least one of 'name', 'activationstatus' or 'operation_types' must be specified in the config.
+  clumio_policy data source is used to retrieve details of the policies for use in other resources. At least one of 'name', 'activation_status' or 'operation_types' must be specified in the config.
 ---
 
 # clumio_policy (Data Source)

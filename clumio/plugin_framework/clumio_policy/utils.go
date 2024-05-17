@@ -96,6 +96,8 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 			}
 		}
 
+		timezone := common.GetStringPtr(operation.Timezone)
+
 		policyOperation := &models.PolicyOperationInput{
 			ActionSetting:    operation.ActionSetting.ValueStringPointer(),
 			BackupWindowTz:   backupWindowTz,
@@ -103,6 +105,7 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 			ClumioType:       operation.OperationType.ValueStringPointer(),
 			AdvancedSettings: advancedSettings,
 			BackupAwsRegion:  backupAwsRegionPtr,
+			Timezone:         timezone,
 		}
 		policyOperations = append(policyOperations, policyOperation)
 	}
@@ -136,9 +139,13 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 		}
 
 		if operation.AdvancedSettings != nil {
-			
 			buildSchemaOperationAdvancedSettings(operation, schemaOperation)
 		}
+
+		if operation.Timezone != nil {
+			schemaOperation.Timezone = types.StringPointerValue(operation.Timezone)
+		}
+
 		schemaOperations = append(schemaOperations, schemaOperation)
 	}
 
@@ -148,38 +155,38 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 // buildSchemaOperationBackupSla maps the Slas field from the SDK PolicyOperation model to the
 // schema format.
 func buildSchemaOperationBackupSlas(
-	ctx context.Context, operation *models.PolicyOperation, 
+	ctx context.Context, operation *models.PolicyOperation,
 	schemaOperation *policyOperationModel, diags *diag.Diagnostics) {
 
 	backupSlas := make([]*slaModel, 0)
-			for _, sla := range operation.Slas {
-				backupSla := &slaModel{}
-				if sla.RetentionDuration != nil {
-					backupSla.RetentionDuration = []*unitValueModel{
-						{
-							Unit:  types.StringPointerValue(sla.RetentionDuration.Unit),
-							Value: types.Int64PointerValue(sla.RetentionDuration.Value),
-						},
-					}
-				}
-				if sla.RpoFrequency != nil {
-					offsets, rpoDiags := types.ListValueFrom(ctx,
-						types.Int64Type, sla.RpoFrequency.Offsets)
-					diags = &rpoDiags
-					backupSla.RPOFrequency = []*rpoModel{
-						{
-							Unit:    types.StringPointerValue(sla.RpoFrequency.Unit),
-							Value:   types.Int64PointerValue(sla.RpoFrequency.Value),
-							Offsets: offsets,
-						},
-					}
-				}
-				backupSlas = append(backupSlas, backupSla)
+	for _, sla := range operation.Slas {
+		backupSla := &slaModel{}
+		if sla.RetentionDuration != nil {
+			backupSla.RetentionDuration = []*unitValueModel{
+				{
+					Unit:  types.StringPointerValue(sla.RetentionDuration.Unit),
+					Value: types.Int64PointerValue(sla.RetentionDuration.Value),
+				},
 			}
-			schemaOperation.Slas = backupSlas
+		}
+		if sla.RpoFrequency != nil {
+			offsets, rpoDiags := types.ListValueFrom(ctx,
+				types.Int64Type, sla.RpoFrequency.Offsets)
+			diags = &rpoDiags
+			backupSla.RPOFrequency = []*rpoModel{
+				{
+					Unit:    types.StringPointerValue(sla.RpoFrequency.Unit),
+					Value:   types.Int64PointerValue(sla.RpoFrequency.Value),
+					Offsets: offsets,
+				},
+			}
+		}
+		backupSlas = append(backupSlas, backupSla)
+	}
+	schemaOperation.Slas = backupSlas
 }
 
-// buildSchemaOperationAdvancedSettings maps the AdvancedSettings field from SDK PolicyOperation 
+// buildSchemaOperationAdvancedSettings maps the AdvancedSettings field from SDK PolicyOperation
 // model to the schema format.
 func buildSchemaOperationAdvancedSettings(
 	operation *models.PolicyOperation, schemaOperation *policyOperationModel) {

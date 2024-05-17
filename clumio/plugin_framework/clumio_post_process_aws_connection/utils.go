@@ -6,13 +6,17 @@
 package clumio_post_process_aws_connection
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -158,4 +162,94 @@ func parseVersion(version string) (string, string, error) {
 	default:
 		return "", "", errors.New(fmt.Sprintf("Invalid version: %v", version))
 	}
+}
+
+// PollForConnectionIngestionAndTargetStatus polls till the connection ingestion and target setup
+// status fields become either completed or failed.
+func pollForConnectionIngestionAndTargetStatus(
+	ctx context.Context, sdkAWSConnection sdkclients.AWSConnectionClient,
+	model postProcessAWSConnectionResourceModel, timeout time.Duration,
+	interval time.Duration) (bool, error) {
+
+	ticker := time.NewTicker(interval)
+	tickerTimeout := time.After(timeout)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return false, errors.New("context canceled or timed out")
+		case <-ticker.C:
+			connectionId := fmt.Sprintf("%s_%s",
+				model.AccountID.ValueString(), model.Region.ValueString())
+			returnExternalId := "false"
+			// Call the Clumio API to read the AWS connection.
+			res, apiErr := sdkAWSConnection.ReadAwsConnection(connectionId, &returnExternalId)
+			if apiErr != nil {
+				return false, errors.New(common.ParseMessageFromApiError(apiErr))
+			}
+			shouldReturn, targetSetupError, err := performValidation(res, model)
+			if shouldReturn {
+				return targetSetupError, err
+			}
+		case <-tickerTimeout:
+			return false, errors.New("polling timed out")
+		}
+	}
+}
+
+// performValidation checks the status from the response to determine whether ReadAwsConnection
+// needs to be performed again.
+func performValidation(res *models.ReadAWSConnectionResponse,
+	model postProcessAWSConnectionResourceModel) (bool, bool, error) {
+
+	if res == nil {
+		return false, false, nil
+	}
+	ingestionComplete, targetSetupComplete := true, true
+	ingestionErr, targetSetupErr := false, false
+	ingestionComplete, ingestionErr = isIngestionComplete(
+		model.WaitForIngestion.ValueBool(), *res.IngestionStatus)
+	targetSetupComplete, targetSetupErr = isTargetSetupComplete(
+		model.WaitForDataPlaneResources.ValueBool(), *res.TargetSetupStatus)
+	if ingestionErr && targetSetupErr {
+		return true, true, errors.New("Ingestion task failed for the connection as well as" +
+			" one or more of the data plane resources setup tasks failed.")
+	} else if ingestionErr {
+		return true, false, errors.New("Ingestion task failed for the connection.")
+	} else if targetSetupErr {
+		return true, true, errors.New(
+			"One or more of the data plane resources setup tasks failed.")
+	}
+	if ingestionComplete && targetSetupComplete {
+		return true, false, nil
+	}
+	return false, false, nil
+}
+
+// isIngestionComplete returns true if either the ingestionStatus is either completed or failed or if
+// waitForIngesion is false. Returns false when ingestionStatus is in_progress.
+func isIngestionComplete(waitForIngestion bool, ingestionStatus string) (bool, bool) {
+
+	if waitForIngestion {
+		if ingestionStatus == inProgress {
+			return false, false
+		} else if ingestionStatus == failed {
+			return true, true
+		}
+	}
+	return true, false
+}
+
+// isTargetSetupComplete returns true if either the targetSetupStatus is either completed or failed
+// or if waitForTargetSetup is false. Returns false when targetSetupStatus is in_progress.
+func isTargetSetupComplete(waitForTargetSetup bool, targetSetupStatus string) (bool, bool) {
+
+	if waitForTargetSetup {
+		if targetSetupStatus == inProgress {
+			return false, false
+		} else if targetSetupStatus == failed {
+			return true, true
+		}
+	}
+	return true, false
 }

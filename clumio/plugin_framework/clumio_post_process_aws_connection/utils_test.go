@@ -7,10 +7,16 @@
 package clumio_post_process_aws_connection
 
 import (
+	"context"
 	"testing"
+	"time"
 
+	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 // Unit test for the following cases:
@@ -172,5 +178,156 @@ func TestParseVersion(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Equal(t, "", majorVersion)
 		assert.Equal(t, "", minorVersion)
+	})
+}
+
+// Unit test for the utility function PollForConnectionIngestionAndTargetStatus.
+// Tests the following scenarios:
+//   - Success scenario for connection ingestion and target status polling.
+//   - Success scenario for connection ingestion and target status polling with the first API call
+//     returning in_progress status.
+//   - Success scenario for connection ingestion polling with only WaitForIngestion enabled.
+//   - Success scenario for target status polling with only WaitForDataPlaneResources enabled.
+//   - Diagnostics is returned when both ingestion and target setup failed.
+//   - Diagnostics is returned when only ingestion failed.
+//   - Diagnostics is returned when only target setup failed.
+func TestPollForConnectionIngestionAndTargetStatus(t *testing.T) {
+	connClient := sdkclients.NewMockAWSConnectionClient(t)
+	ctx := context.Background()
+	accountId = "test-aws-account"
+	region = "test-region"
+	ingestionStatus := "completed"
+	targetSetupStatus := "completed"
+	model := postProcessAWSConnectionResourceModel{
+		WaitForDataPlaneResources: basetypes.NewBoolValue(true),
+		WaitForIngestion:          basetypes.NewBoolValue(true),
+	}
+
+	// Success scenario for connection ingestion and target status polling.
+	t.Run("Success scenario", func(t *testing.T) {
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		_, err := pollForConnectionIngestionAndTargetStatus(ctx, connClient, model, 5*time.Second, 1)
+		assert.Nil(t, err)
+	})
+
+	// Success scenario for connection ingestion and target status polling with the first API call
+	// returning in_progress status.
+	t.Run("Success scenario in_progress check", func(t *testing.T) {
+
+		inProgress := "in_progress"
+		readResInProgress := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &inProgress,
+			TargetSetupStatus: &inProgress,
+		}
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readResInProgress, nil)
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		_, err := pollForConnectionIngestionAndTargetStatus(ctx, connClient, model, 5*time.Second, 1)
+		assert.Nil(t, err)
+	})
+
+	// Success scenario for connection ingestion polling with only WaitForIngestion enabled.
+	t.Run("Success scenario - only WaitForIngestion enabled", func(t *testing.T) {
+		model.WaitForDataPlaneResources = basetypes.NewBoolValue(false)
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		_, err := pollForConnectionIngestionAndTargetStatus(ctx, connClient, model, 5*time.Second, 1)
+		assert.Nil(t, err)
+	})
+
+	// Success scenario for target status polling with only WaitForDataPlaneResources enabled.
+	t.Run("Success scenario - only WaitForDataPlaneResources enabled", func(t *testing.T) {
+		model.WaitForDataPlaneResources = basetypes.NewBoolValue(true)
+		model.WaitForIngestion = basetypes.NewBoolValue(false)
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		_, err := pollForConnectionIngestionAndTargetStatus(ctx, connClient, model, 5*time.Second, 1)
+		assert.Nil(t, err)
+	})
+
+	// Tests that diagnostics is returned when both ingestion and target setup failed.
+	t.Run("Error scenario when both ingestion and target setup failed", func(t *testing.T) {
+		model.WaitForDataPlaneResources = basetypes.NewBoolValue(true)
+		model.WaitForIngestion = basetypes.NewBoolValue(true)
+		ingestionStatus := "failed"
+		targetSetupStatus := "failed"
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		targetSetupError, err := pollForConnectionIngestionAndTargetStatus(
+			ctx, connClient, model, 5*time.Second, 1)
+		assert.NotNil(t, err)
+		assert.True(t, targetSetupError)
+	})
+
+	// Tests that diagnostics is returned when only ingestion failed.
+	t.Run("Error scenario when only ingestion failed", func(t *testing.T) {
+		model.WaitForDataPlaneResources = basetypes.NewBoolValue(true)
+		model.WaitForIngestion = basetypes.NewBoolValue(true)
+		ingestionStatus := "failed"
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		targetSetupError, err := pollForConnectionIngestionAndTargetStatus(
+			ctx, connClient, model, 5*time.Second, 1)
+		assert.NotNil(t, err)
+		assert.False(t, targetSetupError)
+	})
+
+	// Tests that error is returned when only target setup failed.
+	t.Run("Error scenario when only target setup failed", func(t *testing.T) {
+		model.WaitForDataPlaneResources = basetypes.NewBoolValue(true)
+		model.WaitForIngestion = basetypes.NewBoolValue(true)
+		targetSetupStatus := "failed"
+		readRes := models.ReadAWSConnectionResponse{
+			AccountNativeId:   &accountId,
+			AwsRegion:         &region,
+			IngestionStatus:   &ingestionStatus,
+			TargetSetupStatus: &targetSetupStatus,
+		}
+		connClient.EXPECT().ReadAwsConnection(mock.Anything, mock.Anything).Times(1).
+			Return(&readRes, nil)
+		targetSetupError, err := pollForConnectionIngestionAndTargetStatus(
+			ctx, connClient, model, 5*time.Second, 1)
+		assert.NotNil(t, err)
+		assert.True(t, targetSetupError)
 	})
 }

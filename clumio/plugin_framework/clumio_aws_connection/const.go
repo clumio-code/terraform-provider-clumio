@@ -22,4 +22,5 @@ const (
 	statusConnected           = "connected"
 	externalIDFmt             = "ExternalID_%s"
 	defaultDataPlaneAccountId = "*"
+	defaultOrgUnitId          = "00000000-0000-0000-0000-000000000000"
 )

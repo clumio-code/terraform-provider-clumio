@@ -1,3 +1,16 @@
+## 0.7.0
+This update contains the following changes:
+* Added clumio_s3_bucket_properties resource for enabling continuous backup for S3.
+* Added clumio_s3_bucket and clumio_dynamo_db_tables data sources.
+* Deprecated organizational_unit_id schema attribute in the following resources:
+    - clumio_aws_connection
+    - clumio_policy
+    - clumio_policy_rule
+    - clumio_policy_assignment
+    - clumio_protection_group
+* Deprecated the global timezone attribute in clumio_policy resource.
+* Updates to documentation.
+
 ## 0.6.2
 This update contains the following changes:
 * Data sources added for the following:

@@ -165,6 +165,16 @@ func (r *clumioProtectionGroupResource) updateProtectionGroup(
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
 
+	// Call the Clumio API to get the current version of the protection group.
+	readResp, apiErr := sdkProtectionGroups.ReadProtectionGroup(plan.ID.ValueString())
+	if apiErr != nil {
+		summary := fmt.Sprintf("Unable to read %s (ID: %v)", r.name, plan.ID.ValueString())
+		detail := common.ParseMessageFromApiError(apiErr)
+		diags.AddError(summary, detail)
+		return diags
+	}
+	version := readResp.Version
+
 	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
 	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
 	// desired OU so that API calls are made on behalf of the OU.
@@ -177,13 +187,14 @@ func (r *clumioProtectionGroupResource) updateProtectionGroup(
 	objectFilter := mapSchemaObjectFilterToClumioObjectFilter(plan.ObjectFilter)
 
 	// Call the Clumio API to update the protection group.
+	updateReq := &models.UpdateProtectionGroupV1Request{
+		BucketRule:   plan.BucketRule.ValueStringPointer(),
+		Description:  plan.Description.ValueStringPointer(),
+		Name:         plan.Name.ValueStringPointer(),
+		ObjectFilter: objectFilter,
+	}
 	response, apiErr := sdkProtectionGroups.UpdateProtectionGroup(plan.ID.ValueString(),
-		&models.UpdateProtectionGroupV1Request{
-			BucketRule:   plan.BucketRule.ValueStringPointer(),
-			Description:  plan.Description.ValueStringPointer(),
-			Name:         plan.Name.ValueStringPointer(),
-			ObjectFilter: objectFilter,
-		})
+		updateReq)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, plan.ID.ValueString())
 		detail := common.ParseMessageFromApiError(apiErr)
@@ -198,8 +209,8 @@ func (r *clumioProtectionGroupResource) updateProtectionGroup(
 	}
 
 	// Poll to read the protection group till it is updated
-	readResponse, err := common.PollForProtectionGroup(
-		ctx, *response.Id, sdkProtectionGroups, r.pollTimeout, r.pollInterval)
+	readResponse, err := common.PollForProtectionGroupUpdate(
+		ctx, *response.Id, version, updateReq, sdkProtectionGroups, r.pollTimeout, r.pollInterval)
 	if err != nil {
 		summary := fmt.Sprintf(
 			"Unable to poll %s (ID: %v) for update", r.name, plan.ID.ValueString())

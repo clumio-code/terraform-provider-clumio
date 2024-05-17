@@ -67,8 +67,8 @@ func (r *clumioS3BucketDataSource) Schema(
 							Computed: true,
 						},
 						schemaEventBridgeEnabled: schema.BoolAttribute{
-							Description: "List of user ids, with role assigned to this " +
-								"s3 bucket.",
+							Description: "Determines if continuous backup is enabled for the S3" +
+								" bucket.",
 							Computed: true,
 						},
 						schemaLastBackupTimestamp: schema.StringAttribute{

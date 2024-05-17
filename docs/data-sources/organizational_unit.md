@@ -3,7 +3,7 @@
 page_title: "clumio_organizational_unit Data Source - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  clumioorganizationalunit data source is used to retrieve details of an organizational unit for use in other resources.
+  clumio_organizational_unit data source is used to retrieve details of an organizational unit for use in other resources.
 ---
 
 # clumio_organizational_unit (Data Source)
@@ -14,7 +14,7 @@ clumio_organizational_unit data source is used to retrieve details of an organiz
 
 ```terraform
 data "clumio_organizational_unit" "example" {
-  name      = "organizational-unit-name"
+  name = "organizational-unit-name"
 }
 ```
 

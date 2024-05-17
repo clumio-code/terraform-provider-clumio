@@ -43,5 +43,5 @@ provider "clumio" {
 		Portal: https://eu1.portal.clumio.com/
 
 		API Base URL:  https://eu-central-1.de.api.clumio.com
-- `clumio_api_token` (String) The API token required to invoke Clumio APIs. Information on how to obtain API token can be found here: https://support.clumio.com/hc/en-us/articles/5009876674196-Creating-an-API-Token
+- `clumio_api_token` (String) The API token required to invoke Clumio APIs. Informations for generating this token are available here: https://help.clumio.com/docs/api-tokens#managing-tokens
 - `clumio_organizational_unit_context` (String) Organizational Unit context in which to create the clumio resources. If not set, the resources will be created in the context of the Global Organizational Unit. The value should be the id of the Organizational Unit and not the name.

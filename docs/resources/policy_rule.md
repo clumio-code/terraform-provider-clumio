@@ -40,7 +40,7 @@ resource "clumio_policy_rule" "example_2" {
 
 ### Optional
 
-- `organizational_unit_id` (String) The Clumio-assigned ID of the organizational unit to use as the context for assigning the policy.
+- `organizational_unit_id` (String, Deprecated) The Clumio-assigned ID of the organizational unit to use as the context for assigning the policy.
 
 ### Read-Only
 

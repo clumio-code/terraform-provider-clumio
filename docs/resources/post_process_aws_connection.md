@@ -60,6 +60,8 @@ resource "clumio_post_process_aws_connection" "example" {
 - `protect_s3_version` (String) Clumio S3 Protect version.
 - `protect_warm_tier_dynamodb_version` (String) Clumio DynamoDB Warm Tier Protect version.
 - `protect_warm_tier_version` (String) Clumio Warm Tier Protect version.
+- `wait_for_data_plane_resources` (Boolean) Wait for the data plane resources to be created.
+- `wait_for_ingestion` (Boolean) Wait for the AWS connection ingestion task to complete.
 
 ### Read-Only
 

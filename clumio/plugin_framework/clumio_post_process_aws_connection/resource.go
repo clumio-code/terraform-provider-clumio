@@ -8,6 +8,7 @@ package clumio_post_process_aws_connection
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
@@ -18,7 +19,7 @@ import (
 
 // clumioPostProcessAWSConnectionCommon contains the common logic for create, update and delete
 // operations of PostProcessAWSConnection resource.
-func (r *postProcessAWSConnectionResource) clumioPostProcessAWSConnectionCommon(_ context.Context,
+func (r *postProcessAWSConnectionResource) clumioPostProcessAWSConnectionCommon(ctx context.Context,
 	model postProcessAWSConnectionResourceModel, eventType string) diag.Diagnostics {
 
 	var diags diag.Diagnostics
@@ -50,24 +51,57 @@ func (r *postProcessAWSConnectionResource) clumioPostProcessAWSConnectionCommon(
 	}
 	configuration := string(configBytes)
 
+	if eventType == eventTypeCreate {
+		readExtId := "false"
+		connId := fmt.Sprintf("%s_%s", model.AccountID.ValueString(), model.Region.ValueString())
+		connRes, apiErr := r.sdkAWSConnection.ReadAwsConnection(connId, &readExtId)
+		if apiErr != nil {
+			summary := fmt.Sprintf("Unable to read Clumio AWS connection with id: %s", connId)
+			detail := common.ParseMessageFromApiError(apiErr)
+			diags.AddError(summary, detail)
+			return diags
+		}
+		if connRes != nil && *connRes.ConnectionStatus == connected {
+			eventType = eventTypeUpdate
+		}
+	}
 	// Call the Clumio API to post process aws connection.
-	_, apiErr := r.sdkPostProcessConn.PostProcessAwsConnection(
-		&models.PostProcessAwsConnectionV1Request{
-			AccountNativeId:     model.AccountID.ValueStringPointer(),
-			AwsRegion:           model.Region.ValueStringPointer(),
-			Configuration:       &configuration,
-			RequestType:         &eventType,
-			RoleArn:             model.RoleArn.ValueStringPointer(),
-			RoleExternalId:      model.RoleExternalID.ValueStringPointer(),
-			Token:               model.Token.ValueStringPointer(),
-			ClumioEventPubId:    model.ClumioEventPubID.ValueStringPointer(),
-			Properties:          propertiesMap,
-			IntermediateRoleArn: model.IntermediateRoleArn.ValueStringPointer(),
-		})
+	req := &models.PostProcessAwsConnectionV1Request{
+		AccountNativeId:     model.AccountID.ValueStringPointer(),
+		AwsRegion:           model.Region.ValueStringPointer(),
+		Configuration:       &configuration,
+		RequestType:         &eventType,
+		RoleArn:             model.RoleArn.ValueStringPointer(),
+		RoleExternalId:      model.RoleExternalID.ValueStringPointer(),
+		Token:               model.Token.ValueStringPointer(),
+		ClumioEventPubId:    model.ClumioEventPubID.ValueStringPointer(),
+		Properties:          propertiesMap,
+		IntermediateRoleArn: model.IntermediateRoleArn.ValueStringPointer(),
+	}
+	_, apiErr := r.sdkPostProcessConn.PostProcessAwsConnection(req)
 	if apiErr != nil {
 		summary := "Error in invoking Post-process Clumio AWS Connection."
 		detail := common.ParseMessageFromApiError(apiErr)
 		diags.AddError(summary, detail)
+		return diags
+	}
+	if (eventType == eventTypeCreate || eventType == eventTypeUpdate) &&
+		(model.WaitForIngestion.ValueBool() || model.WaitForDataPlaneResources.ValueBool()) {
+
+		targetSetupErr, err := pollForConnectionIngestionAndTargetStatus(
+			ctx, r.sdkAWSConnection, model, r.pollTimeout, r.pollInterval)
+		if err != nil {
+			if targetSetupErr {
+				summary := "Error in polling for connection ingestion and/or data plane resources" +
+					" setup status."
+				Detail := err.Error()
+				diags.AddError(summary, Detail)
+			} else {
+				summary := "Error in polling for ingestion status."
+				Detail := err.Error()
+				diags.AddWarning(summary, Detail)
+			}
+		}
 	}
 	return diags
 }

@@ -32,7 +32,7 @@ resource "clumio_aws_connection" "example" {
 ### Optional
 
 - `description` (String) Brief description to denote details of the connection.
-- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the connection. If not provided, the connection will be associated with the default organizational unit associated with the credentials used to create the connection.
+- `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the connection. If not provided, the connection will be associated with the default organizational unit associated with the credentials used to create the connection.
 
 ### Read-Only
 

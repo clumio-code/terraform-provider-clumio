@@ -330,6 +330,7 @@ func TestReadProtectionGroup(t *testing.T) {
 
 // Unit test for the following cases:
 //   - Update protection group success scenario.
+//   - SDK API for read protection group to get version returns error.
 //   - SDK API for update protection group returns error.
 //   - SDK API for update protection group returns nil response.
 //   - Polling of read protection group returns an error.
@@ -379,12 +380,21 @@ func TestUpdateProtectionGroup(t *testing.T) {
 		},
 	}
 
+	oldVersion := int64(1)
+	newVersion := int64(2)
+	firstResponse := &models.ReadProtectionGroupResponse{
+		Name:        &name,
+		Description: &description,
+		Version:     &oldVersion,
+	}
+
 	// Create the response of the SDK UpdateProtectionGroupDefinition() API.
 	updateResponse := &models.UpdateProtectionGroupResponse{Id: &id}
 
 	// Tests the success scenario for protection group update. It should not return Diagnostics.
 	t.Run("Basic success scenario for update protection group", func(t *testing.T) {
 
+		latestVersionOnly := true
 		// Create the response of the SDK ReadProtectionGroupDefinition() API.
 		readResponse := &models.ReadProtectionGroupResponse{
 			BucketRule:  &bucketRule,
@@ -392,6 +402,7 @@ func TestUpdateProtectionGroup(t *testing.T) {
 			Id:          &id,
 			Name:        &name,
 			ObjectFilter: &models.ObjectFilter{
+				LatestVersionOnly: &latestVersionOnly,
 				PrefixFilters: []*models.PrefixFilter{
 					{
 						ExcludedSubPrefixes: []*string{
@@ -406,9 +417,12 @@ func TestUpdateProtectionGroup(t *testing.T) {
 			},
 			OrganizationalUnitId: &ou,
 			ProtectionStatus:     &protectionStatus,
+			Version:              &newVersion,
 		}
 
 		// Setup Expectations
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(updateResponse, nil)
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
@@ -423,11 +437,26 @@ func TestUpdateProtectionGroup(t *testing.T) {
 		assert.Equal(t, pgrm.ProtectionStatus.ValueString(), *readResponse.ProtectionStatus)
 	})
 
+	// Tests that Diagnostics is returned in case the first read protection group API call returns
+	// error.
+	t.Run("UpdateProtectionGroup returns error", func(t *testing.T) {
+		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
+		// Setup Expectations
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+			Return(nil, apiError)
+
+		diags := pr.updateProtectionGroup(context.Background(), &pgrm)
+		t.Log(diags)
+		assert.NotNil(t, diags)
+	})
+
 	// Tests that Diagnostics is returned in case the update protection group API call returns
 	// error.
 	t.Run("UpdateProtectionGroup returns error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(nil, apiError)
 
@@ -441,6 +470,8 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("UpdateProtectionGroup returns nil response", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(nil, nil)
 
@@ -454,6 +485,8 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("ReadProtectionGroup after update returns an error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(updateResponse, nil)
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
@@ -466,9 +499,11 @@ func TestUpdateProtectionGroup(t *testing.T) {
 
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// empty response.
-	t.Run("ReadProtectionGroup after updatereturns an empty response", func(t *testing.T) {
+	t.Run("ReadProtectionGroup after update returns an empty response", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(updateResponse, nil)
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).

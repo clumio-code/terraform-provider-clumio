@@ -3,7 +3,7 @@
 page_title: "clumio_aws_connection Data Source - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  clumioawsconnection data source is used to retrieve details of the aws connection for use in other resources.
+  clumio_aws_connection data source is used to retrieve details of the aws connection for use in other resources.
 ---
 
 # clumio_aws_connection (Data Source)

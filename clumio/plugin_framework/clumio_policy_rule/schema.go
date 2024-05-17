@@ -80,6 +80,9 @@ func (r *policyRuleResource) Schema(
 					" to use as the context for assigning the policy.",
 				Optional: true,
 				Computed: true,
+				DeprecationMessage: "Use the provider schema attribute " +
+					"clumio_organizational_unit_context to create the resource in the context of " +
+					"an Organizational Unit.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},

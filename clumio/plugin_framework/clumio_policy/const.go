@@ -83,10 +83,9 @@ const (
 	rdsLogicalBackupDesc = "Optional configuration settings for the aws_rds_resource_granular_backup operation."
 
 	rdsLogicalBackupAdvancedSettingDesc = "Backup tier to store the RDS backup in. Valid values" +
-		" are: `standard` (for Granular Record Retrieval) and `frozen` (for SecureVault Archive)." +
-		" To update existing policies with RDS Granular Record Retrieval, the default is `standard`" +
-		" if backup_tier is not provided. To update existing policies that do not have RDS Granular" +
-		" Record Retrieval, or to create new policies, the only supported option is `frozen`."
+		" are: `frozen`(for SecureVault Archive) and `standard`(for SecureVault record - This is " +
+		"supported for existing policies for a limited period of time). For new policies, the only " +
+		"supported value is `frozen`."
 
 	errorPolicyReadMsg = "Unable to read %s (ID: %v)"
 

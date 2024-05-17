@@ -40,24 +40,39 @@ func updateOrgUnitForConnection(
 		},
 	}
 
-	// Retrieve the current Organizational Unit (OU) associated with the connection. Once retrieved,
-	// the OU's parent ID is compared with the new OU provided in the plan. If the new OU is the
-	// parent of the current OU, the AWS connection is removed from the current OU. Else, the AWS
-	// connection is added to the new OU.
-	currentOrgUnit, err := getOrgUnitForConnection(ctx, r, state)
-	if err != nil {
-		return err
-	}
+	// If the current OU is null and the new OU is the default OU or vice versa, there is no need
+	// to update the OU.
 	orgUnitId := plan.OrganizationalUnitID.ValueString()
+	currentOrgUnitId := state.OrganizationalUnitID.ValueString()
+	if orgUnitId == "" && currentOrgUnitId == defaultOrgUnitId {
+		return nil
+	} else if currentOrgUnitId == "" && orgUnitId == defaultOrgUnitId {
+		return nil
+	}
+
 	var updateEntities *models.UpdateEntities
-	if currentOrgUnit.ParentId != nil && *currentOrgUnit.ParentId == orgUnitId {
-		// As the new OU is the parent of the current OU, the AWS connection should be removed from
-		// the current OU. Thus, the "orgUnitId" is set to the current OU's ID in order to remove
-		// the connection from it.
-		orgUnitId = *currentOrgUnit.Id
-		updateEntities = &models.UpdateEntities{Remove: entityModels}
-	} else {
+
+	if currentOrgUnitId == "" {
+		// Current OU is null. So the connection needs to be added to the new OU.
 		updateEntities = &models.UpdateEntities{Add: entityModels}
+	} else {
+		// Retrieve the current Organizational Unit (OU) associated with the connection. Once retrieved,
+		// the OU's parent ID is compared with the new OU provided in the plan. If the new OU is the
+		// parent of the current OU, the AWS connection is removed from the current OU. Else, the AWS
+		// connection is added to the new OU.
+		currentOrgUnit, err := getOrgUnitForConnection(ctx, r, state)
+		if err != nil {
+			return err
+		}
+		if currentOrgUnit.ParentId != nil && *currentOrgUnit.ParentId == orgUnitId || orgUnitId == "" {
+			// As the new OU is the parent of the current OU, the AWS connection should be removed from
+			// the current OU. Thus, the "orgUnitId" is set to the current OU's ID in order to remove
+			// the connection from it.
+			orgUnitId = *currentOrgUnit.Id
+			updateEntities = &models.UpdateEntities{Remove: entityModels}
+		} else {
+			updateEntities = &models.UpdateEntities{Add: entityModels}
+		}
 	}
 
 	// Call the Clumio API to update the Organizational Unit (OU) for the AWS connection.

@@ -202,7 +202,6 @@ resource "clumio_policy" "example_dynamodb" {
 resource "clumio_policy" "example_backup_windown_timezone" {
   name              = "example-policy-Backup-Window-Timezone"
   activation_status = "activated"
-  timezone          = "America/Los_Angeles"
   operations {
     action_setting = "immediate"
     type           = "aws_ebs_volume_backup"
@@ -219,6 +218,7 @@ resource "clumio_policy" "example_backup_windown_timezone" {
     backup_window_tz {
       start_time = "05:00"
     }
+    timezone          = "America/Los_Angeles"
   }
 }
 ```
@@ -234,8 +234,8 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 ### Optional
 
 - `activation_status` (String) The status of the policy. Valid values are: `activated` and `deactivated`. `activated` backups will take place regularly according to the policy SLA. `deactivated` backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
-- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the policy. If not provided, the policy will be associated with the default organizational unit associated with the credentials used to create the policy.
-- `timezone` (String) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
+- `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the policy. If not provided, the policy will be associated with the default organizational unit associated with the credentials used to create the policy.
+- `timezone` (String, Deprecated) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
 ### Read-Only
 
@@ -249,13 +249,14 @@ Required:
 
 - `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values are: `immediate` and `window`. `immediate` starts the backup process immediately while `window` starts the backup in the specified window.
 - `slas` (Block Set) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
-- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the API Documentation for "List policies" for more information about the supported types.
+- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the [API Documentation for List policies](https://help.clumio.com/reference/list-policy-definitions) for more information about the supported types.
 
 Optional:
 
 - `advanced_settings` (Block Set) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
 - `backup_aws_region` (String) The region in which this backup is stored. This might be used for cross-region backup. Possible values are AWS region string, for example: `us-east-1`, `us-west-2`, .... If no value is provided, it defaults to in-region (the asset's source region).
 - `backup_window_tz` (Block Set) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
+- `timezone` (String) The time zone for the operation-specific policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
 <a id="nestedblock--operations--advanced_settings"></a>
 ### Nested Schema for `operations.advanced_settings`
@@ -301,7 +302,7 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `standard` (for Granular Record Retrieval) and `frozen` (for SecureVault Archive). To update existing policies with RDS Granular Record Retrieval, the default is `standard` if backup_tier is not provided. To update existing policies that do not have RDS Granular Record Retrieval, or to create new policies, the only supported option is `frozen`.
+- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `frozen`(for SecureVault Archive) and `standard`(for SecureVault record - This is supported for existing policies for a limited period of time). For new policies, the only supported value is `frozen`.
 
 
 <a id="nestedblock--operations--advanced_settings--ec2_mssql_database_backup"></a>
@@ -361,7 +362,7 @@ Optional:
 <a id="nestedblock--operations--slas"></a>
 ### Nested Schema for `operations.slas`
 
-Required:
+Optional:
 
 - `retention_duration` (Block Set) The retention time for this SLA. For example, to retain the backup for 1 month, set unit=months and value=1. (see [below for nested schema](#nestedblock--operations--slas--retention_duration))
 - `rpo_frequency` (Block Set) The minimum frequency between backups for this SLA. Also known as the recovery point objective (RPO) interval. For example, to configure the minimum frequency between backups to be every 2 days, set unit=days and value=2. To configure the SLA for on-demand backups, set unit=on_demand and leave the value field empty. Also you can specify a day of week for Weekly SLA. For example, set offsets=[1] will trigger backup on every Monday. (see [below for nested schema](#nestedblock--operations--slas--rpo_frequency))

@@ -34,7 +34,7 @@ resource "clumio_policy_assignment" "example" {
 
 ### Optional
 
-- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the resource for which the policy will be assigned. If not provided, the resource will be assumed to be in the default organizational unit associated with the credentials used to create the assignment.
+- `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the resource for which the policy will be assigned. If not provided, the resource will be assumed to be in the default organizational unit associated with the credentials used to create the assignment.
 
 ### Read-Only
 

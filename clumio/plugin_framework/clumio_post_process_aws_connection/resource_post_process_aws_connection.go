@@ -10,6 +10,7 @@ package clumio_post_process_aws_connection
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
@@ -33,6 +34,9 @@ var (
 type postProcessAWSConnectionResource struct {
 	client             *common.ApiClient
 	sdkPostProcessConn sdkclients.PostProcessAWSConnectionClient
+	sdkAWSConnection   sdkclients.AWSConnectionClient
+	pollTimeout        time.Duration
+	pollInterval       time.Duration
 }
 
 // NewPostProcessAWSConnectionResource creates a new instance of postProcessAWSConnectionResource.
@@ -60,6 +64,9 @@ func (r *postProcessAWSConnectionResource) Configure(
 
 	r.client = req.ProviderData.(*common.ApiClient)
 	r.sdkPostProcessConn = sdkclients.NewPostProcessAWSConnectionClient(r.client.ClumioConfig)
+	r.sdkAWSConnection = sdkclients.NewAWSConnectionClient(r.client.ClumioConfig)
+	r.pollInterval = 5 * time.Second
+	r.pollTimeout = 3600 * time.Second
 }
 
 // Create creates the resource via the Clumio API and sets the initial Terraform state.

@@ -39,6 +39,8 @@ type postProcessAWSConnectionResourceModel struct {
 	ProtectWarmTierDynamoDBVersion types.String `tfsdk:"protect_warm_tier_dynamodb_version"`
 	Properties                     types.Map    `tfsdk:"properties"`
 	IntermediateRoleArn            types.String `tfsdk:"intermediate_role_arn"`
+	WaitForIngestion               types.Bool   `tfsdk:"wait_for_ingestion"`
+	WaitForDataPlaneResources      types.Bool   `tfsdk:"wait_for_data_plane_resources"`
 }
 
 // Schema defines the structure and constraints of the clumio_post_process_aws_connection Terraform
@@ -133,6 +135,14 @@ func (r *postProcessAWSConnectionResource) Schema(
 				Description: "Intermediate Role arn to be assumed before accessing" +
 					" ClumioRole in customer account.",
 				Optional: true,
+			},
+			schemaWaitForIngestion: schema.BoolAttribute{
+				Description: "Wait for the AWS connection ingestion task to complete.",
+				Optional:    true,
+			},
+			schemaWaitForDataPlaneResources: schema.BoolAttribute{
+				Description: "Wait for the data plane resources to be created.",
+				Optional:    true,
 			},
 		},
 	}

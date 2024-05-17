@@ -30,13 +30,15 @@ import (
 // Basic test of the clumio_protection_group resource. It tests the following scenarios:
 //   - Creates a protection group and verifies that the plan was applied properly.
 //   - Updates the protection group and verifies that the resource will be updated.
+//   - Updates the protection group and verifies that the attributes of resource will be deleted.
+//   - Updates the protection group with Object filter and verifies that the resource will be updated.
 func TestAccResourceClumioProtectionGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
 		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getTestAccResourceClumioProtectionGroup(false),
+				Config: getTestAccResourceClumioProtectionGroup(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
 						"clumio_protection_group.test_pg", "description",
@@ -56,7 +58,7 @@ func TestAccResourceClumioProtectionGroup(t *testing.T) {
 				},
 			},
 			{
-				Config: getTestAccResourceClumioProtectionGroup(true),
+				Config: getTestAccResourceClumioProtectionGroup(false, false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(
@@ -64,9 +66,21 @@ func TestAccResourceClumioProtectionGroup(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(
-						"clumio_protection_group.test_pg", "description",
-						regexp.MustCompile("test_pg_1_updated"))),
+					resource.TestCheckNoResourceAttr(
+						"clumio_protection_group.test_pg", "description")),
+			},
+			{
+				Config: getTestAccResourceClumioProtectionGroup(false, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(
+							"clumio_protection_group.test_pg", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchTypeSetElemNestedAttrs(
+						"clumio_protection_group.test_pg", "object_filter.0.prefix_filters.*",
+						map[string]*regexp.Regexp{"prefix": regexp.MustCompile("prefix")})),
 			},
 		},
 	})
@@ -129,7 +143,7 @@ func TestAccResourceClumioProtectionGroupRecreate(t *testing.T) {
 		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getTestAccResourceClumioProtectionGroup(false),
+				Config: getTestAccResourceClumioProtectionGroup(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
 						"clumio_protection_group.test_pg", "description",
@@ -217,7 +231,7 @@ func TestAccResourceClumioAwsProtectionGroupImport(t *testing.T) {
 		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:        getTestAccResourceClumioProtectionGroup(false),
+				Config:        getTestAccResourceClumioProtectionGroup(false, false),
 				ImportState:   true,
 				ResourceName:  "clumio_protection_group.test_pg",
 				ImportStateId: id,
@@ -242,13 +256,17 @@ func TestAccResourceClumioAwsProtectionGroupImport(t *testing.T) {
 
 // getTestAccResourceClumioProtectionGroup returns the Terraform configuration for a basic
 // clumio_protection_group resource.
-func getTestAccResourceClumioProtectionGroup(update bool) string {
+func getTestAccResourceClumioProtectionGroup(description bool, prefixFilter bool) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	description := "test_pg_1"
-	if update {
-		description = "test_pg_1_updated"
+	desc := ""
+	if description {
+		desc = "description = \"test_pg_1\""
 	}
-	val := fmt.Sprintf(testAccResourceClumioProtectionGroup, baseUrl, description)
+	pf := ""
+	if prefixFilter {
+		pf = "prefix_filters { prefix = \"prefix\" }"
+	}
+	val := fmt.Sprintf(testAccResourceClumioProtectionGroup, baseUrl, desc, pf)
 	return val
 }
 
@@ -310,7 +328,7 @@ func createProtectionGroupUsingSDK() (string, error) {
 	return *res.Id, nil
 }
 
-// testAccResourceClumioProtectionGroupis the Terraform configuration for a basic
+// testAccResourceClumioProtectionGroup is the Terraform configuration for a basic
 // clumio_protection_group resource.
 const testAccResourceClumioProtectionGroup = `
 provider clumio{
@@ -320,8 +338,9 @@ provider clumio{
 resource "clumio_protection_group" "test_pg"{
   bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
   name = "test_pg_1"
-  description = "%s"
+  %s
   object_filter {
+	%s
 	storage_classes = ["S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA", "S3 Reduced Redundancy"]
   }
 }

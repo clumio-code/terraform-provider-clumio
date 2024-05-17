@@ -7,11 +7,10 @@ package clumio_pf
 
 import (
 	"context"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamo_db_tables"
 	"os"
 	"strings"
 
-	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_rule"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_setting"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_connection"
@@ -25,9 +24,13 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_post_process_kms"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_role"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket_properties"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_user"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_wallet"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+
+	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -156,6 +159,7 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 		clumio_user.NewClumioUserDataSource,
 		clumio_organizational_unit.NewClumioOrganizationalUnitDataSource,
 		clumio_s3_bucket.NewClumioS3BucketDataSource,
+		clumio_dynamo_db_tables.NewClumioDynamoDBTablesDataSource,
 	}
 }
 
@@ -176,5 +180,6 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_auto_user_provisioning_rule.NewAutoUserProvisioningRuleResource,
 		clumio_auto_user_provisioning_setting.NewAutoUserProvisioningSettingResource,
 		clumio_aws_manual_connection.NewClumioAWSManualConnectionResource,
+		clumio_s3_bucket_properties.NewClumioS3BucketPropertiesResource,
 	}
 }

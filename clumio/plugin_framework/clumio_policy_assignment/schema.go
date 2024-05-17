@@ -71,6 +71,9 @@ func (r *clumioPolicyAssignmentResource) Schema(
 					"credentials used to create the assignment.",
 				Optional: true,
 				Computed: true,
+				DeprecationMessage: "Use the provider schema attribute " +
+					"clumio_organizational_unit_context to create the resource in the context of " +
+					"an Organizational Unit.",
 				Validators: []validator.String{
 					validators.LengthAtLeast(1),
 				},

@@ -78,6 +78,9 @@ func (r *clumioAWSConnectionResource) Schema(
 					"the connection.",
 				Optional: true,
 				Computed: true,
+				DeprecationMessage: "Use the provider schema attribute " +
+					"clumio_organizational_unit_context to create the resource in the context of " +
+					"an Organizational Unit.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},

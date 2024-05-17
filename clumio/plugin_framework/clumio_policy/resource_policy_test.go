@@ -586,6 +586,52 @@ func TestAccResourceClumioPolicyErrorEmptyActivationStatus(t *testing.T) {
 	})
 }
 
+// Tests to check if creating a policy with child-level timezone works as expected.
+func TestAccResourceClumioPolicyTimezone(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyTimezone("US/Pacific", "US/Eastern"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.tf_child_timezone_policy",
+							plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
+						"operations.0.timezone",
+						regexp.MustCompile("US/Pacific")),
+					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
+						"operations.1.timezone",
+						regexp.MustCompile("US/Eastern")),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyTimezone("US/Eastern", "US/Pacific"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy.tf_child_timezone_policy", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
+						"operations.0.timezone",
+						regexp.MustCompile("US/Eastern")),
+					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
+						"operations.1.timezone",
+						regexp.MustCompile("US/Pacific")),
+				),
+			},
+		},
+	})
+}
+
 // getTestAccResourceClumioPolicyWindow returns the Terraform configuration for a clumio_policy resource
 // containing a backup window.
 func getTestAccResourceClumioPolicyWindow(update bool) string {
@@ -900,6 +946,13 @@ func getTestClumioPolicyRdsPitrAdv(immediate bool) string {
 	return fmt.Sprintf(testClumioPolicyRdsPolicyTemplate, baseUrl, name, operations)
 }
 
+// getTestAccResourceClumioPolicyTimezone returns the Terraform configuration for a clumio_policy resource
+// containing a child-level timezone and a backup window.
+func getTestAccResourceClumioPolicyTimezone(timezone1, timezone2 string) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	return fmt.Sprintf(testAccResourceClumioPolicyTimezone, baseUrl, timezone1, timezone2)
+}
+
 // getTestClumioPolicyEmptyParams returns the Terraform configuration for a clumio_policy resource with
 // organizational_unit_id set to empty string.
 func getTestClumioPolicyEmptyParams(param string) string {
@@ -1004,6 +1057,56 @@ resource "clumio_policy" "test_policy" {
 				backup_tier = "cold"
 			}
 		}
+	}
+}
+`
+
+// testAccResourceClumioPolicyTimezone is the Terraform configuration for a testing child-level timezone
+// of clumio_policy resource.
+const testAccResourceClumioPolicyTimezone = `
+provider clumio{
+	clumio_api_base_url = "%s"
+}
+
+resource "clumio_policy" "tf_child_timezone_policy" {
+	name = "test_child_timezone_policy"
+	operations {
+		action_setting = "immediate"
+		type = "aws_ebs_volume_backup"
+		slas {
+			retention_duration {
+				unit = "days"
+				value = 5
+			}
+			rpo_frequency {
+				unit = "days"
+				value = 1
+			}
+		}
+		backup_window_tz {
+			start_time = "05:00"
+			end_time = ""
+		}
+		timezone = "%s"
+	}
+	operations {
+		action_setting = "immediate"
+		type = "aws_ec2_instance_backup"
+		slas {
+			retention_duration {
+				unit = "days"
+				value = 10
+			}
+			rpo_frequency {
+				unit = "days"
+				value = 2
+			}
+		}
+		backup_window_tz {
+			start_time = "05:00"
+			end_time = "10:00"
+		}
+		timezone = "%s"
 	}
 }
 `

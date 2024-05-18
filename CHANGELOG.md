@@ -1,3 +1,6 @@
+## 0.7.1
+Added documentation for clumio_s3_bucket datasource.
+
 ## 0.7.0
 This update contains the following changes:
 * Added clumio_s3_bucket_properties resource for enabling continuous backup for S3.

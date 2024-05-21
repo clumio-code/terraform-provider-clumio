@@ -1,5 +1,5 @@
 ## 0.7.2
-Documentation updates for clumio_policy resource.
+Documentation updates for clumio_policy resource to resolve [#65](https://github.com/clumio-code/terraform-provider-clumio/issues/65).
 
 ## 0.7.1
 Added documentation for clumio_s3_bucket datasource.

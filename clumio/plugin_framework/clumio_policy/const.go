@@ -70,8 +70,9 @@ const (
 
 	ec2BackupDesc = "Optional configuration settings for the aws_ec2_instance_backup operation."
 
-	secureVaultLiteDesc = "Backup tier to store the SecureVault Lite backup in." +
-		" Valid values are: `standard` and `lite`. If not provided, the default is `standard`."
+	ebsEc2BackupTierDesc = "Backup tier to store the backup in." +
+		" Valid values are: `standard` and `lite`. If not provided, the default is `standard`.\n" +
+		"\t- `standard` = Clumio SecureVault Standard\n\t- `lite` = Clumio SecureVault Lite"
 
 	rdsPitrConfigSyncDesc = "Optional configuration settings for the aws_rds_config_sync operation."
 
@@ -83,9 +84,9 @@ const (
 	rdsLogicalBackupDesc = "Optional configuration settings for the aws_rds_resource_granular_backup operation."
 
 	rdsLogicalBackupAdvancedSettingDesc = "Backup tier to store the RDS backup in. Valid values" +
-		" are: `frozen`(for SecureVault Archive) and `standard`(for SecureVault record - This is " +
-		"supported for existing policies for a limited period of time). For new policies, the only " +
-		"supported value is `frozen`."
+		" are: `frozen` and `standard`. For new policies, the only supported value is `frozen`. " +
+		"`standard` is supported for existing policies for a limited " +
+		"period of time.\n\t- `frozen` = Clumio SecureVault Archive\n\t- `standard` = Clumio SecureVault record"
 
 	errorPolicyReadMsg = "Unable to read %s (ID: %v)"
 

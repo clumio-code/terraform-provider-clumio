@@ -1,3 +1,6 @@
+## 0.7.2
+Documentation updates for clumio_policy resource.
+
 ## 0.7.1
 Added documentation for clumio_s3_bucket datasource.
 

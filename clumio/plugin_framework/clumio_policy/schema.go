@@ -210,7 +210,8 @@ func (r *policyResource) Schema(
 					schemaBackupTier: schema.StringAttribute{
 						Optional: true,
 						Description: "Backup tier to store the backup in. Valid values are:" +
-							" cold, frozen",
+							" `cold` and `frozen`.\n\t- `cold` = Clumio SecureVault Standard\n\t" +
+							"- `frozen` = Clumio SecureVault Archive",
 					},
 				},
 			},
@@ -224,7 +225,7 @@ func (r *policyResource) Schema(
 				Attributes: map[string]schema.Attribute{
 					schemaBackupTier: schema.StringAttribute{
 						Optional:    true,
-						Description: secureVaultLiteDesc,
+						Description: ebsEc2BackupTierDesc,
 					},
 				},
 			},
@@ -238,7 +239,7 @@ func (r *policyResource) Schema(
 				Attributes: map[string]schema.Attribute{
 					schemaBackupTier: schema.StringAttribute{
 						Optional:    true,
-						Description: secureVaultLiteDesc,
+						Description: ebsEc2BackupTierDesc,
 					},
 				},
 			},

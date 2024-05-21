@@ -278,7 +278,9 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the SecureVault Lite backup in. Valid values are: `standard` and `lite`. If not provided, the default is `standard`.
+- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard` and `lite`. If not provided, the default is `standard`.
+	- `standard` = Clumio SecureVault Standard
+	- `lite` = Clumio SecureVault Lite
 
 
 <a id="nestedblock--operations--advanced_settings--aws_ec2_instance_backup"></a>
@@ -286,7 +288,9 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the SecureVault Lite backup in. Valid values are: `standard` and `lite`. If not provided, the default is `standard`.
+- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard` and `lite`. If not provided, the default is `standard`.
+	- `standard` = Clumio SecureVault Standard
+	- `lite` = Clumio SecureVault Lite
 
 
 <a id="nestedblock--operations--advanced_settings--aws_rds_config_sync"></a>
@@ -302,7 +306,9 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `frozen`(for SecureVault Archive) and `standard`(for SecureVault record - This is supported for existing policies for a limited period of time). For new policies, the only supported value is `frozen`.
+- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `frozen` and `standard`. For new policies, the only supported value is `frozen`. `standard` is supported for existing policies for a limited period of time.
+	- `frozen` = Clumio SecureVault Archive
+	- `standard` = Clumio SecureVault record
 
 
 <a id="nestedblock--operations--advanced_settings--ec2_mssql_database_backup"></a>
@@ -346,7 +352,9 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the backup in. Valid values are: cold, frozen
+- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `cold` and `frozen`.
+	- `cold` = Clumio SecureVault Standard
+	- `frozen` = Clumio SecureVault Archive
 
 
 

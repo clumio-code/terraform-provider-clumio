@@ -15,6 +15,7 @@ import (
 // ObjectFilter
 func mapSchemaObjectFilterToClumioObjectFilter(
 	objectFilterSlice []*objectFilterModel) *models.ObjectFilter {
+
 	if objectFilterSlice == nil || len(objectFilterSlice) == 0 {
 		return nil
 	}
@@ -58,6 +59,7 @@ func mapSchemaObjectFilterToClumioObjectFilter(
 // object_filter
 func mapClumioObjectFilterToSchemaObjectFilter(
 	modelObjectFilter *models.ObjectFilter) []*objectFilterModel {
+
 	schemaObjFilter := &objectFilterModel{}
 	if modelObjectFilter.LatestVersionOnly != nil {
 		schemaObjFilter.LatestVersionOnly = types.BoolValue(

@@ -10,8 +10,9 @@ description: |-
 
 Clumio Auto User Provisioning Setting Resource used to enable or disable the auto user provisioning feature.
 
-NOTE: Single Sign-On (SSO) is a prerequisite for Auto User Provisioning. You must ensure that Single Sign-On is setup and enabled
-before enabling Auto User Provisioning. To get started with setting up Single Sign-On, refer [here](https://help.clumio.com/docs/authentication-1#single-sign-on-sso).
+**_NOTE:_** The first-time setup of SCIM MUST be done through the UI as we do not support selecting the Auto User Provisioning mechanism (SAML or SCIM) through Terraform. Subsequent enablements/disablements can be controlled through Terraform.
+
+To setup auto user provisioning rules, please use the [clumio_auto_user_provisioning_rules](auto_user_provisioning_rule.md) resource.
 
 ## Example Usage
 

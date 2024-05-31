@@ -5,7 +5,7 @@
 
 //go:build basic
 
-package clumio_dynamo_db_tables_test
+package clumio_dynamodb_tables_test
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	clumioPf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamo_db_tables"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,10 +25,10 @@ func TestAccDataSourceClumioDynamoDBTables(t *testing.T) {
 	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId)
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	testAwsRegion := os.Getenv(common.AwsRegion)
-	tableId := os.Getenv(clumio_dynamo_db_tables.TableNativeId)
+	tableId := os.Getenv(clumio_dynamodb_tables.TableNativeId)
 	if tableId == "" {
 		t.Skip(fmt.Sprintf(
-			"Acceptance tests skipped unless env '%s' set", clumio_dynamo_db_tables.TableNativeId))
+			"Acceptance tests skipped unless env '%s' set", clumio_dynamodb_tables.TableNativeId))
 		return
 	}
 	resource.Test(t, resource.TestCase{

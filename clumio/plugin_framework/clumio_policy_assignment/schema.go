@@ -53,11 +53,11 @@ func (r *clumioPolicyAssignmentResource) Schema(
 			},
 			schemaEntityType: schema.StringAttribute{
 				Description: "Type of resource to which the policy will be assigned. " +
-					"Only `protection_group` is currently supported.",
+					"`protection_group` and `dynamodb_table` are currently supported.",
 				Required:      true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{
-					validators.OneOf(entityTypeProtectionGroup),
+					validators.OneOf(entityTypeProtectionGroup, entityTypeAWSDynamoDBTable),
 				},
 			},
 			schemaPolicyId: schema.StringAttribute{

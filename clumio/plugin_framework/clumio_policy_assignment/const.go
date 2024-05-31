@@ -11,11 +11,14 @@ const (
 	schemaPolicyId             = "policy_id"
 	schemaOrganizationalUnitId = "organizational_unit_id"
 
-	entityTypeProtectionGroup = "protection_group"
-	protectionGroupBackup     = "protection_group_backup"
+	entityTypeProtectionGroup  = "protection_group"
+	entityTypeAWSDynamoDBTable = "aws_dynamodb_table"
+	protectionGroupBackup      = "protection_group_backup"
+	dynamodbTableBackup        = "aws_dynamodb_table_backup"
 
 	//Common error messages used by the resource.
 	readProtectionGroupErrFmt = "Unable to read Protection Group %v."
+	readDynamoDBTableErrFmt   = "Unable to read DynamoDB table %v."
 )
 
 var (

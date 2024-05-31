@@ -10,6 +10,7 @@ package clumio_policy_assignment_test
 import (
 	"context"
 	"fmt"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"os"
 	"regexp"
 	"testing"
@@ -35,6 +36,46 @@ func TestAccResourceClumioPolicyAssignment(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioPolicyAssignment("test-1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy_assignment.test_policy_assignment",
+							plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy_assignment.test_policy_assignment",
+							plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Basic test of the clumio_policy_assignment resource. It tests the following scenario:
+//   - Creates a policy assignment and verifies that the plan was applied properly.
+func TestAccResourceClumioPolicyAssignmentDynamoDBTable(t *testing.T) {
+	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId)
+	testAwsRegion := os.Getenv(common.AwsRegion)
+	tableId := os.Getenv(clumio_dynamodb_tables.TableNativeId)
+	if tableId == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance test skipped unless env '%s' set", clumio_dynamodb_tables.TableNativeId))
+		return
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyAssignmentDdbTable(
+					accountNativeId, testAwsRegion, tableId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -301,5 +342,51 @@ resource "clumio_policy_assignment" "test_policy_assignment" {
   entity_type = "protection_group"
   policy_id = "some_policy_id"
   organizational_unit_id = ""
+}
+`
+
+// getTestAccResourceClumioPolicyAssignmentDdbTable returns the Terraform configuration for a basic
+// clumio_policy_assignment resource.
+func getTestAccResourceClumioPolicyAssignmentDdbTable(accountId, region, tableId string) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	return fmt.Sprintf(
+		testAccResourceClumioPolicyAssignmentDdbTable, baseUrl, accountId, region, tableId)
+}
+
+// testAccResourceClumioPolicyAssignmentDdbTable is the Terraform configuration for a
+// clumio_policy_assignment resource to assign policy to a DynamoDB table.
+const testAccResourceClumioPolicyAssignmentDdbTable = `
+provider clumio{
+   clumio_api_base_url = "%s"
+}
+
+data "clumio_dynamodb_tables" "ds_dynamodb_tables" {
+  account_native_id="%s"
+  aws_region="%s"
+  table_native_id="%s"
+}
+
+resource "clumio_policy" "test_policy" {
+  name = "acceptance-test-policy-1234"
+  operations {
+	action_setting = "immediate"
+	type = "aws_dynamodb_table_backup"
+	slas {
+		retention_duration {
+			unit = "days"
+			value = 3
+		}
+		rpo_frequency {
+			unit = "hours"
+			value = 4
+		}
+	}
+  }
+}
+
+resource "clumio_policy_assignment" "test_policy_assignment" {
+  entity_id = element(data.clumio_dynamodb_tables.ds_dynamodb_tables.dynamodb_tables,0).id
+  entity_type = "aws_dynamodb_table"
+  policy_id = clumio_policy.test_policy.id
 }
 `

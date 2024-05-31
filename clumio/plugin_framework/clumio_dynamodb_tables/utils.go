@@ -2,7 +2,7 @@
 
 // This file hold various utility functions used by the clumio_dynamo_db_tables Terraform resource.
 
-package clumio_dynamo_db_tables
+package clumio_dynamodb_tables
 
 import (
 	"context"
@@ -47,9 +47,9 @@ func populateDynamoDBTablesInDataSourceModel(ctx context.Context,
 		}
 		attrVals = append(attrVals, obj)
 	}
-	setObj, listdiag := types.SetValue(objtype, attrVals)
+	listObj, listdiag := types.ListValue(objtype, attrVals)
 	diags.Append(listdiag...)
-	model.DynamoDBTables = setObj
+	model.DynamoDBTables = listObj
 
 	return diags
 }

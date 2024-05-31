@@ -3,7 +3,7 @@
 // This file holds the logic to invoke the Clumio DynamoDB tables SDK API to perform read operation
 // and set the attributes from the response of the API in the data source model.
 
-package clumio_dynamo_db_tables
+package clumio_dynamodb_tables
 
 import (
 	"context"

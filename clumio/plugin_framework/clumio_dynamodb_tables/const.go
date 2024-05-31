@@ -1,6 +1,6 @@
 // Copyright 2024. Clumio, Inc.
 
-package clumio_dynamo_db_tables
+package clumio_dynamodb_tables
 
 const (
 	// Constants used by the resource model for the clumio_dynamo_db_tables Terraform resource.

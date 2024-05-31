@@ -3,7 +3,7 @@
 // This file holds the datasource implementation for the clumio_dynamo_db_tables Terraform datasource. This
 // datasource is used to retrieve the Clumio DynamoDB tables based on the specified attributes.
 
-package clumio_dynamo_db_tables
+package clumio_dynamodb_tables
 
 import (
 	"context"

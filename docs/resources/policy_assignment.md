@@ -29,7 +29,7 @@ resource "clumio_policy_assignment" "example" {
 ### Required
 
 - `entity_id` (String) Identifier of the resource to which the policy will be assigned.
-- `entity_type` (String) Type of resource to which the policy will be assigned. Only `protection_group` is currently supported.
+- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group` and `dynamodb_table` are currently supported.
 - `policy_id` (String) Identifier of the Clumio policy to be assigned.
 
 ### Optional

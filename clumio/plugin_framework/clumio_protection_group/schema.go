@@ -7,7 +7,6 @@ package clumio_protection_group
 
 import (
 	"context"
-
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -64,9 +63,10 @@ func (r *clumioProtectionGroupResource) Schema(
 			Description: "List of subprefixes to exclude from the prefix.",
 			ElementType: types.StringType,
 			Optional:    true,
+			Validators:  []validator.Set{setvalidator.SizeAtLeast(1)},
 		},
 		schemaPrefix: schema.StringAttribute{
-			Optional:    true,
+			Required:    true,
 			Description: "Prefix to include.",
 		},
 	}

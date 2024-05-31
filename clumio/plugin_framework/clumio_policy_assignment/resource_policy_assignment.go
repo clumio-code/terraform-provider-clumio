@@ -26,6 +26,7 @@ type clumioPolicyAssignmentResource struct {
 	sdkPolicyDefinitions sdkclients.PolicyDefinitionClient
 	sdkProtectionGroups  sdkclients.ProtectionGroupClient
 	sdkPolicyAssignments sdkclients.PolicyAssignmentClient
+	sdkDynamoDBTables    sdkclients.DynamoDBTableClient
 	sdkTasks             sdkclients.TaskClient
 	pollTimeout          time.Duration
 	pollInterval         time.Duration

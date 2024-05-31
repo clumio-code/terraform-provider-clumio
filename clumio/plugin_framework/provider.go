@@ -7,7 +7,7 @@ package clumio_pf
 
 import (
 	"context"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamo_db_tables"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"os"
 	"strings"
 
@@ -159,7 +159,7 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 		clumio_user.NewClumioUserDataSource,
 		clumio_organizational_unit.NewClumioOrganizationalUnitDataSource,
 		clumio_s3_bucket.NewClumioS3BucketDataSource,
-		clumio_dynamo_db_tables.NewClumioDynamoDBTablesDataSource,
+		clumio_dynamodb_tables.NewClumioDynamoDBTablesDataSource,
 	}
 }
 

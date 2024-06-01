@@ -24,7 +24,6 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	ctx context.Context, plan *policyAssignmentResourceModel) diag.Diagnostics {
 
 	var diags diag.Diagnostics
-	sdkProtectionGroups := r.sdkProtectionGroups
 	sdkPolicyAssignments := r.sdkPolicyAssignments
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 
@@ -34,11 +33,14 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	if plan.OrganizationalUnitID.ValueString() != "" {
 		config := common.GetSDKConfigForOU(
 			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
 		sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(config)
 		sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(config)
 	}
 
+	policyOperationType := protectionGroupBackup
+	if plan.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
+		policyOperationType = dynamodbTableBackup
+	}
 	// Validation to check if the policy id mentioned supports protection_group_backup operation.
 	policyId := plan.PolicyID.ValueString()
 	policy, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
@@ -50,7 +52,7 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	}
 	correctPolicyType := false
 	for _, operation := range policy.Operations {
-		if *operation.ClumioType == protectionGroupBackup {
+		if *operation.ClumioType == policyOperationType {
 			correctPolicyType = true
 		}
 	}
@@ -92,34 +94,13 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 		diags.AddError(summary, detail)
 		return diags
 	}
-	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(*assignment.Entity.Id)
-	if apiErr != nil {
-		summary := fmt.Sprintf(readProtectionGroupErrFmt, *assignment.Entity.Id)
-		detail := common.ParseMessageFromApiError(apiErr)
-		diags.AddError(summary, detail)
-		return diags
-	}
-	if readResponse == nil {
-		summary := common.NilErrorMessageSummary
-		detail := common.NilErrorMessageDetail
-		diags.AddError(summary, detail)
-		return diags
-	}
-	if readResponse.ProtectionInfo == nil ||
-		*readResponse.ProtectionInfo.PolicyId != policyId {
-		summary := "Protection group policy mismatch"
-		detail := fmt.Sprintf("Protection group with id: %s does not have policy %s applied",
-			*assignment.Entity.Id, policyId)
-		diags.AddError(summary, detail)
-		return diags
-	}
 
 	// Populate all computed fields of the plan including the ID given that the resource is getting
 	// created.
 	entityType := plan.EntityType.ValueString()
 	plan.ID = types.StringValue(
 		fmt.Sprintf("%s_%s_%s", *assignment.PolicyId, *assignment.Entity.Id, entityType))
-	plan.OrganizationalUnitID = types.StringPointerValue(readResponse.OrganizationalUnitId)
+	plan.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
 
 	return diags
 }
@@ -135,6 +116,7 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
+	sdkDynamoDBTables := r.sdkDynamoDBTables
 
 	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
 	// (OU) context. To that end, the SDK clients are temporarily re-initialized in the context of
@@ -144,11 +126,12 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
 		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
 		sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(config)
+		sdkDynamoDBTables = sdkclients.NewDynamoDBTableClient(config)
 	}
 
 	// Call the Clumio API to read the policy definition.
 	policyId := state.PolicyID.ValueString()
-	_, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
+	policy, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
 	if apiErr != nil {
 		remove := false
 		if apiErr.ResponseCode == http.StatusNotFound {
@@ -168,41 +151,17 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 	entityType := state.EntityType.ValueString()
 	switch entityType {
 	case entityTypeProtectionGroup:
-		// Call the Clumio API to read the protection group. Barring any errors, if the protection
-		// group is not found or if the protection group no longer has the desired policy attached,
-		// the function returns "true" to indicate to the caller that the expected resource no
-		// longer exists.
-		entityId := state.EntityID.ValueString()
-		readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(entityId)
-		if apiErr != nil {
-			remove := false
-			if apiErr.ResponseCode == http.StatusNotFound {
-				msgStr := fmt.Sprintf(
-					"Clumio Protection Group with ID %s not found. Removing from state.",
-					entityId)
-				tflog.Warn(ctx, msgStr)
-				remove = true
-			} else {
-				summary := fmt.Sprintf(readProtectionGroupErrFmt, entityId)
-				detail := common.ParseMessageFromApiError(apiErr)
-				diags.AddError(summary, detail)
-			}
-			return remove, diags
+		remove, diags := r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
+		if !remove && !diags.HasError() {
+			state.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
 		}
-		if readResponse == nil {
-			summary := common.NilErrorMessageSummary
-			detail := common.NilErrorMessageDetail
-			diags.AddError(summary, detail)
-			return false, diags
+		return remove, diags
+	case entityTypeAWSDynamoDBTable:
+		remove, diags := r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
+		if !remove && !diags.HasError() {
+			state.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
 		}
-		if readResponse.ProtectionInfo == nil ||
-			*readResponse.ProtectionInfo.PolicyId != policyId {
-			msgStr := fmt.Sprintf("Protection group with id: %s does not have policy %s applied."+
-				" Removing from state.", entityId, policyId)
-			tflog.Warn(ctx, msgStr)
-			return true, diags
-		}
-		state.OrganizationalUnitID = types.StringPointerValue(readResponse.OrganizationalUnitId)
+		return remove, diags
 	default:
 		summary := "Invalid entityType"
 		detail := fmt.Sprintf("The entity type %v is not supported.", entityType)
@@ -219,7 +178,6 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 
 	var diags diag.Diagnostics
 	sdkPolicyAssignments := r.sdkPolicyAssignments
-	sdkProtectionGroups := r.sdkProtectionGroups
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 
 	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
@@ -228,7 +186,6 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 	if plan.OrganizationalUnitID.ValueString() != "" {
 		config := common.GetSDKConfigForOU(
 			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
 		sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(config)
 		sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(config)
 	}
@@ -243,9 +200,13 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 		return diags
 	}
 
+	policyOperationType := protectionGroupBackup
+	if plan.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
+		policyOperationType = dynamodbTableBackup
+	}
 	correctPolicyType := false
 	for _, operation := range policy.Operations {
-		if *operation.ClumioType == protectionGroupBackup {
+		if *operation.ClumioType == policyOperationType {
 			correctPolicyType = true
 		}
 	}
@@ -253,8 +214,7 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 	if !correctPolicyType {
 		summary := "Invalid Policy operation."
 		detail := fmt.Sprintf(
-			"Policy id %s does not contain support protection_group_backup operation",
-			policyId)
+			"Policy id %s does not contain support %s operation", policyId, policyOperationType)
 		diags.AddError(summary, detail)
 		return diags
 	}
@@ -288,32 +248,7 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 		return diags
 	}
 
-	// Call the Clumio API to read the protection group and verify that the policy is assigned
-	// to the protection group.
-	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(*assignment.Entity.Id)
-	if apiErr != nil {
-		summary := fmt.Sprintf(readProtectionGroupErrFmt, *assignment.Entity.Id)
-		detail := common.ParseMessageFromApiError(apiErr)
-		diags.AddError(summary, detail)
-		return diags
-	}
-	if readResponse == nil {
-		summary := common.NilErrorMessageSummary
-		detail := common.NilErrorMessageDetail
-		diags.AddError(summary, detail)
-		return diags
-	}
-
-	if readResponse.ProtectionInfo == nil ||
-		*readResponse.ProtectionInfo.PolicyId != policyId {
-		errMsg := fmt.Sprintf(
-			"Protection group with id: %s does not have policy %s applied",
-			*assignment.Entity.Id, policyId)
-		diags.AddError(errMsg, errMsg)
-		return diags
-	}
-
-	plan.OrganizationalUnitID = types.StringPointerValue(readResponse.OrganizationalUnitId)
+	plan.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
 	return diags
 }
 

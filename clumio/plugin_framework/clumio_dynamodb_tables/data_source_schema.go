@@ -3,7 +3,7 @@
 // This file holds the type definition and Schema datasource function used by the datasource model
 // for the clumio_dynamo_db_tables Terraform datasource.
 
-package clumio_dynamo_db_tables
+package clumio_dynamodb_tables
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type clumioDynamoDBTablesDataSourceModel struct {
 	Region          types.String `tfsdk:"aws_region"`
 	Name            types.String `tfsdk:"name"`
 	TableNativeID   types.String `tfsdk:"table_native_id"`
-	DynamoDBTables  types.Set    `tfsdk:"dynamodb_tables"`
+	DynamoDBTables  types.List   `tfsdk:"dynamodb_tables"`
 }
 
 // Schema defines the structure and constraints of the clumio_dynamo_db_tables Terraform datasource.
@@ -53,7 +53,7 @@ func (r *clumioDynamoDBTablesDataSource) Schema(
 				Description: "Native identifier of the DynamoDB table to be queried.",
 				Optional:    true,
 			},
-			schemaDynamoDBTables: schema.SetNestedAttribute{
+			schemaDynamoDBTables: schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						schemaId: schema.StringAttribute{

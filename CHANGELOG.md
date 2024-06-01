@@ -1,3 +1,9 @@
+## 0.8.0
+This update contains the following changes:
+* Updated clumio_policy_assignment resource to allow assigning policy for DynamoDB tables.
+* More validations added for clumio_protection_group resource.
+* Updates to documentation.
+
 ## 0.7.2
 Documentation updates for clumio_policy resource to resolve [#65](https://github.com/clumio-code/terraform-provider-clumio/issues/65).
 

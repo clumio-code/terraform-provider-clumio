@@ -1,0 +1,50 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+### S3 Protection Group Example
+
+{{tffile "examples/resources/clumio_policy/policy_s3.tf" }}
+
+### EBS Volume Example
+
+{{tffile "examples/resources/clumio_policy/policy_ebs.tf" }}
+
+### EC2 Instance Example
+
+{{tffile "examples/resources/clumio_policy/policy_ec2.tf" }}
+
+### RDS Example
+
+{{tffile "examples/resources/clumio_policy/policy_rds.tf" }}
+
+### MSSQL on EC2 Example
+
+{{tffile "examples/resources/clumio_policy/policy_mssql_ec2.tf" }}
+
+### DynamoDB Example
+
+{{tffile "examples/resources/clumio_policy/policy_dynamodb.tf" }}
+
+### Fixed Start Time and Timezone Example
+
+{{tffile "examples/resources/clumio_policy/policy_fixed_start_timezone.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+{{- if .HasImport }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{codefile "shell" .ImportFile }}
+{{- end }}

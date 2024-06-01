@@ -4,7 +4,7 @@
 
 //go:build unit
 
-package clumio_dynamo_db_tables
+package clumio_dynamodb_tables
 
 import (
 	"context"

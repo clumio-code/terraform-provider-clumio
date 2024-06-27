@@ -36,8 +36,7 @@ func (r *clumioPolicyAssignmentResource) Schema(
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		Description: "Clumio Policy Assignment Resource used to assign (or unassign)" +
-			" policies.\n\n NOTE: Currently policy assignment is supported only for" +
-			" entity type \"protection_group\".",
+			" policies.",
 		Attributes: map[string]schema.Attribute{
 			schemaId: schema.StringAttribute{
 				Description: "Unique identifier for the policy assignment.",
@@ -53,7 +52,7 @@ func (r *clumioPolicyAssignmentResource) Schema(
 			},
 			schemaEntityType: schema.StringAttribute{
 				Description: "Type of resource to which the policy will be assigned. " +
-					"`protection_group` and `dynamodb_table` are currently supported.",
+					"`protection_group` and `aws_dynamodb_table` are currently supported.",
 				Required:      true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{

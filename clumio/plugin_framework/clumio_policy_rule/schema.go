@@ -52,10 +52,12 @@ func (r *policyRuleResource) Schema(
 				Required:    true,
 			},
 			schemaCondition: schema.StringAttribute{
-				Description: "The condition of the policy rule. Possible conditions include: " +
+				Description: "The condition of the policy rule. Possible conditions include:\n\t" +
 					"1) `entity_type` is required and supports `$eq` and `$in` filters. " +
+					"`entity_type` must be one of `aws_rds_instance`, `aws_ebs_volume`, " +
+					"`aws_ec2_instance`, `aws_dynamodb_table` or `aws_rds_cluster`.\n\t" +
 					"2) `aws_account_native_id` and `aws_region` are optional and both support " +
-					"`$eq` and `$in` filters. " +
+					"`$eq` and `$in` filters.\n\t" +
 					"3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` " +
 					"filters.",
 				Required: true,

@@ -8,6 +8,7 @@ package clumio_pf
 import (
 	"context"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_bucket"
 	"os"
 	"strings"
 
@@ -181,5 +182,6 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_auto_user_provisioning_setting.NewAutoUserProvisioningSettingResource,
 		clumio_aws_manual_connection.NewClumioAWSManualConnectionResource,
 		clumio_s3_bucket_properties.NewClumioS3BucketPropertiesResource,
+		clumio_protection_group_bucket.NewClumioProtectionGroupBucketResource,
 	}
 }

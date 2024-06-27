@@ -11,19 +11,13 @@ description: |-
 
 ## Example Usage
 
-### Basic Example
+### Policy Rule example with policy_id referred from policy resource
 
-{{tffile "examples/resources/clumio_protection_group/pg_basic.tf" }}
+{{tffile "examples/resources/clumio_policy_rule/example_using_policy_resource.tf" }}
 
-### Advanced Example
+### Policy Rule example with policy_id referred from policy data source
 
-{{tffile "examples/resources/clumio_protection_group/pg_advanced.tf" }}
-
-### Prefix Filter Examples
-
-{{tffile "examples/resources/clumio_protection_group/pg_prefix_filter1.tf" }}
-
-{{tffile "examples/resources/clumio_protection_group/pg_prefix_filter2.tf" }}
+{{tffile "examples/resources/clumio_policy_rule/example_using_policy_data_source.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
 {{- if .HasImport }}

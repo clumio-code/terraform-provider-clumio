@@ -7,6 +7,7 @@ package clumio_protection_group
 
 import (
 	"context"
+
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -66,8 +67,9 @@ func (r *clumioProtectionGroupResource) Schema(
 			Validators:  []validator.Set{setvalidator.SizeAtLeast(1)},
 		},
 		schemaPrefix: schema.StringAttribute{
-			Required:    true,
-			Description: "Prefix to include.",
+			Required: true,
+			Description: "Prefix to include. To include all objects in the bucket specify empty " +
+				"string \"\".",
 		},
 	}
 

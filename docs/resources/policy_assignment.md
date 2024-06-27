@@ -4,14 +4,11 @@ page_title: "clumio_policy_assignment Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
   Clumio Policy Assignment Resource used to assign (or unassign) policies.
-  NOTE: Currently policy assignment is supported only for entity type "protection_group".
 ---
 
 # clumio_policy_assignment (Resource)
 
 Clumio Policy Assignment Resource used to assign (or unassign) policies.
-
- NOTE: Currently policy assignment is supported only for entity type "protection_group".
 
 ## Example Usage
 
@@ -29,7 +26,7 @@ resource "clumio_policy_assignment" "example" {
 ### Required
 
 - `entity_id` (String) Identifier of the resource to which the policy will be assigned.
-- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group` and `dynamodb_table` are currently supported.
+- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group` and `aws_dynamodb_table` are currently supported.
 - `policy_id` (String) Identifier of the Clumio policy to be assigned.
 
 ### Optional
@@ -39,12 +36,3 @@ resource "clumio_policy_assignment" "example" {
 ### Read-Only
 
 - `id` (String) Unique identifier for the policy assignment.
-
-## Import
-
-Import is supported using the following syntax:
-
-```shell
-# Replace <POLICY_ID>, <ENTITY_ID and <ENTITY_TYPE> with the correct Clumio Policy ID, Entity ID and Entity Type.
-terraform import clumio_policy.example <POLICY_ID>_<ENTITY_ID>_<ENTITY_TYPE>
-```

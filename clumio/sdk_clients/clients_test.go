@@ -68,4 +68,7 @@ func TestClientInitialization(t *testing.T) {
 
 	s3BucketClient := NewS3BucketClient(config)
 	assert.NotNil(t, s3BucketClient)
+
+	s3AssetsClient := NewProtectionGroupS3AssetsClient(config)
+	assert.NotNil(t, s3AssetsClient)
 }

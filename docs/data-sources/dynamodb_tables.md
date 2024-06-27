@@ -43,7 +43,7 @@ data "clumio_dynamodb_tables" "ds_dynamodb_tables" {
 
 ### Read-Only
 
-- `dynamodb_tables` (Attributes Set) List of DynamoDB tables which matched the query criteria. (see [below for nested schema](#nestedatt--dynamodb_tables))
+- `dynamodb_tables` (Attributes List) List of DynamoDB tables which matched the query criteria. (see [below for nested schema](#nestedatt--dynamodb_tables))
 
 <a id="nestedatt--dynamodb_tables"></a>
 ### Nested Schema for `dynamodb_tables`

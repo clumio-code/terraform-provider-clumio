@@ -8,7 +8,7 @@ const (
 	// Provider version header key and value used in Clumio client API requests. If the version is
 	// being changed here, it must also be changed in the GNUmakefile.
 	clumioTfProviderVersionHeader      = "CLUMIO_TERRAFORM_PROVIDER_VERSION"
-	clumioTfProviderVersionHeaderValue = "0.8.0"
+	clumioTfProviderVersionHeaderValue = "0.9.0"
 
 	// User-Agent header key used in Clumio client API requests. The value to be set is defined
 	// below in: userAgentHeaderValue.

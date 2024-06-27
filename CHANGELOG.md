@@ -1,3 +1,8 @@
+## 0.9.0
+This update contains the following changes:
+* Added clumio_protection_group_bucket resource for adding an S3 bucket to a protection group.
+* Updates to documentation.
+
 ## 0.8.0
 This update contains the following changes:
 * Updated clumio_policy_assignment resource to allow assigning policy for DynamoDB tables.

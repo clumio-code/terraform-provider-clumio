@@ -228,11 +228,11 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 ### Required
 
 - `name` (String) The user-assigned name of the policy. Note that having identical names for different policies is permissible.
-- `operations` (Block Set) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
 
 ### Optional
 
 - `activation_status` (String) The status of the policy. Valid values are: `activated` and `deactivated`. `activated` backups will take place regularly according to the policy SLA. `deactivated` backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
+- `operations` (Block Set) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
 - `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the policy. If not provided, the policy will be associated with the default organizational unit associated with the credentials used to create the policy.
 - `timezone` (String, Deprecated) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
@@ -247,7 +247,6 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 Required:
 
 - `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values are: `immediate` and `window`. `immediate` starts the backup process immediately while `window` starts the backup in the specified window.
-- `slas` (Block Set) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
 - `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the [API Documentation for List policies](https://help.clumio.com/reference/list-policy-definitions) for more information about the supported types.
 
 Optional:
@@ -255,7 +254,8 @@ Optional:
 - `advanced_settings` (Block Set) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
 - `backup_aws_region` (String) The region in which this backup is stored. This might be used for cross-region backup. Possible values are AWS region string, for example: `us-east-1`, `us-west-2`, .... If no value is provided, it defaults to in-region (the asset's source region).
 - `backup_window_tz` (Block Set) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
-- `timezone` (String) The time zone for the operation-specific policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
+- `slas` (Block Set) The service level agreement (SLA) for the policy. A policy can include one or more SLAs. For example, a policy can retain daily backups for a month each, and monthly backups for a year each. (see [below for nested schema](#nestedblock--operations--slas))
+- `timezone` (String) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
 <a id="nestedblock--operations--advanced_settings"></a>
 ### Nested Schema for `operations.advanced_settings`

@@ -147,6 +147,22 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 		}
 		return remove, diags
 	}
+	policyOperationType := protectionGroupBackup
+	if state.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
+		policyOperationType = dynamodbTableBackup
+	}
+	correctPolicyType := false
+	for _, operation := range policy.Operations {
+		if *operation.ClumioType == policyOperationType {
+			correctPolicyType = true
+		}
+	}
+	if !correctPolicyType {
+		msgStr := fmt.Sprintf(
+			"Policy does not support required policy operation: %s", policyOperationType)
+		tflog.Warn(ctx, msgStr)
+		return true, diags
+	}
 
 	entityType := state.EntityType.ValueString()
 	switch entityType {

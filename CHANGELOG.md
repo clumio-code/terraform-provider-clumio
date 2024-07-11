@@ -1,3 +1,8 @@
+## 0.10.0
+This update contains the following changes:
+* Added clumio_protection_group_asset data source for getting asset id of a protection group asset.
+* Updates to documentation.
+
 ## 0.9.0
 This update contains the following changes:
 * Added clumio_protection_group_bucket resource for adding an S3 bucket to a protection group.

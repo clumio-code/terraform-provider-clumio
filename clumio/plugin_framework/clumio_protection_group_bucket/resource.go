@@ -8,14 +8,13 @@ package clumio_protection_group_bucket
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"net/http"
 )
 
 // createProtectionGroupBucket invokes the API to assign the bucket to the protection group and from
@@ -58,17 +57,7 @@ func (r *clumioProtectionGroupBucketResource) readProtectionGroupBucket(
 	ctx context.Context, state *clumioProtectionGroupBucketResourceModel) (bool, diag.Diagnostics) {
 
 	var diags diag.Diagnostics
-	filters := make([]string, 0)
-	pgId := state.ProtectionGroupID.ValueString()
-	pgFilter := fmt.Sprintf(`"protection_group_id": {"$eq":"%s"}`, pgId)
-	filters = append(filters, pgFilter)
-	bucketId := state.BucketID.ValueString()
-	bucketFilter := fmt.Sprintf(`"bucket_id": {"$eq":"%s"}`, bucketId)
-	filters = append(filters, bucketFilter)
-	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))
-
-	// Call the Clumio API to list the S3 Assets for the protection group.
-	readResponse, apiErr := r.sdkS3Assets.ListProtectionGroupS3Assets(nil, nil, &filter)
+	readResponse, apiErr := r.sdkS3Assets.ReadProtectionGroupS3Asset(state.ID.ValueString())
 	if apiErr != nil {
 		if apiErr.ResponseCode == http.StatusNotFound {
 			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state",
@@ -92,13 +81,15 @@ func (r *clumioProtectionGroupBucketResource) readProtectionGroupBucket(
 
 	// If the protection group bucket was deleted externally, issue a warning and return "true" to
 	// signal to the caller that the resource has been removed.
-	if *readResponse.TotalCount == 0 {
+	if readResponse.IsDeleted != nil && *readResponse.IsDeleted {
 		msgStr := fmt.Sprintf(
-			"Bucket with ID %s not part of Protection Group with ID %s. Removing from state.",
+			"Bucket with ID %s is not part of Protection Group with ID %s. Removing from state.",
 			state.BucketID.ValueString(), state.ProtectionGroupID.ValueString())
 		tflog.Warn(ctx, msgStr)
 		return true, diags
 	}
+	state.BucketID = basetypes.NewStringPointerValue(readResponse.BucketId)
+	state.ProtectionGroupID = basetypes.NewStringPointerValue(readResponse.GroupId)
 
 	return false, diags
 }

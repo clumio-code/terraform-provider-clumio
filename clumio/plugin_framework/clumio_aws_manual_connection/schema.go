@@ -90,14 +90,14 @@ type S3ServiceRoles struct {
 // Schema defines the structure and constraints of the clumio_aws_manual_connection Terraform
 // resource. Schema is a method on the clumioAWSManualConnectionResource struct. It sets the schema
 // for the clumio_aws_manual_connection Terraform resource, which is used deploy resources for
-// manual connections in Clumio. The schema defines various attributes such as the connection ID, 
+// manual connections in Clumio. The schema defines various attributes such as the connection ID,
 // AWS account ID, AWS region, assets enabled, etc. Some of these attributes are computed, meaning they
-//  are determined by Clumio at runtime, while others are required inputs from the user.
+// are determined by Clumio at runtime, while others are required inputs from the user.
 func (r *clumioAWSManualConnectionResource) Schema(
 	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Clumio AWS Manual Connection Resource used to setup manual resources for" + 
-		" connections.",
+		Description: "Clumio AWS Manual Connection Resource used to setup manual resources for" +
+			" connections.",
 		Attributes: map[string]schema.Attribute{
 			schemaId: schema.StringAttribute{
 				Description: "Unique identifier for the Clumio AWS manual connection.",
@@ -121,21 +121,23 @@ func (r *clumioAWSManualConnectionResource) Schema(
 				Description: "Assets enabled for the connection.",
 				Required:    true,
 				AttributeTypes: map[string]attr.Type{
-					schemaIsEbsEnabled: types.BoolType,
+					schemaIsEbsEnabled:      types.BoolType,
 					schemaIsDynamoDBEnabled: types.BoolType,
-					schemaIsRDSEnabled: types.BoolType,
-					schemaIsS3Enabled: types.BoolType,
-					schemaIsMssqlEnabled: types.BoolType,
+					schemaIsRDSEnabled:      types.BoolType,
+					schemaIsS3Enabled:       types.BoolType,
+					schemaIsMssqlEnabled:    types.BoolType,
 				},
 			},
 			schemaResources: schema.ObjectAttribute{
-				Description: "An object containing the ARNs of the resources created for the manual AWS" + 
+				Description: "An object containing the ARNs of the resources created for the manual AWS" +
 					" connection. Please refer to this guide for instructions on how to create them. - " +
-					"https://help.clumio.com/docs/manual-setup-for-aws-account-integration",
+					"https://help.clumio.com/docs/manual-setup-for-aws-account-integration. If any" +
+					" of the ARNs are not applicable to the manual connection, provide an empty" +
+					" string \"\".",
 				Required: true,
 				AttributeTypes: map[string]attr.Type{
-					schemaClumioIAMRoleArn: types.StringType,
-					schemaClumioEventPubArn: types.StringType,
+					schemaClumioIAMRoleArn:     types.StringType,
+					schemaClumioEventPubArn:    types.StringType,
 					schemaClumioSupportRoleArn: types.StringType,
 					schemaEventRules: types.ObjectType{
 						AttrTypes: map[string]attr.Type{
@@ -147,12 +149,12 @@ func (r *clumioAWSManualConnectionResource) Schema(
 						AttrTypes: map[string]attr.Type{
 							schemaS3: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
-									schemaContinuousBackupsRoleArn: types.StringType,				
-								},			
+									schemaContinuousBackupsRoleArn: types.StringType,
+								},
 							},
 							schemaMssql: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
-									schemaSsmNotificationRoleArn: types.StringType,
+									schemaSsmNotificationRoleArn:   types.StringType,
 									schemaEc2SsmInstanceProfileArn: types.StringType,
 								},
 							},

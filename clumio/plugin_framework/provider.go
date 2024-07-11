@@ -8,6 +8,7 @@ package clumio_pf
 import (
 	"context"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_asset"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_bucket"
 	"os"
 	"strings"
@@ -161,6 +162,7 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 		clumio_organizational_unit.NewClumioOrganizationalUnitDataSource,
 		clumio_s3_bucket.NewClumioS3BucketDataSource,
 		clumio_dynamodb_tables.NewClumioDynamoDBTablesDataSource,
+		clumio_protection_group_asset.NewClumioProtectionGroupAssetDataSource,
 	}
 }
 

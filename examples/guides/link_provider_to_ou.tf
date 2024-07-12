@@ -2,7 +2,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.9.0"
+      version = "~>0.10.0"
     }
   }
 }

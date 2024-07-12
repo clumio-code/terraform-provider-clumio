@@ -132,8 +132,6 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 		ResponseCode: 404,
 	}
 
-	count := int64(1)
-
 	// Populate the protection group resource model to be used as input to readProtectionGroupBucket()
 	pgrm := clumioProtectionGroupBucketResourceModel{
 		ID:                basetypes.NewStringValue(id),
@@ -144,37 +142,31 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	t.Run("Basic success scenario for read protection group", func(t *testing.T) {
 
 		// Create the response of the SDK ReadProtectionGroupDefinition() API.
-		listResponse := &models.ListProtectionGroupS3AssetsResponse{
-			Embedded: &models.ProtectionGroupBucketListEmbedded{
-				Items: []*models.ProtectionGroupBucket{
-					{
-						Id:       &id,
-						BucketId: &bucketId,
-						GroupId:  &pgId,
-					},
-				},
-			},
-			TotalCount: &count,
+		isDeleted := false
+		readResponse := &models.ReadProtectionGroupS3AssetResponse{
+			Id:        &id,
+			BucketId:  &bucketId,
+			GroupId:   &pgId,
+			IsDeleted: &isDeleted,
 		}
 
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).Return(listResponse, nil)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
+			Return(readResponse, nil)
 
 		remove, diags := pr.readProtectionGroupBucket(ctx, &pgrm)
 		assert.False(t, remove)
 		assert.Nil(t, diags)
-		assert.Equal(t, pgrm.ID.ValueString(), *listResponse.Embedded.Items[0].Id)
-		assert.Equal(t, pgrm.BucketID.ValueString(), *listResponse.Embedded.Items[0].BucketId)
-		assert.Equal(t, pgrm.ID.ValueString(), *listResponse.Embedded.Items[0].Id)
+		assert.Equal(t, pgrm.ID.ValueString(), *readResponse.Id)
+		assert.Equal(t, pgrm.BucketID.ValueString(), *readResponse.BucketId)
+		assert.Equal(t, pgrm.ProtectionGroupID.ValueString(), *readResponse.GroupId)
 	})
 
 	// Tests that Diagnostics is returned in case the ListProtectionGroupS3Assets API call returns
 	// HTTP 404 error.
 	t.Run("ReadProtectionGroup returns http 404 error", func(t *testing.T) {
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
 			Return(nil, apiNotFoundError)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
@@ -187,14 +179,16 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	t.Run("ReadProtectionGroup returns no S3 asset", func(t *testing.T) {
 
 		// Create the response of the SDK ReadProtectionGroupDefinition() API.
-		count = 0
-		listResponse := &models.ListProtectionGroupS3AssetsResponse{
-			TotalCount: &count,
+		isDeleted := true
+		readResponse := &models.ReadProtectionGroupS3AssetResponse{
+			Id:        &id,
+			BucketId:  &bucketId,
+			GroupId:   &pgId,
+			IsDeleted: &isDeleted,
 		}
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).
-			Return(listResponse, nil)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
+			Return(readResponse, nil)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.Nil(t, diags)
@@ -205,8 +199,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	// error.
 	t.Run("ReadProtectionGroup returns an error", func(t *testing.T) {
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).Return(nil, apiError)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
+			Return(nil, apiError)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.NotNil(t, diags)
@@ -217,8 +211,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	// empty response.
 	t.Run("ReadProtectionGroup returns nil response", func(t *testing.T) {
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).Return(nil, nil)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
+			Return(nil, nil)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.NotNil(t, diags)

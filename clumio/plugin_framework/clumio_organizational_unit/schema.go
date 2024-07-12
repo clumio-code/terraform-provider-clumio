@@ -49,7 +49,11 @@ type clumioOrganizationalUnitResourceModel struct {
 func (r *clumioOrganizationalUnitResource) Schema(
 	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Resource for creating and managing Organizational Unit in Clumio.",
+		Description: "Resource for creating and managing Organizational Unit in Clumio. NOTE: If " +
+			"this is the first time creating an Organizational Unit, the AWS \"data group\" that " +
+			"denotes the top-most level that an Organizational Unit can see must be manually " +
+			"selected once from the Clumio portal under \"Settings -> Access Management -> " +
+			"Organizational Units\".",
 		Attributes: map[string]schema.Attribute{
 			schemaId: schema.StringAttribute{
 				Description: "Unique identifier for the Clumio organizational unit.",

@@ -137,5 +137,5 @@ func TestProviderDataSources(t *testing.T) {
 	clumioProvider := New()
 
 	resp := clumioProvider.DataSources(ctx)
-	assert.Equal(t, 10, len(resp))
+	assert.Equal(t, 11, len(resp))
 }

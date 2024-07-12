@@ -1,0 +1,42 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+### Assign Policy to Protection Group Example
+
+{{tffile "examples/resources/clumio_policy_assignment/policy_pg_assignment.tf" }}
+
+### Assign Policy to AWS DynamoDB Table Example
+
+{{tffile "examples/resources/clumio_policy_assignment/policy_ddb_table_assignment.tf" }}
+
+### Known Limitation
+There is a known limitation with the clumio_policy_assignment resource in a particular scenario.
+The below example shows a config where a policy is being created with support for protection_group_backup and aws_dynamodb_table_backup operations. When we apply this configuration, the policy will be created and the protection_group with the given entity_id will be assigned to the policy.
+{{tffile "examples/resources/clumio_policy_assignment/policy_assignment_limitation.tf" }}
+
+Later when the protection_group_backup operation is removed from the policy and a `terraform apply` is done, the policy resource will be updated but there will be no changes required on the policy_assignment resource.
+{{tffile "examples/resources/clumio_policy_assignment/policy_assignment_limitation_update.tf" }}
+Only after the policy update is done, when a `terraform plan` is done, the policy_assignment will be removed as the policy no longer supports the protection_group_backup operation.
+So essentially, the clumio_policy resource needs to be updated first before the clumio_policy_assignment resource can determine if the policy assignment to the entity is valid or not.
+
+Note: This limitation is only in the case where both the clumio_policy and clumio_policy_assignment are part of the same state file and the policy is updated by removing the policy operation required for the assignment.
+
+{{ .SchemaMarkdown | trimspace }}
+{{- if .HasImport }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{codefile "shell" .ImportFile }}
+{{- end }}

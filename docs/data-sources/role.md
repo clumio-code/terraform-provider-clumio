@@ -14,6 +14,7 @@ Clumio Role data source used to retrieve details of a role for use in other reso
 
 ```terraform
 data "clumio_role" "example" {
+  name = "Super Admin"
 }
 ```
 

@@ -395,7 +395,7 @@ func TestReadPolicyAssignment(t *testing.T) {
 
 	// Tests that Diagnostics is returned in case the read policy assignment with invalid entity
 	// type.
-	t.Run(readPolicyError, func(t *testing.T) {
+	t.Run("Read policy assignment with invalid entity type", func(t *testing.T) {
 
 		invalidType := "invalid-type"
 		modelWithInvalidType := &policyAssignmentResourceModel{
@@ -406,13 +406,46 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 
 		// Setup Expectations
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 
 		modelWithInvalidType.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, modelWithInvalidType)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
+	})
+
+	// Tests that Diagnostics is returned in case the read policy assignment with invalid entity
+	// type.
+	t.Run("Read policy with invalid policy operation type", func(t *testing.T) {
+
+		dynamodbPolicyType := dynamodbTableBackup
+		// Setup Expectations
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &dynamodbPolicyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
+		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+			Return(pdResp, nil)
+
+		model.OrganizationalUnitID = basetypes.NewStringNull()
+		remove, diags := par.readPolicyAssignment(ctx, model)
+		assert.Nil(t, diags)
+		assert.True(t, remove)
 	})
 
 	// Tests that Diagnostics is returned in case the read policy definition API call returns an
@@ -448,8 +481,17 @@ func TestReadPolicyAssignment(t *testing.T) {
 	t.Run(readProtectionGroupError, func(t *testing.T) {
 
 		// Setup Expectations
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
 			nil, apiError)
 
@@ -464,8 +506,17 @@ func TestReadPolicyAssignment(t *testing.T) {
 	t.Run(readProtectionGroupEmptyResponse, func(t *testing.T) {
 
 		// Setup Expectations
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
 			nil, nil)
 
@@ -480,8 +531,17 @@ func TestReadPolicyAssignment(t *testing.T) {
 	t.Run(readProtectionGroupNotFoundError, func(t *testing.T) {
 
 		// Setup Expectations
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
 			nil, apiNotFoundError)
 
@@ -504,8 +564,17 @@ func TestReadPolicyAssignment(t *testing.T) {
 			OrganizationalUnitId: &ou,
 		}
 		// Setup Expectations
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
 			readPgResp, nil)
 
@@ -521,8 +590,18 @@ func TestReadPolicyAssignment(t *testing.T) {
 
 		model.EntityType = basetypes.NewStringValue(entityTypeAWSDynamoDBTable)
 		// Setup Expectations
+		policyType := dynamodbTableBackup
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
 			nil, apiError)
 
@@ -538,8 +617,18 @@ func TestReadPolicyAssignment(t *testing.T) {
 
 		model.EntityType = basetypes.NewStringValue(entityTypeAWSDynamoDBTable)
 		// Setup Expectations
+		policyType := dynamodbTableBackup
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
 			nil, nil)
 
@@ -555,8 +644,18 @@ func TestReadPolicyAssignment(t *testing.T) {
 
 		model.EntityType = basetypes.NewStringValue(entityTypeAWSDynamoDBTable)
 		// Setup Expectations
+		policyType := dynamodbTableBackup
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
 			nil, apiNotFoundError)
 
@@ -580,8 +679,18 @@ func TestReadPolicyAssignment(t *testing.T) {
 			OrganizationalUnitId: &ou,
 		}
 		// Setup Expectations
+		policyType := dynamodbTableBackup
+		pdResp := &models.ReadPolicyResponse{
+			Id: &policyId,
+			Operations: []*models.PolicyOperation{
+				{
+					ClumioType: &policyType,
+				},
+			},
+			OrganizationalUnitId: &ou,
+		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(nil, nil)
+			Return(pdResp, nil)
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
 			readTableResp, nil)
 

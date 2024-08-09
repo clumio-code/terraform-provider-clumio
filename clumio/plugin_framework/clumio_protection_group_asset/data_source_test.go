@@ -73,7 +73,8 @@ func TestDatasourceReadProtectionGroupAsset(t *testing.T) {
 
 		// Setup expectations.
 		s3AssetsClient.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).Return(readResponse, nil)
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+			Return(readResponse, nil)
 
 		diags := ds.readProtectionGroupAsset(ctx, dsModel)
 		assert.Nil(t, diags)
@@ -85,7 +86,8 @@ func TestDatasourceReadProtectionGroupAsset(t *testing.T) {
 
 		// Setup expectations.
 		s3AssetsClient.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).Return(nil, apiError)
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+			Return(nil, apiError)
 
 		diags := ds.readProtectionGroupAsset(ctx, dsModel)
 		assert.NotNil(t, diags)
@@ -97,7 +99,8 @@ func TestDatasourceReadProtectionGroupAsset(t *testing.T) {
 
 		// Setup expectations.
 		s3AssetsClient.EXPECT().ListProtectionGroupS3Assets(
-			mock.Anything, mock.Anything, mock.Anything).Times(1).Return(nil, nil)
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+			Return(nil, nil)
 
 		diags := ds.readProtectionGroupAsset(ctx, dsModel)
 		assert.NotNil(t, diags)
@@ -116,7 +119,8 @@ func TestDatasourceReadProtectionGroupAsset(t *testing.T) {
 
 			// Setup expectations.
 			s3AssetsClient.EXPECT().ListProtectionGroupS3Assets(
-				mock.Anything, mock.Anything, mock.Anything).Times(1).Return(readResponse, nil)
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+				Return(readResponse, nil)
 
 			diags := ds.readProtectionGroupAsset(ctx, dsModel)
 			assert.NotNil(t, diags)

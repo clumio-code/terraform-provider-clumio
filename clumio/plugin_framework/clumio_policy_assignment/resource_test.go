@@ -348,7 +348,7 @@ func TestReadPolicyAssignment(t *testing.T) {
 		// Setup Expectations.
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).Return(
 			readPgResp, nil)
 
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -384,8 +384,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 			// Setup Expectations.
 			mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 				Return(pdResp, nil)
-			mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).
-				Return(readTableResp, nil)
+			mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(
+				entityId, mock.Anything, mock.Anything).Times(1).Return(readTableResp, nil)
 
 			remove, diags := par.readPolicyAssignment(ctx, model)
 			assert.Nil(t, diags)
@@ -492,8 +492,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
-			nil, apiError)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
+			Return(nil, apiError)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -517,8 +517,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
-			nil, nil)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
+			Return(nil, nil)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -542,8 +542,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
-			nil, apiNotFoundError)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
+			Return(nil, apiNotFoundError)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -575,8 +575,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId).Times(1).Return(
-			readPgResp, nil)
+		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
+			Return(readPgResp, nil)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -602,8 +602,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
-			nil, apiError)
+		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
+			Times(1).Return(nil, apiError)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -629,8 +629,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
-			nil, nil)
+		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
+			Times(1).Return(nil, nil)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -656,8 +656,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
-			nil, apiNotFoundError)
+		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
+			Times(1).Return(nil, apiNotFoundError)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
@@ -691,8 +691,8 @@ func TestReadPolicyAssignment(t *testing.T) {
 		}
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
-		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything).Times(1).Return(
-			readTableResp, nil)
+		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
+			Times(1).Return(readTableResp, nil)
 
 		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)

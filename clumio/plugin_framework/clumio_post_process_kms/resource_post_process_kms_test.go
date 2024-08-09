@@ -115,5 +115,6 @@ resource "clumio_post_process_kms" "test" {
   role_arn = "arn:aws:iam::${clumio_wallet.test_wallet.account_native_id}:role/testArn"
   role_id = "test_role_id"
   template_version = "%s"
+  clumio_iam_role_principal = "arn:aws:iam::${clumio_wallet.test_wallet.account_native_id}:role/CustomerSupportRoleArn"
 }
 `

@@ -115,10 +115,16 @@ type backupWindowModel struct {
 func (r *policyResource) Schema(
 	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 
-	unitAttribute := schema.StringAttribute{
+	retentionUnitAttribute := schema.StringAttribute{
 		Required: true,
 		Description: "The measurement unit of the SLA parameter. Values include" +
-			" hours, days, months, and years.",
+			" days, weeks, months and years.",
+	}
+
+	rpoUnitAttribute := schema.StringAttribute{
+		Required: true,
+		Description: "The measurement unit of the SLA parameter. Values include" +
+			" minutes, hours, days, weeks, months and years.",
 	}
 
 	valueAttribute := schema.Int64Attribute{
@@ -126,13 +132,13 @@ func (r *policyResource) Schema(
 		Description: "The measurement value of the SLA parameter.",
 	}
 
-	unitValueSchemaAttributes := map[string]schema.Attribute{
-		schemaUnit:  unitAttribute,
+	retentionSchemaAttributes := map[string]schema.Attribute{
+		schemaUnit:  retentionUnitAttribute,
 		schemaValue: valueAttribute,
 	}
 
-	rpoValueSchemaAttributes := map[string]schema.Attribute{
-		schemaUnit:  unitAttribute,
+	rpoSchemaAttributes := map[string]schema.Attribute{
+		schemaUnit:  rpoUnitAttribute,
 		schemaValue: valueAttribute,
 		schemaOffsets: schema.ListAttribute{
 			Optional:    true,
@@ -311,7 +317,7 @@ func (r *policyResource) Schema(
 				"For example, to retain the backup for 1 month," +
 				" set unit=months and value=1.",
 			NestedObject: schema.NestedBlockObject{
-				Attributes: unitValueSchemaAttributes,
+				Attributes: retentionSchemaAttributes,
 			},
 			Validators: []validator.Set{
 				common.WrapSetValidator(setvalidator.IsRequired()),
@@ -331,7 +337,7 @@ func (r *policyResource) Schema(
 				"set offsets=[1] will trigger backup on every " +
 				"Monday.",
 			NestedObject: schema.NestedBlockObject{
-				Attributes: rpoValueSchemaAttributes,
+				Attributes: rpoSchemaAttributes,
 			},
 			Validators: []validator.Set{
 				common.WrapSetValidator(setvalidator.IsRequired()),

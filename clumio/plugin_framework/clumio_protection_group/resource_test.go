@@ -127,7 +127,7 @@ func TestCreateProtectionGroup(t *testing.T) {
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(createResponse, nil)
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(readResponse, nil)
 
 		diags := pr.createProtectionGroup(ctx, &pgrm)
@@ -172,7 +172,7 @@ func TestCreateProtectionGroup(t *testing.T) {
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(createResponse, nil)
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
 
 		diags := pr.createProtectionGroup(context.Background(), &pgrm)
@@ -187,7 +187,7 @@ func TestCreateProtectionGroup(t *testing.T) {
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(createResponse, nil)
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, nil)
 
 		diags := pr.createProtectionGroup(context.Background(), &pgrm)
@@ -275,7 +275,7 @@ func TestReadProtectionGroup(t *testing.T) {
 		}
 
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(id).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(id, mock.Anything).Times(1).
 			Return(readResponse, nil)
 
 		remove, diags := pr.readProtectionGroup(ctx, &pgrm)
@@ -293,7 +293,7 @@ func TestReadProtectionGroup(t *testing.T) {
 	t.Run("ReadProtectionGroup returns http 404 error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiNotFoundError)
 
 		remove, diags := pr.readProtectionGroup(context.Background(), &pgrm)
@@ -306,7 +306,7 @@ func TestReadProtectionGroup(t *testing.T) {
 	t.Run("ReadProtectionGroup returns an error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
 
 		remove, diags := pr.readProtectionGroup(context.Background(), &pgrm)
@@ -319,7 +319,7 @@ func TestReadProtectionGroup(t *testing.T) {
 	t.Run("ReadProtectionGroup returns nil response", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, nil)
 
 		remove, diags := pr.readProtectionGroup(context.Background(), &pgrm)
@@ -421,11 +421,11 @@ func TestUpdateProtectionGroup(t *testing.T) {
 		}
 
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(updateResponse, nil)
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(readResponse, nil)
 
 		diags := pr.updateProtectionGroup(ctx, &pgrm)
@@ -442,7 +442,7 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("UpdateProtectionGroup returns error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
 
 		diags := pr.updateProtectionGroup(context.Background(), &pgrm)
@@ -455,7 +455,7 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("UpdateProtectionGroup returns error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(nil, apiError)
@@ -470,7 +470,7 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("UpdateProtectionGroup returns nil response", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(nil, nil)
@@ -485,11 +485,11 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("ReadProtectionGroup after update returns an error", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(updateResponse, nil)
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
 
 		diags := pr.updateProtectionGroup(context.Background(), &pgrm)
@@ -502,11 +502,11 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	t.Run("ReadProtectionGroup after update returns an empty response", func(t *testing.T) {
 		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
 		mockProtectionGroup.EXPECT().UpdateProtectionGroup(id, mock.Anything).Times(1).
 			Return(updateResponse, nil)
-		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything).Times(1).
+		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, nil)
 
 		diags := pr.updateProtectionGroup(context.Background(), &pgrm)

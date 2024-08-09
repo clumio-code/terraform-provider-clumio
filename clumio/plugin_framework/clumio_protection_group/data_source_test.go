@@ -69,7 +69,8 @@ func TestDatasourceReadProtectionGroup(t *testing.T) {
 		}
 
 		// Setup expectations.
-		pgClient.EXPECT().ListProtectionGroups(mock.Anything, mock.Anything, mock.Anything).
+		pgClient.EXPECT().ListProtectionGroups(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(readResponse, nil)
 
 		diags := rds.readProtectionGroup(ctx, rdsm)
@@ -81,7 +82,8 @@ func TestDatasourceReadProtectionGroup(t *testing.T) {
 	t.Run("list protection groups returns an error", func(t *testing.T) {
 
 		// Setup expectations.
-		pgClient.EXPECT().ListProtectionGroups(mock.Anything, mock.Anything, mock.Anything).
+		pgClient.EXPECT().ListProtectionGroups(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(nil, apiError)
 
 		diags := rds.readProtectionGroup(ctx, rdsm)
@@ -93,7 +95,8 @@ func TestDatasourceReadProtectionGroup(t *testing.T) {
 	t.Run("list protection groups returns an empty response", func(t *testing.T) {
 
 		// Setup expectations.
-		pgClient.EXPECT().ListProtectionGroups(mock.Anything, mock.Anything, mock.Anything).
+		pgClient.EXPECT().ListProtectionGroups(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(nil, nil)
 
 		diags := rds.readProtectionGroup(ctx, rdsm)
@@ -111,7 +114,8 @@ func TestDatasourceReadProtectionGroup(t *testing.T) {
 		}
 
 		// Setup expectations.
-		pgClient.EXPECT().ListProtectionGroups(mock.Anything, mock.Anything, mock.Anything).
+		pgClient.EXPECT().ListProtectionGroups(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(readResponse, nil)
 
 		diags := rds.readProtectionGroup(ctx, rdsm)

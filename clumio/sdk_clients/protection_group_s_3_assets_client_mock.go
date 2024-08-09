@@ -22,9 +22,9 @@ func (_m *MockProtectionGroupS3AssetsClient) EXPECT() *MockProtectionGroupS3Asse
 	return &MockProtectionGroupS3AssetsClient_Expecter{mock: &_m.Mock}
 }
 
-// ListProtectionGroupS3Assets provides a mock function with given fields: limit, start, filter
-func (_m *MockProtectionGroupS3AssetsClient) ListProtectionGroupS3Assets(limit *int64, start *string, filter *string) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError) {
-	ret := _m.Called(limit, start, filter)
+// ListProtectionGroupS3Assets provides a mock function with given fields: limit, start, filter, lookbackDays
+func (_m *MockProtectionGroupS3AssetsClient) ListProtectionGroupS3Assets(limit *int64, start *string, filter *string, lookbackDays *int64) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError) {
+	ret := _m.Called(limit, start, filter, lookbackDays)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListProtectionGroupS3Assets")
@@ -32,19 +32,19 @@ func (_m *MockProtectionGroupS3AssetsClient) ListProtectionGroupS3Assets(limit *
 
 	var r0 *models.ListProtectionGroupS3AssetsResponse
 	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func(*int64, *string, *string) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError)); ok {
-		return rf(limit, start, filter)
+	if rf, ok := ret.Get(0).(func(*int64, *string, *string, *int64) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError)); ok {
+		return rf(limit, start, filter, lookbackDays)
 	}
-	if rf, ok := ret.Get(0).(func(*int64, *string, *string) *models.ListProtectionGroupS3AssetsResponse); ok {
-		r0 = rf(limit, start, filter)
+	if rf, ok := ret.Get(0).(func(*int64, *string, *string, *int64) *models.ListProtectionGroupS3AssetsResponse); ok {
+		r0 = rf(limit, start, filter, lookbackDays)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListProtectionGroupS3AssetsResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*int64, *string, *string) *apiutils.APIError); ok {
-		r1 = rf(limit, start, filter)
+	if rf, ok := ret.Get(1).(func(*int64, *string, *string, *int64) *apiutils.APIError); ok {
+		r1 = rf(limit, start, filter, lookbackDays)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -63,13 +63,14 @@ type MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call struct {
 //   - limit *int64
 //   - start *string
 //   - filter *string
-func (_e *MockProtectionGroupS3AssetsClient_Expecter) ListProtectionGroupS3Assets(limit interface{}, start interface{}, filter interface{}) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call {
-	return &MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call{Call: _e.mock.On("ListProtectionGroupS3Assets", limit, start, filter)}
+//   - lookbackDays *int64
+func (_e *MockProtectionGroupS3AssetsClient_Expecter) ListProtectionGroupS3Assets(limit interface{}, start interface{}, filter interface{}, lookbackDays interface{}) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call {
+	return &MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call{Call: _e.mock.On("ListProtectionGroupS3Assets", limit, start, filter, lookbackDays)}
 }
 
-func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call) Run(run func(limit *int64, start *string, filter *string)) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call {
+func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call) Run(run func(limit *int64, start *string, filter *string, lookbackDays *int64)) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*int64), args[1].(*string), args[2].(*string))
+		run(args[0].(*int64), args[1].(*string), args[2].(*string), args[3].(*int64))
 	})
 	return _c
 }
@@ -79,14 +80,14 @@ func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call) Re
 	return _c
 }
 
-func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call) RunAndReturn(run func(*int64, *string, *string) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError)) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call {
+func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call) RunAndReturn(run func(*int64, *string, *string, *int64) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError)) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3Assets_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ReadProtectionGroupS3Asset provides a mock function with given fields: protectionGroupS3AssetId
-func (_m *MockProtectionGroupS3AssetsClient) ReadProtectionGroupS3Asset(protectionGroupS3AssetId string) (*models.ReadProtectionGroupS3AssetResponse, *apiutils.APIError) {
-	ret := _m.Called(protectionGroupS3AssetId)
+// ReadProtectionGroupS3Asset provides a mock function with given fields: protectionGroupS3AssetId, lookbackDays
+func (_m *MockProtectionGroupS3AssetsClient) ReadProtectionGroupS3Asset(protectionGroupS3AssetId string, lookbackDays *int64) (*models.ReadProtectionGroupS3AssetResponse, *apiutils.APIError) {
+	ret := _m.Called(protectionGroupS3AssetId, lookbackDays)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadProtectionGroupS3Asset")
@@ -94,19 +95,19 @@ func (_m *MockProtectionGroupS3AssetsClient) ReadProtectionGroupS3Asset(protecti
 
 	var r0 *models.ReadProtectionGroupS3AssetResponse
 	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func(string) (*models.ReadProtectionGroupS3AssetResponse, *apiutils.APIError)); ok {
-		return rf(protectionGroupS3AssetId)
+	if rf, ok := ret.Get(0).(func(string, *int64) (*models.ReadProtectionGroupS3AssetResponse, *apiutils.APIError)); ok {
+		return rf(protectionGroupS3AssetId, lookbackDays)
 	}
-	if rf, ok := ret.Get(0).(func(string) *models.ReadProtectionGroupS3AssetResponse); ok {
-		r0 = rf(protectionGroupS3AssetId)
+	if rf, ok := ret.Get(0).(func(string, *int64) *models.ReadProtectionGroupS3AssetResponse); ok {
+		r0 = rf(protectionGroupS3AssetId, lookbackDays)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ReadProtectionGroupS3AssetResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) *apiutils.APIError); ok {
-		r1 = rf(protectionGroupS3AssetId)
+	if rf, ok := ret.Get(1).(func(string, *int64) *apiutils.APIError); ok {
+		r1 = rf(protectionGroupS3AssetId, lookbackDays)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -123,13 +124,14 @@ type MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call struct {
 
 // ReadProtectionGroupS3Asset is a helper method to define mock.On call
 //   - protectionGroupS3AssetId string
-func (_e *MockProtectionGroupS3AssetsClient_Expecter) ReadProtectionGroupS3Asset(protectionGroupS3AssetId interface{}) *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call {
-	return &MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call{Call: _e.mock.On("ReadProtectionGroupS3Asset", protectionGroupS3AssetId)}
+//   - lookbackDays *int64
+func (_e *MockProtectionGroupS3AssetsClient_Expecter) ReadProtectionGroupS3Asset(protectionGroupS3AssetId interface{}, lookbackDays interface{}) *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call {
+	return &MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call{Call: _e.mock.On("ReadProtectionGroupS3Asset", protectionGroupS3AssetId, lookbackDays)}
 }
 
-func (_c *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call) Run(run func(protectionGroupS3AssetId string)) *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call {
+func (_c *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call) Run(run func(protectionGroupS3AssetId string, lookbackDays *int64)) *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(string), args[1].(*int64))
 	})
 	return _c
 }
@@ -139,7 +141,7 @@ func (_c *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call) Ret
 	return _c
 }
 
-func (_c *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call) RunAndReturn(run func(string) (*models.ReadProtectionGroupS3AssetResponse, *apiutils.APIError)) *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call {
+func (_c *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call) RunAndReturn(run func(string, *int64) (*models.ReadProtectionGroupS3AssetResponse, *apiutils.APIError)) *MockProtectionGroupS3AssetsClient_ReadProtectionGroupS3Asset_Call {
 	_c.Call.Return(run)
 	return _c
 }

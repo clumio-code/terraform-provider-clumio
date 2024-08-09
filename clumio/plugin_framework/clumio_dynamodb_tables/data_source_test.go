@@ -77,7 +77,7 @@ func TestDatasourceReadDynamoDBTables(t *testing.T) {
 
 		// Setup expectations.
 		ouClient.EXPECT().ListAwsDynamodbTables(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(readResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(readResponse, nil)
 
 		diags := rds.readDynamoDBTables(ctx, rdsm)
 		assert.Nil(t, diags)
@@ -89,7 +89,7 @@ func TestDatasourceReadDynamoDBTables(t *testing.T) {
 
 		// Setup expectations.
 		ouClient.EXPECT().ListAwsDynamodbTables(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(nil, apiError)
+			mock.Anything, mock.Anything).Times(1).Return(nil, apiError)
 
 		diags := rds.readDynamoDBTables(ctx, rdsm)
 		assert.NotNil(t, diags)
@@ -101,7 +101,7 @@ func TestDatasourceReadDynamoDBTables(t *testing.T) {
 
 		// Setup expectations.
 		ouClient.EXPECT().ListAwsDynamodbTables(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(nil, nil)
+			mock.Anything, mock.Anything).Times(1).Return(nil, nil)
 
 		diags := rds.readDynamoDBTables(ctx, rdsm)
 		assert.NotNil(t, diags)
@@ -119,7 +119,7 @@ func TestDatasourceReadDynamoDBTables(t *testing.T) {
 
 		// Setup expectations.
 		ouClient.EXPECT().ListAwsDynamodbTables(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(readResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(readResponse, nil)
 
 		diags := rds.readDynamoDBTables(ctx, rdsm)
 		assert.NotNil(t, diags)

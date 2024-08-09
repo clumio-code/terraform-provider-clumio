@@ -91,7 +91,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -135,7 +135,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id:       &ou,
@@ -161,7 +161,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(nil, apiError)
+			mock.Anything, mock.Anything).Times(1).Return(nil, apiError)
 
 		err := updateOrgUnitForConnection(ctx, cr, plan, state)
 		assert.NotNil(t, err)
@@ -182,7 +182,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			nil, apiError)
 
@@ -205,7 +205,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -233,7 +233,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -263,7 +263,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -293,7 +293,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -355,7 +355,7 @@ func TestGetEnvironmentForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 
 		env, err := getEnvironmentForConnection(ctx, cr, state)
 		assert.Nil(t, err)
@@ -373,7 +373,7 @@ func TestGetEnvironmentForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(nil, apiError)
+			mock.Anything, mock.Anything).Times(1).Return(nil, apiError)
 
 		env, err := getEnvironmentForConnection(ctx, cr, state)
 		assert.NotNil(t, err)
@@ -386,7 +386,7 @@ func TestGetEnvironmentForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(&models.ListAWSEnvironmentsResponse{}, nil)
+			mock.Anything, mock.Anything).Times(1).Return(&models.ListAWSEnvironmentsResponse{}, nil)
 
 		env, err := getEnvironmentForConnection(ctx, cr, state)
 		assert.NotNil(t, err)
@@ -414,7 +414,7 @@ func TestGetEnvironmentForConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 
 		env, err := getEnvironmentForConnection(ctx, cr, state)
 		assert.NotNil(t, err)

@@ -31,6 +31,7 @@ resource "clumio_post_process_kms" "example" {
 ### Required
 
 - `account_id` (String) Identifier of the AWS account linked with Clumio.
+- `clumio_iam_role_principal` (String) The ARN of the Clumio IAM role principal.
 - `region` (String) Region of the AWS account linked with Clumio.
 - `role_arn` (String) The ARN of the IAM role to manage the customer-managed key.
 - `role_external_id` (String) Unique identifier Clumio uses to access the service role within your account.

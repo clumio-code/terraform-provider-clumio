@@ -379,7 +379,7 @@ Optional:
 
 Required:
 
-- `unit` (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
+- `unit` (String) The measurement unit of the SLA parameter. Values include days, weeks, months and years.
 - `value` (Number) The measurement value of the SLA parameter.
 
 
@@ -388,7 +388,7 @@ Required:
 
 Required:
 
-- `unit` (String) The measurement unit of the SLA parameter. Values include hours, days, months, and years.
+- `unit` (String) The measurement unit of the SLA parameter. Values include minutes, hours, days, weeks, months and years.
 - `value` (Number) The measurement value of the SLA parameter.
 
 Optional:

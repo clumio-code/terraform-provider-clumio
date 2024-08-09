@@ -139,7 +139,7 @@ func PollForProtectionGroup(
 		case <-ctx.Done():
 			return nil, errors.New("context canceled or timed out")
 		case <-ticker.C:
-			readResponse, err := protectionGroup.ReadProtectionGroup(id)
+			readResponse, err := protectionGroup.ReadProtectionGroup(id, &DefaultLookBackDays)
 			if err != nil {
 				if err.ResponseCode != http.StatusNotFound {
 					return nil, errors.New(ParseMessageFromApiError(err))
@@ -169,7 +169,7 @@ func PollForProtectionGroupUpdate(
 		case <-ctx.Done():
 			return nil, errors.New("context canceled or timed out")
 		case <-ticker.C:
-			readResponse, err := protectionGroup.ReadProtectionGroup(id)
+			readResponse, err := protectionGroup.ReadProtectionGroup(id, &DefaultLookBackDays)
 			if err != nil {
 				if err.ResponseCode != http.StatusNotFound {
 					return nil, errors.New(ParseMessageFromApiError(err))

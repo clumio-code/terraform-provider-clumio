@@ -57,7 +57,8 @@ func (r *clumioProtectionGroupBucketResource) readProtectionGroupBucket(
 	ctx context.Context, state *clumioProtectionGroupBucketResourceModel) (bool, diag.Diagnostics) {
 
 	var diags diag.Diagnostics
-	readResponse, apiErr := r.sdkS3Assets.ReadProtectionGroupS3Asset(state.ID.ValueString())
+	readResponse, apiErr := r.sdkS3Assets.ReadProtectionGroupS3Asset(
+		state.ID.ValueString(), &common.DefaultLookBackDays)
 	if apiErr != nil {
 		if apiErr.ResponseCode == http.StatusNotFound {
 			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state",

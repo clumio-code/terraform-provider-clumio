@@ -1,3 +1,7 @@
+---
+page_title: "Updating Clumio AWS module"
+---
+
 # Updating Clumio AWS module for AWS account linked to Clumio Portal
 
 ## Purpose

@@ -36,6 +36,7 @@ func (r *clumioPostProcessKmsResource) clumioPostProcessKmsCommon(
 			RoleExternalId:        state.RoleExternalId.ValueStringPointer(),
 			CreatedMultiRegionCmk: state.CreatedMultiRegionCMK.ValueBoolPointer(),
 			Version:               &templateVersion,
+			IntermediateRoleArn:   state.ClumioIAMRolePrincipal.ValueStringPointer(),
 		})
 	if apiErr != nil {
 		summary := "Error in invoking Post-process Clumio KMS."

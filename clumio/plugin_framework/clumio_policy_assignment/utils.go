@@ -61,7 +61,8 @@ func (r *clumioPolicyAssignmentResource) readAndValidateProtectionGroup(ctx cont
 	// the function returns "true" to indicate to the caller that the expected resource no
 	// longer exists.
 	entityId := state.EntityID.ValueString()
-	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(entityId)
+	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(
+		entityId, &common.DefaultLookBackDays)
 	if apiErr != nil {
 		remove := false
 		if apiErr.ResponseCode == http.StatusNotFound {
@@ -105,7 +106,8 @@ func (r *clumioPolicyAssignmentResource) readAndValidateDynamoDBTable(ctx contex
 	// the function returns "true" to indicate to the caller that the expected resource no
 	// longer exists.
 	entityId := state.EntityID.ValueString()
-	readResponse, apiErr := sdkDynamoDBTables.ReadAwsDynamodbTable(entityId, nil)
+	readResponse, apiErr := sdkDynamoDBTables.ReadAwsDynamodbTable(
+		entityId, &common.DefaultLookBackDays, nil)
 	if apiErr != nil {
 		remove := false
 		if apiErr.ResponseCode == http.StatusNotFound {

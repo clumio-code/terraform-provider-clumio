@@ -30,7 +30,8 @@ func (r *clumioProtectionGroupAssetDataSource) readProtectionGroupAsset(
 	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))
 
 	// Call the Clumio API to list the S3 Assets for the protection group.
-	readResponse, apiErr := r.s3AssetsClient.ListProtectionGroupS3Assets(nil, nil, &filter)
+	readResponse, apiErr := r.s3AssetsClient.ListProtectionGroupS3Assets(
+		nil, nil, &filter, &common.DefaultLookBackDays)
 	if apiErr != nil {
 		summary := fmt.Sprintf(
 			"Unable to read protection group asset with Protection Group ID: %v and "+

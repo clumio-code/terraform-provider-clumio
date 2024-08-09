@@ -26,7 +26,7 @@ func (r *clumioProtectionGroupDataSource) readProtectionGroup(
 	filter := fmt.Sprintf(`{"name": {"$eq":"%s"}}`, name)
 
 	// Call the Clumio API to list the protection groups.
-	res, apiErr := r.protectionGroupClient.ListProtectionGroups(nil, nil, &filter)
+	res, apiErr := r.protectionGroupClient.ListProtectionGroups(nil, nil, &filter, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

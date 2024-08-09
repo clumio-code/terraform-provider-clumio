@@ -106,7 +106,7 @@ func (r *clumioProtectionGroupResource) readProtectionGroup(
 	}
 
 	// Call the Clumio API to read the protection group
-	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(state.ID.ValueString())
+	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(state.ID.ValueString(), nil)
 	if apiErr != nil {
 		if apiErr.ResponseCode == http.StatusNotFound {
 			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state",
@@ -166,7 +166,7 @@ func (r *clumioProtectionGroupResource) updateProtectionGroup(
 	sdkProtectionGroups := r.sdkProtectionGroups
 
 	// Call the Clumio API to get the current version of the protection group.
-	readResp, apiErr := sdkProtectionGroups.ReadProtectionGroup(plan.ID.ValueString())
+	readResp, apiErr := sdkProtectionGroups.ReadProtectionGroup(plan.ID.ValueString(), nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s (ID: %v)", r.name, plan.ID.ValueString())
 		detail := common.ParseMessageFromApiError(apiErr)

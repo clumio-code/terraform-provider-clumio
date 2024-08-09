@@ -19,16 +19,17 @@ import (
 // resource. It represents the schema of the resource and the data it holds. This schema is used by
 // customers to configure the resource and by the Clumio provider to read and write the resource.
 type clumioPostProcessKmsResourceModel struct {
-	Id                    types.String `tfsdk:"id"`
-	Token                 types.String `tfsdk:"token"`
-	AccountId             types.String `tfsdk:"account_id"`
-	Region                types.String `tfsdk:"region"`
-	RoleId                types.String `tfsdk:"role_id"`
-	RoleArn               types.String `tfsdk:"role_arn"`
-	RoleExternalId        types.String `tfsdk:"role_external_id"`
-	CreatedMultiRegionCMK types.Bool   `tfsdk:"created_multi_region_cmk"`
-	MultiRegionCMKKeyId   types.String `tfsdk:"multi_region_cmk_key_id"`
-	TemplateVersion       types.Int64  `tfsdk:"template_version"`
+	Id                     types.String `tfsdk:"id"`
+	Token                  types.String `tfsdk:"token"`
+	AccountId              types.String `tfsdk:"account_id"`
+	Region                 types.String `tfsdk:"region"`
+	RoleId                 types.String `tfsdk:"role_id"`
+	RoleArn                types.String `tfsdk:"role_arn"`
+	RoleExternalId         types.String `tfsdk:"role_external_id"`
+	CreatedMultiRegionCMK  types.Bool   `tfsdk:"created_multi_region_cmk"`
+	MultiRegionCMKKeyId    types.String `tfsdk:"multi_region_cmk_key_id"`
+	TemplateVersion        types.Int64  `tfsdk:"template_version"`
+	ClumioIAMRolePrincipal types.String `tfsdk:"clumio_iam_role_principal"`
 }
 
 // Schema defines the structure and constraints of the clumio_post_process_kms Terraform resource.
@@ -84,6 +85,10 @@ func (r *clumioPostProcessKmsResource) Schema(
 			schemaTemplateVersion: schema.Int64Attribute{
 				Description: "Version of the BYOK template which was created.",
 				Optional:    true,
+			},
+			schemaClumioIAMRolePrincipal: schema.StringAttribute{
+				Description: "The ARN of the Clumio IAM role principal.",
+				Required:    true,
 			},
 		},
 	}

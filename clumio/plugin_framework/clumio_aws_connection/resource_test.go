@@ -330,7 +330,7 @@ func TestUpdateAWSConnection(t *testing.T) {
 		}
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -369,7 +369,7 @@ func TestUpdateAWSConnection(t *testing.T) {
 		}
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(listEnvsResponse, nil)
+			mock.Anything, mock.Anything).Times(1).Return(listEnvsResponse, nil)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ou, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{
 				Id: &ou,
@@ -395,7 +395,7 @@ func TestUpdateAWSConnection(t *testing.T) {
 
 		// Setup Expectations
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything).Times(1).Return(nil, apiError)
+			mock.Anything, mock.Anything).Times(1).Return(nil, apiError)
 
 		plan.OrganizationalUnitID = basetypes.NewStringValue(ouUpdated)
 		diags := cr.updateAWSConnection(ctx, &plan, &state)

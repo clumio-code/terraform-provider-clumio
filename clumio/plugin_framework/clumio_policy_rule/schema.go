@@ -64,8 +64,11 @@ func (r *policyRuleResource) Schema(
 			},
 			schemaBeforeRuleId: schema.StringAttribute{
 				Description: "The policy rule ID before which this policy rule should be " +
-					"inserted. An empty value will set the rule to have lowest priority. " +
-					"NOTE: If in the Global Organizational Unit, rules can also be prioritized " +
+					"inserted. Each policy rule must have a unique before_rule_id. If the same before_rule_id is set " +
+					"for more than one policy rule, then only one will have that before_rule_id. The other rules will " +
+					"have a different before_rule_id assigned to them automatically. An empty value will set the rule " +
+					"to have lowest priority.\n\t" +
+					"- NOTE: In the Global Organizational Unit, rules can also be prioritized " +
 					"against two virtual rules maintained by the system: `asset-level-rule` and " +
 					"`child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct " +
 					"Assignments (when a policy is applied directly to an asset) whereas " +

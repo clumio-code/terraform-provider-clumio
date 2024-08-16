@@ -36,5 +36,3 @@ const (
 	// Auth Error
 	AuthError = "Unauthorized access. Please ensure that your credentials are valid and/or your account is active."
 )
-
-var DefaultLookBackDays = int64(1)

@@ -121,8 +121,7 @@ func getEnvironmentForConnection(_ context.Context, r *clumioAWSConnectionResour
 
 	// Call the Clumio API to retrieve the associated environment.
 	limit := int64(1)
-	envs, apiErr := r.sdkEnvironments.ListAwsEnvironments(
-		&limit, nil, &filterStr, nil, &common.DefaultLookBackDays)
+	envs, apiErr := r.sdkEnvironments.ListAwsEnvironments(&limit, nil, &filterStr, nil, nil)
 	if apiErr != nil {
 		return nil, fmt.Errorf(
 			"unable to retrieve environment corresponding to %v, %v (%v)",

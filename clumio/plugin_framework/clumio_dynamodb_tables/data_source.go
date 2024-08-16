@@ -53,8 +53,7 @@ func (r *clumioDynamoDBTablesDataSource) readDynamoDBTables(
 	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))
 	// Call the Clumio API to list the DynamoDB tables.
 	limit := int64(10000)
-	res, apiErr := r.dynamoDBTableClient.ListAwsDynamodbTables(
-		&limit, nil, &filter, nil, &common.DefaultLookBackDays)
+	res, apiErr := r.dynamoDBTableClient.ListAwsDynamodbTables(&limit, nil, &filter, nil, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

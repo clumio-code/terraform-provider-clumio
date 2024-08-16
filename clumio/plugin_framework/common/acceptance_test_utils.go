@@ -106,7 +106,7 @@ func DeleteProtectionGroup(idOrResourceName string, isResourceName bool) resourc
 		}
 		time.Sleep(3 * time.Second)
 		for {
-			pg, apiErr := pd.ReadProtectionGroup(id, &DefaultLookBackDays)
+			pg, apiErr := pd.ReadProtectionGroup(id, nil)
 			if apiErr != nil {
 				if apiErr.ResponseCode == http.StatusNotFound {
 					break

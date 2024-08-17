@@ -7,6 +7,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"net/http"
 	"reflect"
 	"testing"
@@ -191,7 +192,8 @@ func TestPollForProtectionGroup(t *testing.T) {
 		readPGResponse := models.ReadProtectionGroupResponse{
 			Id: &pgId,
 		}
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(&readPGResponse, nil)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Times(1).
+			Return(&readPGResponse, nil)
 		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 5*time.Second, 1)
 		assert.Nil(t, err)
 		assert.Equal(t, pgId, *res.Id)
@@ -200,7 +202,8 @@ func TestPollForProtectionGroup(t *testing.T) {
 	// Read protection group returns an error.
 	t.Run("Read protection group returns an error", func(t *testing.T) {
 		apiError := apiutils.NewAPIError("Test Error", http.StatusInternalServerError, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(nil, apiError)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Times(1).
+			Return(nil, apiError)
 		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 5*time.Second, 1)
 		assert.NotNil(t, err)
 		assert.Nil(t, res)
@@ -228,7 +231,7 @@ func TestPGPollingTimedOut(t *testing.T) {
 	// Read protection group returns HTTP 404 leading to polling timeout.
 	t.Run("Polling timeout", func(t *testing.T) {
 		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Return(nil, notFoundError)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Return(nil, notFoundError)
 		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 100, 10)
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling timed out", err.Error())
@@ -278,7 +281,8 @@ func TestPollForProtectionGroupUpdate(t *testing.T) {
 
 	// Success scenario for protection group polling.
 	t.Run("Success scenario", func(t *testing.T) {
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(&readResponse, nil)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Times(1).
+			Return(&readResponse, nil)
 		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient,
 			5*time.Second, 1)
 		assert.Nil(t, err)
@@ -288,8 +292,8 @@ func TestPollForProtectionGroupUpdate(t *testing.T) {
 	// Success scenario for protection group polling with the first API call not returning expected
 	// result.
 	t.Run("Success scenario with second API call", func(t *testing.T) {
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(&firstResponse, nil).Return(
-			&readResponse, nil)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Times(1).
+			Return(&firstResponse, nil).Return(&readResponse, nil)
 		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient,
 			5*time.Second, 1)
 		assert.Nil(t, err)
@@ -299,7 +303,8 @@ func TestPollForProtectionGroupUpdate(t *testing.T) {
 	// Read protection group while Polling returns an error.
 	t.Run("Read protection group returns an error", func(t *testing.T) {
 		apiError := apiutils.NewAPIError("Test Error", http.StatusInternalServerError, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Times(1).Return(nil, apiError)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Times(1).
+			Return(nil, apiError)
 		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient,
 			5*time.Second, 1)
 		assert.NotNil(t, err)
@@ -344,7 +349,7 @@ func TestPGUpdatePollingTimedOut(t *testing.T) {
 	// Read protection group returns HTTP 404 leading to polling timeout.
 	t.Run("Polling timeout", func(t *testing.T) {
 		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId).Return(nil, notFoundError)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Return(nil, notFoundError)
 		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient, 100, 10)
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling timed out", err.Error())

@@ -69,7 +69,8 @@ resource "clumio_policy_rule" "example_2" {
 
 ### Required
 
-- `before_rule_id` (String) The policy rule ID before which this policy rule should be inserted. An empty value will set the rule to have lowest priority. NOTE: If in the Global Organizational Unit, rules can also be prioritized against two virtual rules maintained by the system: `asset-level-rule` and `child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct Assignments (when a policy is applied directly to an asset) whereas `child-ou-rule` corresponds to the priority of rules created by child organizational units.
+- `before_rule_id` (String) The policy rule ID before which this policy rule should be inserted. Each policy rule must have a unique before_rule_id. If the same before_rule_id is set for more than one policy rule, then only one will have that before_rule_id. The other rules will have a different before_rule_id assigned to them automatically. An empty value will set the rule to have lowest priority.
+	- NOTE: In the Global Organizational Unit, rules can also be prioritized against two virtual rules maintained by the system: `asset-level-rule` and `child-ou-rule`. `asset-level-rule` corresponds to the priority of Direct Assignments (when a policy is applied directly to an asset) whereas `child-ou-rule` corresponds to the priority of rules created by child organizational units.
 - `condition` (String) The condition of the policy rule. Possible conditions include:
 	1) `entity_type` is required and supports `$eq` and `$in` filters. `entity_type` must be one of `aws_rds_instance`, `aws_ebs_volume`, `aws_ec2_instance`, `aws_dynamodb_table` or `aws_rds_cluster`.
 	2) `aws_account_native_id` and `aws_region` are optional and both support `$eq` and `$in` filters.

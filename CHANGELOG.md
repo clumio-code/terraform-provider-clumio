@@ -1,3 +1,6 @@
+## 0.10.1
+Updated clumio_post_process_kms resource with a new schema attribute.
+
 ## 0.10.0
 This update contains the following changes:
 * Added clumio_protection_group_asset data source for getting asset id of a protection group asset.

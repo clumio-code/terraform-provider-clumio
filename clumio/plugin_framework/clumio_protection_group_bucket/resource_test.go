@@ -151,8 +151,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 		}
 
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
-			Return(readResponse, nil)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id, mock.Anything).
+			Times(1).Return(readResponse, nil)
 
 		remove, diags := pr.readProtectionGroupBucket(ctx, &pgrm)
 		assert.False(t, remove)
@@ -166,8 +166,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	// HTTP 404 error.
 	t.Run("ReadProtectionGroup returns http 404 error", func(t *testing.T) {
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
-			Return(nil, apiNotFoundError)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id, mock.Anything).
+			Times(1).Return(nil, apiNotFoundError)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.Nil(t, diags)
@@ -187,8 +187,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 			IsDeleted: &isDeleted,
 		}
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
-			Return(readResponse, nil)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id, mock.Anything).
+			Times(1).Return(readResponse, nil)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.Nil(t, diags)
@@ -199,8 +199,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	// error.
 	t.Run("ReadProtectionGroup returns an error", func(t *testing.T) {
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
-			Return(nil, apiError)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id, mock.Anything).
+			Times(1).Return(nil, apiError)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.NotNil(t, diags)
@@ -211,8 +211,8 @@ func TestReadProtectionGroupBucket(t *testing.T) {
 	// empty response.
 	t.Run("ReadProtectionGroup returns nil response", func(t *testing.T) {
 		// Setup Expectations
-		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id).Times(1).
-			Return(nil, nil)
+		mockSDKProtectionGroupS3Assets.EXPECT().ReadProtectionGroupS3Asset(id, mock.Anything).
+			Times(1).Return(nil, nil)
 
 		remove, diags := pr.readProtectionGroupBucket(context.Background(), &pgrm)
 		assert.NotNil(t, diags)

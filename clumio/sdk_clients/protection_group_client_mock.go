@@ -264,9 +264,9 @@ func (_c *MockProtectionGroupClient_DeleteProtectionGroup_Call) RunAndReturn(run
 	return _c
 }
 
-// ListProtectionGroups provides a mock function with given fields: limit, start, filter
-func (_m *MockProtectionGroupClient) ListProtectionGroups(limit *int64, start *string, filter *string) (*models.ListProtectionGroupsResponse, *apiutils.APIError) {
-	ret := _m.Called(limit, start, filter)
+// ListProtectionGroups provides a mock function with given fields: limit, start, filter, lookbackDays
+func (_m *MockProtectionGroupClient) ListProtectionGroups(limit *int64, start *string, filter *string, lookbackDays *int64) (*models.ListProtectionGroupsResponse, *apiutils.APIError) {
+	ret := _m.Called(limit, start, filter, lookbackDays)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListProtectionGroups")
@@ -274,19 +274,19 @@ func (_m *MockProtectionGroupClient) ListProtectionGroups(limit *int64, start *s
 
 	var r0 *models.ListProtectionGroupsResponse
 	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func(*int64, *string, *string) (*models.ListProtectionGroupsResponse, *apiutils.APIError)); ok {
-		return rf(limit, start, filter)
+	if rf, ok := ret.Get(0).(func(*int64, *string, *string, *int64) (*models.ListProtectionGroupsResponse, *apiutils.APIError)); ok {
+		return rf(limit, start, filter, lookbackDays)
 	}
-	if rf, ok := ret.Get(0).(func(*int64, *string, *string) *models.ListProtectionGroupsResponse); ok {
-		r0 = rf(limit, start, filter)
+	if rf, ok := ret.Get(0).(func(*int64, *string, *string, *int64) *models.ListProtectionGroupsResponse); ok {
+		r0 = rf(limit, start, filter, lookbackDays)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListProtectionGroupsResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*int64, *string, *string) *apiutils.APIError); ok {
-		r1 = rf(limit, start, filter)
+	if rf, ok := ret.Get(1).(func(*int64, *string, *string, *int64) *apiutils.APIError); ok {
+		r1 = rf(limit, start, filter, lookbackDays)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -305,13 +305,14 @@ type MockProtectionGroupClient_ListProtectionGroups_Call struct {
 //   - limit *int64
 //   - start *string
 //   - filter *string
-func (_e *MockProtectionGroupClient_Expecter) ListProtectionGroups(limit interface{}, start interface{}, filter interface{}) *MockProtectionGroupClient_ListProtectionGroups_Call {
-	return &MockProtectionGroupClient_ListProtectionGroups_Call{Call: _e.mock.On("ListProtectionGroups", limit, start, filter)}
+//   - lookbackDays *int64
+func (_e *MockProtectionGroupClient_Expecter) ListProtectionGroups(limit interface{}, start interface{}, filter interface{}, lookbackDays interface{}) *MockProtectionGroupClient_ListProtectionGroups_Call {
+	return &MockProtectionGroupClient_ListProtectionGroups_Call{Call: _e.mock.On("ListProtectionGroups", limit, start, filter, lookbackDays)}
 }
 
-func (_c *MockProtectionGroupClient_ListProtectionGroups_Call) Run(run func(limit *int64, start *string, filter *string)) *MockProtectionGroupClient_ListProtectionGroups_Call {
+func (_c *MockProtectionGroupClient_ListProtectionGroups_Call) Run(run func(limit *int64, start *string, filter *string, lookbackDays *int64)) *MockProtectionGroupClient_ListProtectionGroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*int64), args[1].(*string), args[2].(*string))
+		run(args[0].(*int64), args[1].(*string), args[2].(*string), args[3].(*int64))
 	})
 	return _c
 }
@@ -321,14 +322,14 @@ func (_c *MockProtectionGroupClient_ListProtectionGroups_Call) Return(_a0 *model
 	return _c
 }
 
-func (_c *MockProtectionGroupClient_ListProtectionGroups_Call) RunAndReturn(run func(*int64, *string, *string) (*models.ListProtectionGroupsResponse, *apiutils.APIError)) *MockProtectionGroupClient_ListProtectionGroups_Call {
+func (_c *MockProtectionGroupClient_ListProtectionGroups_Call) RunAndReturn(run func(*int64, *string, *string, *int64) (*models.ListProtectionGroupsResponse, *apiutils.APIError)) *MockProtectionGroupClient_ListProtectionGroups_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ReadProtectionGroup provides a mock function with given fields: groupId
-func (_m *MockProtectionGroupClient) ReadProtectionGroup(groupId string) (*models.ReadProtectionGroupResponse, *apiutils.APIError) {
-	ret := _m.Called(groupId)
+// ReadProtectionGroup provides a mock function with given fields: groupId, lookbackDays
+func (_m *MockProtectionGroupClient) ReadProtectionGroup(groupId string, lookbackDays *int64) (*models.ReadProtectionGroupResponse, *apiutils.APIError) {
+	ret := _m.Called(groupId, lookbackDays)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadProtectionGroup")
@@ -336,19 +337,19 @@ func (_m *MockProtectionGroupClient) ReadProtectionGroup(groupId string) (*model
 
 	var r0 *models.ReadProtectionGroupResponse
 	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func(string) (*models.ReadProtectionGroupResponse, *apiutils.APIError)); ok {
-		return rf(groupId)
+	if rf, ok := ret.Get(0).(func(string, *int64) (*models.ReadProtectionGroupResponse, *apiutils.APIError)); ok {
+		return rf(groupId, lookbackDays)
 	}
-	if rf, ok := ret.Get(0).(func(string) *models.ReadProtectionGroupResponse); ok {
-		r0 = rf(groupId)
+	if rf, ok := ret.Get(0).(func(string, *int64) *models.ReadProtectionGroupResponse); ok {
+		r0 = rf(groupId, lookbackDays)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ReadProtectionGroupResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) *apiutils.APIError); ok {
-		r1 = rf(groupId)
+	if rf, ok := ret.Get(1).(func(string, *int64) *apiutils.APIError); ok {
+		r1 = rf(groupId, lookbackDays)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -365,13 +366,14 @@ type MockProtectionGroupClient_ReadProtectionGroup_Call struct {
 
 // ReadProtectionGroup is a helper method to define mock.On call
 //   - groupId string
-func (_e *MockProtectionGroupClient_Expecter) ReadProtectionGroup(groupId interface{}) *MockProtectionGroupClient_ReadProtectionGroup_Call {
-	return &MockProtectionGroupClient_ReadProtectionGroup_Call{Call: _e.mock.On("ReadProtectionGroup", groupId)}
+//   - lookbackDays *int64
+func (_e *MockProtectionGroupClient_Expecter) ReadProtectionGroup(groupId interface{}, lookbackDays interface{}) *MockProtectionGroupClient_ReadProtectionGroup_Call {
+	return &MockProtectionGroupClient_ReadProtectionGroup_Call{Call: _e.mock.On("ReadProtectionGroup", groupId, lookbackDays)}
 }
 
-func (_c *MockProtectionGroupClient_ReadProtectionGroup_Call) Run(run func(groupId string)) *MockProtectionGroupClient_ReadProtectionGroup_Call {
+func (_c *MockProtectionGroupClient_ReadProtectionGroup_Call) Run(run func(groupId string, lookbackDays *int64)) *MockProtectionGroupClient_ReadProtectionGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(string), args[1].(*int64))
 	})
 	return _c
 }
@@ -381,7 +383,7 @@ func (_c *MockProtectionGroupClient_ReadProtectionGroup_Call) Return(_a0 *models
 	return _c
 }
 
-func (_c *MockProtectionGroupClient_ReadProtectionGroup_Call) RunAndReturn(run func(string) (*models.ReadProtectionGroupResponse, *apiutils.APIError)) *MockProtectionGroupClient_ReadProtectionGroup_Call {
+func (_c *MockProtectionGroupClient_ReadProtectionGroup_Call) RunAndReturn(run func(string, *int64) (*models.ReadProtectionGroupResponse, *apiutils.APIError)) *MockProtectionGroupClient_ReadProtectionGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }

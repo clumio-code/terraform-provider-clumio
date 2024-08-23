@@ -457,9 +457,6 @@ func (r *policyResource) Schema(
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
 			},
 			schemaActivationStatus: schema.StringAttribute{
 				Description: "The status of the policy. Valid values are: `activated` and `deactivated`." +

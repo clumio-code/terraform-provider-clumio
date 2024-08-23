@@ -1,3 +1,6 @@
+## 0.10.2
+Updated schema validation for policy resource.
+
 ## 0.10.1
 Updated clumio_post_process_kms resource with a new schema attribute.
 

@@ -4,9 +4,9 @@
 
 # If the version is being changed here, it should also be changed for the variable
 # clumioTfProviderVersionValue in the file clumio/plugin_framework/common/const.go.
-VERSION=0.10.1
+VERSION=0.10.2
 ifndef OS_ARCH
-OS_ARCH=darwin_amd64
+OS_ARCH=darwin_arm64
 endif
 
 CLUMIO_PROVIDER_DIR=~/.terraform.d/plugins/clumio.com/providers/clumio/${VERSION}/${OS_ARCH}

@@ -45,7 +45,6 @@ func readPolicyAndUpdateModel(ctx context.Context,
 	state.Name = types.StringPointerValue(res.Name)
 	state.Timezone = types.StringPointerValue(res.Timezone)
 	state.ActivationStatus = types.StringPointerValue(res.ActivationStatus)
-	state.OrganizationalUnitId = types.StringPointerValue(res.OrganizationalUnitId)
 	stateOp, diags := mapClumioOperationsToSchemaOperations(ctx, res.Operations)
 	state.Operations = stateOp
 	return nil, diags

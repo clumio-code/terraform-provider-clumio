@@ -2,7 +2,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.10.0"
+      version = "~>0.11.0"
     }
     aws = {}
   }
@@ -18,6 +18,11 @@ provider "clumio" {
 # associated with a different AWS account and thus requires role assumption
 provider "aws" {
   region = "us-west-2"
+  default_tags {
+    tags = {
+      "Vendor" = "Clumio"
+    }
+  }
 }
 
 provider "aws" {

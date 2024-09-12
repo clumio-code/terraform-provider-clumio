@@ -29,8 +29,6 @@ type clumioUserResourceModel struct {
 	Id                         types.String `tfsdk:"id"`
 	Email                      types.String `tfsdk:"email"`
 	FullName                   types.String `tfsdk:"full_name"`
-	AssignedRole               types.String `tfsdk:"assigned_role"`
-	OrganizationalUnitIds      types.Set    `tfsdk:"organizational_unit_ids"`
 	AccessControlConfiguration types.Set    `tfsdk:"access_control_configuration"`
 	Inviter                    types.String `tfsdk:"inviter"`
 	IsConfirmed                types.Bool   `tfsdk:"is_confirmed"`
@@ -74,39 +72,20 @@ func (r *clumioUserResource) Schema(
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			schemaAssignedRole: schema.StringAttribute{
-				Description: "Identifier of the role to assign to the user.",
-				Optional:    true,
-				Computed:    true,
-				DeprecationMessage: "Configure access_control_configuration instead. This attribute will" +
-					" be removed in the next major version of the provider.",
-			},
-			schemaOrganizationalUnitIds: schema.SetAttribute{
-				Description: "Identifiers of the organizational units  to be assigned to the user. The" +
-					" Global Organizational Unit ID is \"00000000-0000-0000-0000-000000000000\"",
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
-				DeprecationMessage: "Configure access_control_configuration instead. This attribute will" +
-					" be removed in the next major version of the provider.",
-			},
 			schemaAccessControlConfiguration: schema.SetNestedAttribute{
 				Description: "Identifiers of the organizational units, along with the identifier of the" +
 					" role, to be assigned to the user.",
-				Optional: true,
-				Computed: true,
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						schemaRoleId: schema.StringAttribute{
 							Description: "Identifier of the role to assign to the user.",
-							Optional:    true,
-							Computed:    true,
+							Required:    true,
 						},
 						schemaOrganizationalUnitIds: schema.SetAttribute{
 							Description: "Identifiers of the organizational units to be assigned to the user." +
 								"The Global Organizational Unit ID is \"00000000-0000-0000-0000-000000000000\"",
-							Optional:    true,
-							Computed:    true,
+							Required:    true,
 							ElementType: types.StringType,
 						},
 					},

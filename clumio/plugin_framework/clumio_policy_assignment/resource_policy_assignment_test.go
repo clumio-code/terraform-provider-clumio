@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"os"
-	"regexp"
 	"testing"
 	"time"
 
@@ -197,22 +196,6 @@ func TestAccResourceClumioPolicyAssignmentRecreate(t *testing.T) {
 	})
 }
 
-// Tests that empty organizational_unit returns error
-func TestAccResourceClumioPolicyAssignmentWithEmptyOU(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(testAccResourceClumioPolicyAssignmentEmptyOU,
-					os.Getenv(common.ClumioApiBaseUrl)),
-				ExpectError: regexp.MustCompile(
-					"Attribute organizational_unit_id string length must be at least 1"),
-			},
-		},
-	})
-}
-
 // getTestAccResourceClumioPolicyAssignment returns the Terraform configuration for a basic
 // clumio_policy_assignment resource.
 func getTestAccResourceClumioPolicyAssignment(suffix string) string {
@@ -327,21 +310,6 @@ resource "clumio_policy_assignment" "test_policy_assignment" {
   entity_id = clumio_protection_group.test_pg_policy_assignment.id
   entity_type = "protection_group"
   policy_id = clumio_policy.test_policy.id
-}
-`
-
-// testAccResourceClumioPolicyAssignmentEmptyOU is the Terraform configuration for creating a policy
-// assignment with empty value for organizational_unit_id
-const testAccResourceClumioPolicyAssignmentEmptyOU = `
-provider clumio{
-   clumio_api_base_url = "%s"
-}
-
-resource "clumio_policy_assignment" "test_policy_assignment" {
-  entity_id = "some_pg_id"
-  entity_type = "protection_group"
-  policy_id = "some_policy_id"
-  organizational_unit_id = ""
 }
 `
 

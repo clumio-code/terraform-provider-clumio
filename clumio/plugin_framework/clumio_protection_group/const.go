@@ -16,7 +16,6 @@ const (
 	schemaPrefix               = "prefix"
 	schemaStorageClasses       = "storage_classes"
 	schemaPolicyId             = "policy_id"
-	schemaOrganizationalUnitId = "organizational_unit_id"
 	schemaProtectionInfo       = "protection_info"
 	schemaInheritingEntityId   = "inheriting_entity_id"
 	schemaInheritingEntityType = "inheriting_entity_type"

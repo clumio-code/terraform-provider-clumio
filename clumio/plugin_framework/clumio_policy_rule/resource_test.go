@@ -99,7 +99,6 @@ func TestCreatePolicyRule(t *testing.T) {
 		diags := pr.createPolicyRule(ctx, prm)
 		assert.Nil(t, diags)
 		assert.Equal(t, id, prm.ID.ValueString())
-		assert.Equal(t, ou, prm.OrganizationalUnitID.ValueString())
 	})
 
 	// Tests that Diagnostics is returned in case the create policy rule API call returns an error.
@@ -109,7 +108,6 @@ func TestCreatePolicyRule(t *testing.T) {
 		mockPolicyRule.EXPECT().CreatePolicyRule(mock.Anything).Times(1).Return(
 			nil, apiError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.createPolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})
@@ -122,7 +120,6 @@ func TestCreatePolicyRule(t *testing.T) {
 		mockPolicyRule.EXPECT().CreatePolicyRule(mock.Anything).Times(1).Return(
 			nil, nil)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.createPolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})
@@ -135,7 +132,6 @@ func TestCreatePolicyRule(t *testing.T) {
 			createResp, nil)
 		mockTasks.EXPECT().ReadTask(taskid).Times(1).Return(nil, apiError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.createPolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})
@@ -204,7 +200,6 @@ func TestReadPolicyRule(t *testing.T) {
 		assert.Nil(t, diags)
 		assert.False(t, remove)
 		assert.Equal(t, id, prm.ID.ValueString())
-		assert.Equal(t, ou, prm.OrganizationalUnitID.ValueString())
 		assert.Equal(t, name, prm.Name.ValueString())
 		assert.Equal(t, condition, prm.Condition.ValueString())
 		assert.Equal(t, beforeRuleId, prm.BeforeRuleID.ValueString())
@@ -217,7 +212,6 @@ func TestReadPolicyRule(t *testing.T) {
 		// Setup Expectations
 		mockPolicyRule.EXPECT().ReadPolicyRule(id).Times(1).Return(nil, apiNotFoundError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := pr.readPolicyRule(context.Background(), prm)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -230,7 +224,6 @@ func TestReadPolicyRule(t *testing.T) {
 		// Setup Expectations
 		mockPolicyRule.EXPECT().ReadPolicyRule(id).Times(1).Return(nil, apiError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := pr.readPolicyRule(context.Background(), prm)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -243,7 +236,6 @@ func TestReadPolicyRule(t *testing.T) {
 		// Setup Expectations
 		mockPolicyRule.EXPECT().ReadPolicyRule(id).Times(1).Return(nil, nil)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := pr.readPolicyRule(context.Background(), prm)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -311,7 +303,6 @@ func TestUpdatePolicyRule(t *testing.T) {
 		diags := pr.updatePolicyRule(ctx, prm)
 		assert.Nil(t, diags)
 		assert.Equal(t, id, prm.ID.ValueString())
-		assert.Equal(t, ou, prm.OrganizationalUnitID.ValueString())
 	})
 
 	// Tests that Diagnostics is returned in case the update policy rule API call returns an error.
@@ -321,7 +312,6 @@ func TestUpdatePolicyRule(t *testing.T) {
 		mockPolicyRule.EXPECT().UpdatePolicyRule(id, mock.Anything).Times(1).Return(
 			nil, apiError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.updatePolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})
@@ -334,7 +324,6 @@ func TestUpdatePolicyRule(t *testing.T) {
 		mockPolicyRule.EXPECT().UpdatePolicyRule(id, mock.Anything).Times(1).Return(
 			nil, nil)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.updatePolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})
@@ -347,7 +336,6 @@ func TestUpdatePolicyRule(t *testing.T) {
 			updateResp, nil)
 		mockTasks.EXPECT().ReadTask(taskid).Times(1).Return(nil, apiError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.updatePolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})
@@ -439,7 +427,6 @@ func TestDeletePolicyRule(t *testing.T) {
 		mockPolicyRule.EXPECT().DeletePolicyRule(id).Times(1).Return(deleteResp, nil)
 		mockTasks.EXPECT().ReadTask(taskid).Times(1).Return(nil, apiError)
 
-		prm.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := pr.deletePolicyRule(ctx, prm)
 		assert.NotNil(t, diags)
 	})

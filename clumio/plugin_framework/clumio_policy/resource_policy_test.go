@@ -542,21 +542,6 @@ func TestAccResourceClumioPolicyErrorMissingOperations(t *testing.T) {
 	})
 }
 
-// Tests to check if creating a policy with empty organizational_unit_id returns error.
-func TestAccResourceClumioPolicyErrorEmptyOU(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: getTestClumioPolicyEmptyParams("organizational_unit_id"),
-				ExpectError: regexp.MustCompile(
-					"Attribute organizational_unit_id string length must be at least 1"),
-			},
-		},
-	})
-}
-
 // Tests to check if creating a policy with empty timezone returns error.
 func TestAccResourceClumioPolicyErrorEmptyTimezone(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -954,7 +939,7 @@ func getTestAccResourceClumioPolicyTimezone(timezone1, timezone2 string) string 
 }
 
 // getTestClumioPolicyEmptyParams returns the Terraform configuration for a clumio_policy resource with
-// organizational_unit_id set to empty string.
+// the given param set to empty string.
 func getTestClumioPolicyEmptyParams(param string) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	name := "tf-acceptance-test-policy-empty-params"
@@ -1290,7 +1275,7 @@ resource "clumio_policy" "backup_region_policy" {
 `
 
 // testAccResourceClumioPolicyEmptyParams is the Terraform configuration for a clumio_policy resource
-// with organizational_unit_id or activation_status set to empty string.
+// with timezone or activation_status set to empty string.
 const testAccResourceClumioPolicyEmptyParams = `
 provider clumio{
 	clumio_api_base_url = "%s"

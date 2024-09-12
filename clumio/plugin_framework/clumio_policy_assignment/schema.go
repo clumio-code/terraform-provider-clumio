@@ -21,11 +21,10 @@ import (
 // resource. It represents the schema of the resource and the data it holds. This schema is used by
 // customers to configure the resource and by the Clumio provider to read and write the resource.
 type policyAssignmentResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	EntityID             types.String `tfsdk:"entity_id"`
-	EntityType           types.String `tfsdk:"entity_type"`
-	PolicyID             types.String `tfsdk:"policy_id"`
-	OrganizationalUnitID types.String `tfsdk:"organizational_unit_id"`
+	ID         types.String `tfsdk:"id"`
+	EntityID   types.String `tfsdk:"entity_id"`
+	EntityType types.String `tfsdk:"entity_type"`
+	PolicyID   types.String `tfsdk:"policy_id"`
 }
 
 // Schema defines the structure and constraints of the clumio_policy_assignment Terraform resource.
@@ -62,20 +61,6 @@ func (r *clumioPolicyAssignmentResource) Schema(
 			schemaPolicyId: schema.StringAttribute{
 				Description: "Identifier of the Clumio policy to be assigned.",
 				Required:    true,
-			},
-			schemaOrganizationalUnitId: schema.StringAttribute{
-				Description: "Identifier of the Clumio organizational unit associated with the " +
-					"resource for which the policy will be assigned. If not provided, the resource " +
-					"will be assumed to be in the default organizational unit associated with the " +
-					"credentials used to create the assignment.",
-				Optional: true,
-				Computed: true,
-				DeprecationMessage: "Use the provider schema attribute " +
-					"clumio_organizational_unit_context to create the resource in the context of " +
-					"an Organizational Unit.",
-				Validators: []validator.String{
-					validators.LengthAtLeast(1),
-				},
 			},
 		},
 	}

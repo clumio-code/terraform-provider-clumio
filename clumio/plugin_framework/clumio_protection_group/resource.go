@@ -10,10 +10,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
-
 	"github.com/clumio-code/clumio-go-sdk/models"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -26,15 +24,6 @@ func (r *clumioProtectionGroupResource) createProtectionGroup(
 
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if plan.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
-	}
 
 	// Call the Clumio API to create the protection group.
 	objectFilter := mapSchemaObjectFilterToClumioObjectFilter(plan.ObjectFilter)
@@ -79,7 +68,6 @@ func (r *clumioProtectionGroupResource) createProtectionGroup(
 	// including the ID given that the resource is getting created.
 	plan.ID = types.StringPointerValue(response.Id)
 	plan.Name = types.StringPointerValue(readResponse.Name)
-	plan.OrganizationalUnitID = types.StringPointerValue(readResponse.OrganizationalUnitId)
 	plan.ObjectFilter = mapClumioObjectFilterToSchemaObjectFilter(readResponse.ObjectFilter)
 	plan.ProtectionStatus = types.StringPointerValue(readResponse.ProtectionStatus)
 	plan.ProtectionInfo, diags = mapClumioProtectionInfoToSchemaProtectionInfo(
@@ -95,15 +83,6 @@ func (r *clumioProtectionGroupResource) readProtectionGroup(
 
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if state.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
-	}
 
 	// Call the Clumio API to read the protection group
 	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(state.ID.ValueString(), nil)
@@ -149,7 +128,6 @@ func (r *clumioProtectionGroupResource) readProtectionGroup(
 		state.BucketRule = bucketRule
 	}
 	state.Name = types.StringPointerValue(readResponse.Name)
-	state.OrganizationalUnitID = types.StringPointerValue(readResponse.OrganizationalUnitId)
 	state.ObjectFilter = mapClumioObjectFilterToSchemaObjectFilter(readResponse.ObjectFilter)
 	state.ProtectionStatus = types.StringPointerValue(readResponse.ProtectionStatus)
 	state.ProtectionInfo, diags = mapClumioProtectionInfoToSchemaProtectionInfo(
@@ -174,15 +152,6 @@ func (r *clumioProtectionGroupResource) updateProtectionGroup(
 		return diags
 	}
 	version := readResp.Version
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if plan.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
-	}
 
 	objectFilter := mapSchemaObjectFilterToClumioObjectFilter(plan.ObjectFilter)
 
@@ -225,7 +194,6 @@ func (r *clumioProtectionGroupResource) updateProtectionGroup(
 		return diags
 	}
 	// Convert the Clumio API response back to a schema and populate all computed fields of the plan.
-	plan.OrganizationalUnitID = types.StringPointerValue(readResponse.OrganizationalUnitId)
 	plan.ObjectFilter = mapClumioObjectFilterToSchemaObjectFilter(readResponse.ObjectFilter)
 	plan.ProtectionStatus = types.StringPointerValue(readResponse.ProtectionStatus)
 	plan.ProtectionInfo, diags = mapClumioProtectionInfoToSchemaProtectionInfo(
@@ -239,15 +207,6 @@ func (r *clumioProtectionGroupResource) deleteProtectionGroup(
 
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if state.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
-	}
 
 	// Call the Clumio API to delete the protection group
 	_, apiErr := sdkProtectionGroups.DeleteProtectionGroup(state.ID.ValueString())

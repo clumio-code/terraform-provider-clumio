@@ -78,10 +78,6 @@ resource "clumio_policy_rule" "example_2" {
 - `name` (String) The name of the policy rule.
 - `policy_id` (String) The Clumio-assigned ID of the policy.
 
-### Optional
-
-- `organizational_unit_id` (String, Deprecated) The Clumio-assigned ID of the organizational unit to use as the context for assigning the policy.
-
 ### Read-Only
 
 - `id` (String) Unique identifier of the policy rule.

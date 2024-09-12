@@ -169,47 +169,6 @@ func TestAccResourceClumioProtectionGroupRecreate(t *testing.T) {
 	})
 }
 
-// Tests creation of a organizational unit and using that organizational unit to create a
-// protection group
-func TestAccResourceClumioProtectionGroupWithOU(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: getTestAccResourceClumioProtectionGroupWithOU(false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(
-						"clumio_protection_group.test_pg", "description",
-						regexp.MustCompile("test_pg_1"))),
-			},
-			{
-				Config: getTestAccResourceClumioProtectionGroupWithOU(true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(
-						"clumio_protection_group.test_pg", "description",
-						regexp.MustCompile("test_pg_1_updated"))),
-			},
-		},
-	})
-}
-
-// Tests that empty organizational_unit returns error
-func TestAccResourceClumioProtectionGroupWithEmptyOU(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(testAccResourceClumioProtectionGroupWithEmptyOU,
-					os.Getenv(common.ClumioApiBaseUrl)),
-				ExpectError: regexp.MustCompile(
-					"Attribute organizational_unit_id string length must be at least 1"),
-			},
-		},
-	})
-}
-
 // Tests importing a Protection Group by ID and ensuring that the import is successful.
 func TestAccResourceClumioAwsProtectionGroupImport(t *testing.T) {
 
@@ -267,18 +226,6 @@ func getTestAccResourceClumioProtectionGroup(description bool, prefixFilter bool
 		pf = "prefix_filters { prefix = \"prefix\" }"
 	}
 	val := fmt.Sprintf(testAccResourceClumioProtectionGroup, baseUrl, desc, pf)
-	return val
-}
-
-// getTestAccResourceClumioProtectionGroupWithOU returns the Terraform configuration for a
-// clumio_protection_group resource with the protection group having a organizational unit.
-func getTestAccResourceClumioProtectionGroupWithOU(update bool) string {
-	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	description := "test_pg_1"
-	if update {
-		description = "test_pg_1_updated"
-	}
-	val := fmt.Sprintf(testAccResourceClumioProtectionGroupWithOU, baseUrl, description)
 	return val
 }
 
@@ -372,28 +319,6 @@ resource "clumio_protection_group" "test_pg2"{
 }
 `
 
-// testAccResourceClumioProtectionGroupWithOU is the Terraform configuration for a
-// clumio_protection_group resource with the protection group having an organizational unit.
-const testAccResourceClumioProtectionGroupWithOU = `
-provider clumio{
-   clumio_api_base_url = "%s"
-}
-
-resource "clumio_organizational_unit" "test_ou_pg" {
-  name = "test_ou_pg"
-}
-
-resource "clumio_protection_group" "test_pg"{
-  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
-  name = "test_pg_1"
-  description = "%s"
-  organizational_unit_id = clumio_organizational_unit.test_ou_pg.id
-  object_filter {
-	storage_classes = ["S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA", "S3 Reduced Redundancy"]
-  }
-}
-`
-
 // testAccResourceClumioProtectionGroupNoOptional is the Terraform configuration for a
 // clumio_protection_group resource with optional fields such as description and bucket_rule not set.
 const testAccResourceClumioProtectionGroupNoOptional = `
@@ -403,24 +328,6 @@ provider clumio{
 
 resource "clumio_protection_group" "test_pg"{
   name = "test_pg_1"
-  object_filter {
-	storage_classes = ["S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA", "S3 Reduced Redundancy"]
-  }
-}
-`
-
-// testAccResourceClumioProtectionGroupWithEmptyOU is the Terraform configuration for a
-// clumio_protection_group resource with the protection group having an empty organizational unit.
-const testAccResourceClumioProtectionGroupWithEmptyOU = `
-provider clumio{
-   clumio_api_base_url = "%s"
-}
-
-resource "clumio_protection_group" "test_pg"{
-  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
-  name = "test_pg_1"
-  description = "some description"
-  organizational_unit_id = ""
   object_filter {
 	storage_classes = ["S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA", "S3 Reduced Redundancy"]
   }

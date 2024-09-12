@@ -28,7 +28,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.10.0"
+      version = "~>0.11.0"
     }
     aws = {}
   }
@@ -43,6 +43,11 @@ provider "clumio" {
 # Instantiate the AWS provider
 provider "aws" {
   region = "us-west-2"
+  default_tags {
+    tags = {
+      "Vendor" = "Clumio"
+    }
+  }
 }
 
 # Retrieve the effective AWS account ID and region
@@ -89,7 +94,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.10.0"
+      version = "~>0.11.0"
     }
     aws = {}
   }
@@ -104,11 +109,21 @@ provider "clumio" {
 # Instantiate two AWS providers with different regions
 provider "aws" {
   region = "us-west-2"
+  default_tags {
+    tags = {
+      "Vendor" = "Clumio"
+    }
+  }
 }
 
 provider "aws" {
   alias  = "east"
   region = "us-east-1"
+  default_tags {
+    tags = {
+      "Vendor" = "Clumio"
+    }
+  }
 }
 
 # Retrieve the effective AWS account ID
@@ -186,7 +201,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.10.0"
+      version = "~>0.11.0"
     }
     aws = {}
   }
@@ -202,6 +217,11 @@ provider "clumio" {
 # associated with a different AWS account and thus requires role assumption
 provider "aws" {
   region = "us-west-2"
+  default_tags {
+    tags = {
+      "Vendor" = "Clumio"
+    }
+  }
 }
 
 provider "aws" {

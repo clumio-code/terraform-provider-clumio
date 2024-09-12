@@ -10,10 +10,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
-
 	"github.com/clumio-code/clumio-go-sdk/models"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -26,15 +24,6 @@ func (r *policyRuleResource) createPolicyRule(
 
 	var diags diag.Diagnostics
 	sdkPolicyRules := r.sdkPolicyRules
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if plan.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkPolicyRules = sdkclients.NewPolicyRuleClient(config)
-	}
 
 	// Convert the schema to a Clumio API request to create a policy rule.
 	priority := &models.RulePriority{
@@ -80,7 +69,6 @@ func (r *policyRuleResource) createPolicyRule(
 	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
 	// including the ID given that the resource is getting created.
 	plan.ID = types.StringPointerValue(res.Rule.Id)
-	plan.OrganizationalUnitID = types.StringPointerValue(res.Rule.OrganizationalUnitId)
 
 	return diags
 }
@@ -93,15 +81,6 @@ func (r *policyRuleResource) readPolicyRule(ctx context.Context, state *policyRu
 
 	var diags diag.Diagnostics
 	sdkPolicyRules := r.sdkPolicyRules
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if state.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
-		sdkPolicyRules = sdkclients.NewPolicyRuleClient(config)
-	}
 
 	// Call the Clumio API to read the policy rule.
 	res, apiErr := sdkPolicyRules.ReadPolicyRule(state.ID.ValueString())
@@ -135,7 +114,6 @@ func (r *policyRuleResource) readPolicyRule(ctx context.Context, state *policyRu
 		state.BeforeRuleID = types.StringPointerValue(res.Priority.BeforeRuleId)
 	}
 	state.PolicyID = types.StringPointerValue(res.Action.AssignPolicy.PolicyId)
-	state.OrganizationalUnitID = types.StringPointerValue(res.OrganizationalUnitId)
 
 	return false, diags
 }
@@ -147,15 +125,6 @@ func (r *policyRuleResource) updatePolicyRule(
 
 	var diags diag.Diagnostics
 	sdkPolicyRules := r.sdkPolicyRules
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if plan.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkPolicyRules = sdkclients.NewPolicyRuleClient(config)
-	}
 
 	priority := &models.RulePriority{
 		BeforeRuleId: plan.BeforeRuleID.ValueStringPointer(),
@@ -200,11 +169,6 @@ func (r *policyRuleResource) updatePolicyRule(
 		return diags
 	}
 
-	// Convert the Clumio API response back to a schema and populate all computed fields of the
-	// plan. ID however is not updated given that it is the field used to denote which resource to
-	// update in the backend.
-	plan.OrganizationalUnitID = types.StringPointerValue(res.Rule.OrganizationalUnitId)
-
 	return diags
 }
 
@@ -214,15 +178,6 @@ func (r *policyRuleResource) deletePolicyRule(
 
 	var diags diag.Diagnostics
 	sdkPolicyRules := r.sdkPolicyRules
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if state.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
-		sdkPolicyRules = sdkclients.NewPolicyRuleClient(config)
-	}
 
 	// Call the Clumio API to delete the policy rule.
 	res, apiErr := sdkPolicyRules.DeletePolicyRule(state.ID.ValueString())

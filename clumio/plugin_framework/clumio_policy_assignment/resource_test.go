@@ -114,7 +114,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 
 		diags := par.createPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
-		assert.Equal(t, ou, model.OrganizationalUnitID.ValueString())
 	})
 
 	// Tests the success scenario for create policy assignment for DynamoDB table. It should not
@@ -123,7 +122,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 		func(t *testing.T) {
 
 			model.EntityType = basetypes.NewStringValue(entityTypeAWSDynamoDBTable)
-			model.OrganizationalUnitID = basetypes.NewStringNull()
 			policyType := dynamodbTableBackup
 			pdResp := &models.ReadPolicyResponse{
 				Id: &policyId,
@@ -153,7 +151,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 
 			diags := par.createPolicyAssignment(ctx, model)
 			assert.Nil(t, diags)
-			assert.Equal(t, ou, model.OrganizationalUnitID.ValueString())
 			model.EntityType = basetypes.NewStringValue(entityTypeProtectionGroup)
 		})
 
@@ -161,12 +158,10 @@ func TestCreatePolicyAssignment(t *testing.T) {
 	// error.
 	t.Run(readPolicyError, func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.createPolicyAssignment(context.Background(), model)
 		assert.NotNil(t, diags)
 	})
@@ -175,7 +170,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 	// policy without the required operation type for policy assignment.
 	t.Run("Read policy definition returns policy with unsupported type", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		opType := "some-type"
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
@@ -190,7 +184,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.createPolicyAssignment(context.Background(), model)
 		assert.NotNil(t, diags)
 	})
@@ -199,7 +192,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 	// error.
 	t.Run("Set policy assignments returns an error", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -215,7 +207,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 		mockPolicyAssignments.EXPECT().SetPolicyAssignments(mock.Anything).Times(1).Return(
 			nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.createPolicyAssignment(context.Background(), model)
 		t.Log(diags)
 		assert.NotNil(t, diags)
@@ -225,7 +216,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 	// empty response.
 	t.Run("Set policy assignments returns an empty response", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -241,7 +231,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 		mockPolicyAssignments.EXPECT().SetPolicyAssignments(mock.Anything).Times(1).Return(
 			nil, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.createPolicyAssignment(context.Background(), model)
 		t.Log(diags)
 		assert.NotNil(t, diags)
@@ -250,7 +239,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read task API call returns an error.
 	t.Run(setPolicyAssignmentPollingError, func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -270,7 +258,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 			paResp, nil)
 		mockTasks.EXPECT().ReadTask(taskId).Times(1).Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.createPolicyAssignment(context.Background(), model)
 		t.Log(diags)
 		assert.NotNil(t, diags)
@@ -327,7 +314,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 	// Tests the success scenario for read policy assignment. It should not return Diagnostics.
 	t.Run("Basic success scenario for read policy assignment", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -362,7 +348,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		func(t *testing.T) {
 
 			model.EntityType = basetypes.NewStringValue(entityTypeAWSDynamoDBTable)
-			model.OrganizationalUnitID = basetypes.NewStringNull()
 			policyType := dynamodbTableBackup
 			pdResp := &models.ReadPolicyResponse{
 				Id: &policyId,
@@ -418,7 +403,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
 
-		modelWithInvalidType.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, modelWithInvalidType)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -442,7 +426,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -456,7 +439,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -470,7 +452,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(nil, apiNotFoundError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -495,7 +476,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
 			Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -520,7 +500,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
 			Return(nil, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -545,7 +524,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
 			Return(nil, apiNotFoundError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -578,7 +556,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockProtectionGroups.EXPECT().ReadProtectionGroup(entityId, mock.Anything).Times(1).
 			Return(readPgResp, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -605,7 +582,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
 			Times(1).Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -632,7 +608,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
 			Times(1).Return(nil, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
@@ -659,7 +634,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
 			Times(1).Return(nil, apiNotFoundError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -694,7 +668,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		mockDynamoDBTables.EXPECT().ReadAwsDynamodbTable(entityId, mock.Anything, mock.Anything).
 			Times(1).Return(readTableResp, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		remove, diags := par.readPolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
 		assert.True(t, remove)
@@ -769,14 +742,12 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 
 		diags := par.updatePolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
-		assert.Equal(t, ou, model.OrganizationalUnitID.ValueString())
 	})
 
 	// Tests the success scenario for update policy assignment. It should not return Diagnostics.
 	t.Run("Basic success scenario for update policy assignment", func(t *testing.T) {
 
 		model.EntityType = basetypes.NewStringValue(entityTypeAWSDynamoDBTable)
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		policyType := dynamodbTableBackup
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
@@ -806,7 +777,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 
 		diags := par.updatePolicyAssignment(ctx, model)
 		assert.Nil(t, diags)
-		assert.Equal(t, ou, model.OrganizationalUnitID.ValueString())
 		model.EntityType = basetypes.NewStringValue(entityTypeProtectionGroup)
 	})
 
@@ -814,12 +784,10 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 	// error.
 	t.Run(readPolicyError, func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.updatePolicyAssignment(context.Background(), model)
 		assert.NotNil(t, diags)
 	})
@@ -828,7 +796,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 	// policy without the required operation type for policy assignment.
 	t.Run("Read policy definition returns policy with unsupported type", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		opType := "some-type"
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
@@ -843,7 +810,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
 			Return(pdResp, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.updatePolicyAssignment(context.Background(), model)
 		assert.NotNil(t, diags)
 	})
@@ -852,7 +818,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 	// error.
 	t.Run("Set policy assignments returns an error", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -868,7 +833,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 		mockPolicyAssignments.EXPECT().SetPolicyAssignments(mock.Anything).Times(1).Return(
 			nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.updatePolicyAssignment(context.Background(), model)
 		t.Log(diags)
 		assert.NotNil(t, diags)
@@ -878,7 +842,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 	// empty response.
 	t.Run("Set policy assignments returns an empty response", func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -894,7 +857,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 		mockPolicyAssignments.EXPECT().SetPolicyAssignments(mock.Anything).Times(1).Return(
 			nil, nil)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.updatePolicyAssignment(context.Background(), model)
 		t.Log(diags)
 		assert.NotNil(t, diags)
@@ -903,7 +865,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read task API call returns an error.
 	t.Run(setPolicyAssignmentPollingError, func(t *testing.T) {
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		pdResp := &models.ReadPolicyResponse{
 			Id: &policyId,
 			Operations: []*models.PolicyOperation{
@@ -923,7 +884,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 			paResp, nil)
 		mockTasks.EXPECT().ReadTask(taskId).Times(1).Return(nil, apiError)
 
-		model.OrganizationalUnitID = basetypes.NewStringNull()
 		diags := par.updatePolicyAssignment(context.Background(), model)
 		t.Log(diags)
 		assert.NotNil(t, diags)

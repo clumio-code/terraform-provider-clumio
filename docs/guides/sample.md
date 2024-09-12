@@ -18,7 +18,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.10.0"
+      version = "~>0.11.0"
     }
     aws = {}
   }
@@ -33,6 +33,11 @@ provider "clumio" {
 # Instantiate the AWS provider
 provider "aws" {
   region = "us-west-2"
+  default_tags {
+    tags = {
+      "Vendor" = "Clumio"
+    }
+  }
 }
 
 # Retrieve the effective AWS account ID and region

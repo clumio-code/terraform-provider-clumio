@@ -106,7 +106,6 @@ resource "clumio_protection_group" "prefix_filter_2" {
 - `bucket_rule` (String) Describes the possible conditions for a bucket to be  automatically added to a protection group. For example: {"aws_tag":{"$eq":{"key":"Environment", "value":"Prod"}}}
 - `description` (String) Brief description to denote details of the protection group.
 - `object_filter` (Block Set) (see [below for nested schema](#nestedblock--object_filter))
-- `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the protection group. If not provided, the protection group will be associated with the default organizational unit associated with the credentials used to create the protection group.
 
 ### Read-Only
 

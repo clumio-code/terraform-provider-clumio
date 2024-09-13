@@ -17,17 +17,19 @@ First, we need to define the provider configurations in our Terraform code. Open
 provider "clumio" {
     alias = "provider1"
     clumio_organizational_unit_context = "org_unit_1"
-    api_token = "<provider1_api_token>"
+    clumio_api_token = "<provider1_api_token>"
+    clumio_api_base_url = "<clumio_api_base_url>"
 }
 
 provider "clumio" {
     alias = "provider2"
     clumio_organizational_unit_context = "org_unit_2"
-    api_token = "<provider2_api_token>"
+    clumio_api_token = "<provider2_api_token>"
+    clumio_api_base_url = "<clumio_api_base_url>"
 }
 ```
 
-Replace `<provider1_api_token>` and `<provider2_api_token>` with the respective API tokens for each Clumio provider.
+Replace `<provider1_api_token>`, `<provider2_api_token>` and `<clumio_api_base_url>` with the respective API tokens and provider base URL for each Clumio provider.
 
 ## Step 2: Define Resources
 

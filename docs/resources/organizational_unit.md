@@ -25,12 +25,12 @@ resource "clumio_organizational_unit" "example" {
 
 ### Required
 
-- `name` (String) Unique name assigned to the organizational unit.
+- `name` (String) Unique name assigned to the organizational unit. Root organizational unit is named as 'Global organizational unit'.
 
 ### Optional
 
 - `description` (String) Brief description to denote details of the organizational unit.
-- `parent_id` (String) The identifier of the parent organizational unit under which the new organizational unit is to be created. If not provided, the resource will be created under the default organizational unit associated with the credentials used to create the organizational unit.
+- `parent_id` (String) The identifier of the parent organizational unit under which the new organizational unit is to be created. If not provided, the resource will be created under the default organizational unit associated with the credentials used to create the organizational unit. Root organizational unit ID is '00000000-0000-0000-0000-000000000000'.
 
 ### Read-Only
 

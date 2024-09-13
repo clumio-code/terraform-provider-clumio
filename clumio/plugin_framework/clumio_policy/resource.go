@@ -30,11 +30,10 @@ func (r *policyResource) createPolicy(
 		return diags
 	}
 	pdRequest := &models.CreatePolicyDefinitionV1Request{
-		ActivationStatus:     plan.ActivationStatus.ValueStringPointer(),
-		Name:                 plan.Name.ValueStringPointer(),
-		Timezone:             plan.Timezone.ValueStringPointer(),
-		Operations:           policyOperations,
-		OrganizationalUnitId: plan.OrganizationalUnitId.ValueStringPointer(),
+		ActivationStatus: plan.ActivationStatus.ValueStringPointer(),
+		Name:             plan.Name.ValueStringPointer(),
+		Timezone:         plan.Timezone.ValueStringPointer(),
+		Operations:       policyOperations,
 	}
 
 	// Call the Clumio API to create the policy.
@@ -110,11 +109,10 @@ func (r *policyResource) updatePolicy(
 		return diags
 	}
 	pdRequest := &models.UpdatePolicyDefinitionV1Request{
-		ActivationStatus:     plan.ActivationStatus.ValueStringPointer(),
-		Name:                 plan.Name.ValueStringPointer(),
-		Timezone:             plan.Timezone.ValueStringPointer(),
-		Operations:           policyOperations,
-		OrganizationalUnitId: plan.OrganizationalUnitId.ValueStringPointer(),
+		ActivationStatus: plan.ActivationStatus.ValueStringPointer(),
+		Name:             plan.Name.ValueStringPointer(),
+		Timezone:         plan.Timezone.ValueStringPointer(),
+		Operations:       policyOperations,
 	}
 
 	// Call the Clumio API to update the policy.

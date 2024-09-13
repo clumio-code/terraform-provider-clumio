@@ -233,7 +233,6 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 
 - `activation_status` (String) The status of the policy. Valid values are: `activated` and `deactivated`. `activated` backups will take place regularly according to the policy SLA. `deactivated` backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
 - `operations` (Block Set) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
-- `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the policy. If not provided, the policy will be associated with the default organizational unit associated with the credentials used to create the policy.
 - `timezone` (String, Deprecated) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
 ### Read-Only

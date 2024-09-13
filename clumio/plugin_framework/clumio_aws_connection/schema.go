@@ -8,12 +8,10 @@ package clumio_aws_connection
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -21,18 +19,17 @@ import (
 // resource. It represents the schema of the resource and the data it holds. This schema is used by
 // customers to configure the resource and by the Clumio provider to read and write the resource.
 type clumioAWSConnectionResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	AccountNativeID      types.String `tfsdk:"account_native_id"`
-	AWSRegion            types.String `tfsdk:"aws_region"`
-	Description          types.String `tfsdk:"description"`
-	OrganizationalUnitID types.String `tfsdk:"organizational_unit_id"`
-	ConnectionStatus     types.String `tfsdk:"connection_status"`
-	Token                types.String `tfsdk:"token"`
-	Namespace            types.String `tfsdk:"namespace"`
-	ClumioAWSAccountID   types.String `tfsdk:"clumio_aws_account_id"`
-	ClumioAWSRegion      types.String `tfsdk:"clumio_aws_region"`
-	ExternalID           types.String `tfsdk:"role_external_id"`
-	DataPlaneAccountID   types.String `tfsdk:"data_plane_account_id"`
+	ID                 types.String `tfsdk:"id"`
+	AccountNativeID    types.String `tfsdk:"account_native_id"`
+	AWSRegion          types.String `tfsdk:"aws_region"`
+	Description        types.String `tfsdk:"description"`
+	ConnectionStatus   types.String `tfsdk:"connection_status"`
+	Token              types.String `tfsdk:"token"`
+	Namespace          types.String `tfsdk:"namespace"`
+	ClumioAWSAccountID types.String `tfsdk:"clumio_aws_account_id"`
+	ClumioAWSRegion    types.String `tfsdk:"clumio_aws_region"`
+	ExternalID         types.String `tfsdk:"role_external_id"`
+	DataPlaneAccountID types.String `tfsdk:"data_plane_account_id"`
 }
 
 // Schema defines the structure and constraints of the clumio_aws_connection Terraform resource.
@@ -70,20 +67,6 @@ func (r *clumioAWSConnectionResource) Schema(
 			schemaDescription: schema.StringAttribute{
 				Description: "Brief description to denote details of the connection.",
 				Optional:    true,
-			},
-			schemaOrganizationalUnitId: schema.StringAttribute{
-				Description: "Identifier of the Clumio organizational unit associated with the " +
-					"connection. If not provided, the connection will be associated with the " +
-					"default organizational unit associated with the credentials used to create " +
-					"the connection.",
-				Optional: true,
-				Computed: true,
-				DeprecationMessage: "Use the provider schema attribute " +
-					"clumio_organizational_unit_context to create the resource in the context of " +
-					"an Organizational Unit.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
 			},
 			schemaConnectionStatus: schema.StringAttribute{
 				Description: "Current state of the connection (e.g, `connecting`, `connected`, " +

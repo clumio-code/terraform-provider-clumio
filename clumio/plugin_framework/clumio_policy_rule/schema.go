@@ -8,12 +8,10 @@ package clumio_policy_rule
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -21,12 +19,11 @@ import (
 // resource. It represents the schema of the resource and the data it holds. This schema is used by
 // customers to configure the resource and by the Clumio provider to read and write the resource.
 type policyRuleResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	Name                 types.String `tfsdk:"name"`
-	Condition            types.String `tfsdk:"condition"`
-	BeforeRuleID         types.String `tfsdk:"before_rule_id"`
-	PolicyID             types.String `tfsdk:"policy_id"`
-	OrganizationalUnitID types.String `tfsdk:"organizational_unit_id"`
+	ID           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	Condition    types.String `tfsdk:"condition"`
+	BeforeRuleID types.String `tfsdk:"before_rule_id"`
+	PolicyID     types.String `tfsdk:"policy_id"`
 }
 
 // Schema defines the structure and constraints of the clumio_policy_rule Terraform resource.
@@ -79,18 +76,6 @@ func (r *policyRuleResource) Schema(
 			schemaPolicyId: schema.StringAttribute{
 				Description: "The Clumio-assigned ID of the policy. ",
 				Required:    true,
-			},
-			schemaOrganizationalUnitId: schema.StringAttribute{
-				Description: "The Clumio-assigned ID of the organizational unit" +
-					" to use as the context for assigning the policy.",
-				Optional: true,
-				Computed: true,
-				DeprecationMessage: "Use the provider schema attribute " +
-					"clumio_organizational_unit_context to create the resource in the context of " +
-					"an Organizational Unit.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
 			},
 		},
 	}

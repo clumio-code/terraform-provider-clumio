@@ -63,8 +63,9 @@ func (r *clumioOrganizationalUnitResource) Schema(
 				},
 			},
 			schemaName: schema.StringAttribute{
-				Description: "Unique name assigned to the organizational unit.",
-				Required:    true,
+				Description: "Unique name assigned to the organizational unit. " +
+					"Root organizational unit is named as 'Global organizational unit'.",
+				Required: true,
 			},
 			schemaDescription: schema.StringAttribute{
 				Description: "Brief description to denote details of the organizational unit.",
@@ -74,7 +75,8 @@ func (r *clumioOrganizationalUnitResource) Schema(
 				Description: "The identifier of the parent organizational unit under which the new " +
 					"organizational unit is to be created. If not provided, the resource will be " +
 					"created under the default organizational unit associated with the credentials " +
-					"used to create the organizational unit.",
+					"used to create the organizational unit. Root organizational unit ID is " +
+					"'00000000-0000-0000-0000-000000000000'.",
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

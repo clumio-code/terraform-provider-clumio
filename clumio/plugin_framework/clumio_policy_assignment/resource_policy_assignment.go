@@ -60,6 +60,7 @@ func (r *clumioPolicyAssignmentResource) Configure(
 	r.sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(r.client.ClumioConfig)
 	r.sdkProtectionGroups = sdkclients.NewProtectionGroupClient(r.client.ClumioConfig)
 	r.sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(r.client.ClumioConfig)
+	r.sdkDynamoDBTables = sdkclients.NewDynamoDBTableClient(r.client.ClumioConfig)
 	r.sdkTasks = sdkclients.NewTaskClient(r.client.ClumioConfig)
 	r.pollTimeout = 300 * time.Second
 	r.pollInterval = 5 * time.Second

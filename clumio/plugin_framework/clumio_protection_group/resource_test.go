@@ -27,7 +27,6 @@ var (
 	name             = "test-protection-group"
 	resourceName     = "test_protection_group"
 	id               = "mock-pg-id"
-	ou               = "mock-ou"
 	testError        = "Test Error"
 	description      = "test-description"
 	bucketRule       = "test-bucket-rule"
@@ -120,8 +119,7 @@ func TestCreateProtectionGroup(t *testing.T) {
 					&storageClass, &storageClass2,
 				},
 			},
-			OrganizationalUnitId: &ou,
-			ProtectionStatus:     &protectionStatus,
+			ProtectionStatus: &protectionStatus,
 		}
 
 		// Setup Expectations
@@ -134,15 +132,12 @@ func TestCreateProtectionGroup(t *testing.T) {
 		assert.Nil(t, diags)
 		assert.Equal(t, pgrm.ID.ValueString(), *createResponse.Id)
 		assert.Equal(t, pgrm.Name.ValueString(), *readResponse.Name)
-		assert.Equal(t, pgrm.OrganizationalUnitID.ValueString(),
-			*readResponse.OrganizationalUnitId)
 		assert.Equal(t, pgrm.ProtectionStatus.ValueString(), *readResponse.ProtectionStatus)
 	})
 
 	// Tests that Diagnostics is returned in case the create protection group API call returns
 	// error.
 	t.Run("CreateProtectionGroup returns error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(nil, apiError)
@@ -155,7 +150,6 @@ func TestCreateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the create protection group API call returns an
 	// empty response.
 	t.Run("CreateProtectionGroup returns an empty response", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(nil, nil)
@@ -168,7 +162,6 @@ func TestCreateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// error.
 	t.Run("ReadProtectionGroup after create returns an error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(createResponse, nil)
@@ -183,7 +176,6 @@ func TestCreateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// empty response.
 	t.Run("ReadProtectionGroup after create returns an empty response", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().CreateProtectionGroup(mock.Anything).Times(1).
 			Return(createResponse, nil)
@@ -270,8 +262,7 @@ func TestReadProtectionGroup(t *testing.T) {
 					&storageClass, &storageClass2,
 				},
 			},
-			OrganizationalUnitId: &ou,
-			ProtectionStatus:     &protectionStatus,
+			ProtectionStatus: &protectionStatus,
 		}
 
 		// Setup Expectations
@@ -283,15 +274,12 @@ func TestReadProtectionGroup(t *testing.T) {
 		assert.Nil(t, diags)
 		assert.Equal(t, pgrm.ID.ValueString(), *readResponse.Id)
 		assert.Equal(t, pgrm.Name.ValueString(), *readResponse.Name)
-		assert.Equal(t, pgrm.OrganizationalUnitID.ValueString(),
-			*readResponse.OrganizationalUnitId)
 		assert.Equal(t, pgrm.ProtectionStatus.ValueString(), *readResponse.ProtectionStatus)
 	})
 
 	// Tests that Diagnostics is returned in case the read protection group API call returns HTTP
 	// 404 error.
 	t.Run("ReadProtectionGroup returns http 404 error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiNotFoundError)
@@ -304,7 +292,6 @@ func TestReadProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// error.
 	t.Run("ReadProtectionGroup returns an error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
@@ -317,7 +304,6 @@ func TestReadProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// empty response.
 	t.Run("ReadProtectionGroup returns nil response", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, nil)
@@ -415,9 +401,8 @@ func TestUpdateProtectionGroup(t *testing.T) {
 					&storageClass, &storageClass2,
 				},
 			},
-			OrganizationalUnitId: &ou,
-			ProtectionStatus:     &protectionStatus,
-			Version:              &newVersion,
+			ProtectionStatus: &protectionStatus,
+			Version:          &newVersion,
 		}
 
 		// Setup Expectations
@@ -432,15 +417,12 @@ func TestUpdateProtectionGroup(t *testing.T) {
 		assert.Nil(t, diags)
 		assert.Equal(t, pgrm.ID.ValueString(), *updateResponse.Id)
 		assert.Equal(t, pgrm.Name.ValueString(), *readResponse.Name)
-		assert.Equal(t, pgrm.OrganizationalUnitID.ValueString(),
-			*readResponse.OrganizationalUnitId)
 		assert.Equal(t, pgrm.ProtectionStatus.ValueString(), *readResponse.ProtectionStatus)
 	})
 
 	// Tests that Diagnostics is returned in case the first read protection group API call returns
 	// error.
 	t.Run("UpdateProtectionGroup returns error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
@@ -453,7 +435,6 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the update protection group API call returns
 	// error.
 	t.Run("UpdateProtectionGroup returns error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
@@ -468,7 +449,6 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the update protection group API call returns an
 	// empty response.
 	t.Run("UpdateProtectionGroup returns nil response", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
@@ -483,7 +463,6 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// error.
 	t.Run("ReadProtectionGroup after update returns an error", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)
@@ -500,7 +479,6 @@ func TestUpdateProtectionGroup(t *testing.T) {
 	// Tests that Diagnostics is returned in case the read protection group API call returns an
 	// empty response.
 	t.Run("ReadProtectionGroup after update returns an empty response", func(t *testing.T) {
-		pgrm.OrganizationalUnitID = basetypes.NewStringNull()
 		// Setup Expectations
 		mockProtectionGroup.EXPECT().ReadProtectionGroup(mock.Anything, mock.Anything).Times(1).
 			Return(firstResponse, nil)

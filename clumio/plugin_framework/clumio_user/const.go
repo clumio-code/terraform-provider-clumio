@@ -8,7 +8,6 @@ const (
 	schemaId                         = "id"
 	schemaEmail                      = "email"
 	schemaFullName                   = "full_name"
-	schemaAssignedRole               = "assigned_role"
 	schemaOrganizationalUnitIds      = "organizational_unit_ids"
 	schemaAccessControlConfiguration = "access_control_configuration"
 	schemaRoleId                     = "role_id"

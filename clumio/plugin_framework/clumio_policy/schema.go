@@ -25,13 +25,12 @@ import (
 // the schema of the resource and the data it holds. This schema is used by customers to configure
 // the resource and by the Clumio provider to read and write the resource.
 type policyResourceModel struct {
-	ID                   types.String            `tfsdk:"id"`
-	LockStatus           types.String            `tfsdk:"lock_status"`
-	Name                 types.String            `tfsdk:"name"`
-	Timezone             types.String            `tfsdk:"timezone"`
-	ActivationStatus     types.String            `tfsdk:"activation_status"`
-	OrganizationalUnitId types.String            `tfsdk:"organizational_unit_id"`
-	Operations           []*policyOperationModel `tfsdk:"operations"`
+	ID               types.String            `tfsdk:"id"`
+	LockStatus       types.String            `tfsdk:"lock_status"`
+	Name             types.String            `tfsdk:"name"`
+	Timezone         types.String            `tfsdk:"timezone"`
+	ActivationStatus types.String            `tfsdk:"activation_status"`
+	Operations       []*policyOperationModel `tfsdk:"operations"`
 }
 
 // replicaModel maps to some of the attributes in the advancedSettingsModel which require a
@@ -472,23 +471,6 @@ func (r *policyResource) Schema(
 				},
 				Validators: []validator.String{
 					stringvalidator.OneOf(activationStatusActivated, activationStatusDectivated),
-				},
-			},
-			schemaOrganizationalUnitId: schema.StringAttribute{
-				Description: "Identifier of the Clumio organizational unit associated with the " +
-					"policy. If not provided, the policy will be associated with the default " +
-					"organizational unit associated with the credentials used to create the policy.",
-				Optional: true,
-				// Use computed property to accept null value.
-				Computed: true,
-				DeprecationMessage: "Use the provider schema attribute " +
-					"clumio_organizational_unit_context to create the resource in the context of " +
-					"an Organizational Unit.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
 				},
 			},
 		},

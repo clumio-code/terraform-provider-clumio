@@ -160,7 +160,6 @@ func TestCreatePolicy(t *testing.T) {
 		assert.Nil(t, diags)
 		assert.Equal(t, id, prm.ID.ValueString())
 		assert.Equal(t, lockStatus, prm.LockStatus.ValueString())
-		assert.Equal(t, ou, prm.OrganizationalUnitId.ValueString())
 	})
 
 	// Tests that Diagnostics is returned in case the create policy API call returns error.
@@ -487,7 +486,6 @@ func TestUpdatePolicy(t *testing.T) {
 		assert.Nil(t, diags)
 		assert.Equal(t, id, prm.ID.ValueString())
 		assert.Equal(t, lockStatus, prm.LockStatus.ValueString())
-		assert.Equal(t, ou, prm.OrganizationalUnitId.ValueString())
 	})
 
 	// Tests that Diagnostics is returned if the update policy API call returns error.

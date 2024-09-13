@@ -7,6 +7,7 @@ package common
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -49,13 +50,13 @@ func PollTask(ctx context.Context, taskClient tasks.TasksV1Client,
 		case <-ticker.C:
 			resp, apiErr := taskClient.ReadTask(taskId)
 			if apiErr != nil {
-				return errors.New(ParseMessageFromApiError(apiErr))
+				return errors.New(fmt.Sprintf("Error for Task %s: ", ParseMessageFromApiError(apiErr)))
 			} else if *resp.Status == TaskSuccess {
 				return nil
 			} else if *resp.Status == TaskAborted {
-				return errors.New("task aborted")
+				return errors.New(fmt.Sprintf("Task %s aborted", taskId))
 			} else if *resp.Status == TaskFailed {
-				return errors.New("task failed")
+				return errors.New(fmt.Sprintf("Task %s failed", taskId))
 			}
 		case <-tickerTimeout:
 			return errors.New("polling task timeout")

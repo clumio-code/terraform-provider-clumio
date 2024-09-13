@@ -34,14 +34,9 @@ resource "clumio_user" "example" {
 
 ### Required
 
+- `access_control_configuration` (Attributes Set) Identifiers of the organizational units, along with the identifier of the role, to be assigned to the user. (see [below for nested schema](#nestedatt--access_control_configuration))
 - `email` (String) The email address of the user to be added to Clumio.
 - `full_name` (String) The full name of the user to be added to Clumio. For example, enter the user's first name and last name. The name appears in the User Management screen and in the body of the  email invitation.
-
-### Optional
-
-- `access_control_configuration` (Attributes Set) Identifiers of the organizational units, along with the identifier of the role, to be assigned to the user. (see [below for nested schema](#nestedatt--access_control_configuration))
-- `assigned_role` (String, Deprecated) Identifier of the role to assign to the user.
-- `organizational_unit_ids` (Set of String, Deprecated) Identifiers of the organizational units  to be assigned to the user. The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
 
 ### Read-Only
 
@@ -55,7 +50,7 @@ resource "clumio_user" "example" {
 <a id="nestedatt--access_control_configuration"></a>
 ### Nested Schema for `access_control_configuration`
 
-Optional:
+Required:
 
 - `organizational_unit_ids` (Set of String) Identifiers of the organizational units to be assigned to the user.The Global Organizational Unit ID is "00000000-0000-0000-0000-000000000000"
 - `role_id` (String) Identifier of the role to assign to the user.

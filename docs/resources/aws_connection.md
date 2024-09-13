@@ -14,10 +14,9 @@ Resource for establishing a connection between AWS accounts and Clumio.
 
 ```terraform
 resource "clumio_aws_connection" "example" {
-  account_native_id      = "aws_account_id"
-  aws_region             = "aws_region"
-  description            = "description"
-  organizational_unit_id = "organizational_unit_id"
+  account_native_id = "aws_account_id"
+  aws_region        = "aws_region"
+  description       = "description"
 }
 ```
 
@@ -32,7 +31,6 @@ resource "clumio_aws_connection" "example" {
 ### Optional
 
 - `description` (String) Brief description to denote details of the connection.
-- `organizational_unit_id` (String, Deprecated) Identifier of the Clumio organizational unit associated with the connection. If not provided, the connection will be associated with the default organizational unit associated with the credentials used to create the connection.
 
 ### Read-Only
 

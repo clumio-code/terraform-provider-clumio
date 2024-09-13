@@ -14,7 +14,6 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	"github.com/clumio-code/clumio-go-sdk/models"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -28,51 +27,21 @@ func (r *clumioUserResource) createUser(
 
 	var diags diag.Diagnostics
 
-	if (!plan.AssignedRole.IsUnknown() || !plan.OrganizationalUnitIds.IsUnknown()) &&
-		!plan.AccessControlConfiguration.IsUnknown() {
-		summary := fmt.Sprintf(createErrorFmt, r.name)
-		detail := "Both access_control_configuration and assigned_role/organizational_unit_ids" +
-			" cannot be configured. Please configure access_control_configuration only."
-		diags.AddError(summary, detail)
-		return diags
-	}
-
 	// Convert access_control_configuration field from schema to API request format.
 	accessControlConfiguration := make([]*models.RoleForOrganizationalUnits, 0)
-	if !plan.AccessControlConfiguration.IsUnknown() {
-		for _, element := range plan.AccessControlConfiguration.Elements() {
-			roleForOU := roleForOrganizationalUnitModel{}
-			element.(types.Object).As(ctx, &roleForOU, basetypes.ObjectAsOptions{})
-			ouIds := make([]*string, 0)
-			if !roleForOU.OrganizationalUnitIds.IsNull() {
-				conversionDiags := roleForOU.OrganizationalUnitIds.ElementsAs(ctx, &ouIds, false)
-				diags.Append(conversionDiags...)
-			}
-			accessControlConfiguration = append(accessControlConfiguration,
-				&models.RoleForOrganizationalUnits{
-					RoleId:                roleForOU.RoleId.ValueStringPointer(),
-					OrganizationalUnitIds: ouIds,
-				})
-		}
-	} else if !plan.OrganizationalUnitIds.IsUnknown() && !plan.AssignedRole.IsUnknown() {
+	for _, element := range plan.AccessControlConfiguration.Elements() {
+		roleForOU := roleForOrganizationalUnitModel{}
+		element.(types.Object).As(ctx, &roleForOU, basetypes.ObjectAsOptions{})
 		ouIds := make([]*string, 0)
-		conversionDiags := plan.OrganizationalUnitIds.ElementsAs(ctx, &ouIds, false)
-		diags.Append(conversionDiags...)
-		if diags.HasError() {
-			return diags
+		if !roleForOU.OrganizationalUnitIds.IsNull() {
+			conversionDiags := roleForOU.OrganizationalUnitIds.ElementsAs(ctx, &ouIds, false)
+			diags.Append(conversionDiags...)
 		}
-
 		accessControlConfiguration = append(accessControlConfiguration,
 			&models.RoleForOrganizationalUnits{
-				RoleId:                plan.AssignedRole.ValueStringPointer(),
+				RoleId:                roleForOU.RoleId.ValueStringPointer(),
 				OrganizationalUnitIds: ouIds,
 			})
-	} else {
-		summary := fmt.Sprintf(createErrorFmt, r.name)
-		detail := "One of access_control_configuration or assigned_role/organizational_unit_ids" +
-			" must be configured."
-		diags.AddError(summary, detail)
-		return diags
 	}
 
 	// Convert the schema to a Clumio API request to create a Clumio user.
@@ -108,12 +77,6 @@ func (r *clumioUserResource) createUser(
 	accessControlCfg := getAccessControlCfgFromHTTPRes(
 		ctx, res.AccessControlConfiguration, &diags)
 	plan.AccessControlConfiguration = accessControlCfg
-	ouIds, conversionDiags := types.SetValueFrom(
-		ctx, types.StringType, res.AccessControlConfiguration[0].OrganizationalUnitIds)
-	diags.Append(conversionDiags...)
-	plan.OrganizationalUnitIds = ouIds
-	plan.AssignedRole = basetypes.NewStringPointerValue(
-		res.AccessControlConfiguration[0].RoleId)
 
 	return diags
 }
@@ -171,11 +134,6 @@ func (r *clumioUserResource) readUser(ctx context.Context, state *clumioUserReso
 	accessControlCfg := getAccessControlCfgFromHTTPRes(
 		ctx, res.AccessControlConfiguration, &diags)
 	state.AccessControlConfiguration = accessControlCfg
-	ouIds, conversionDiags := types.SetValueFrom(
-		ctx, types.StringType, res.AccessControlConfiguration[0].OrganizationalUnitIds)
-	diags.Append(conversionDiags...)
-	state.OrganizationalUnitIds = ouIds
-	state.AssignedRole = basetypes.NewStringPointerValue(res.AccessControlConfiguration[0].RoleId)
 
 	return false, diags
 }
@@ -187,58 +145,19 @@ func (r *clumioUserResource) updateUser(ctx context.Context, plan *clumioUserRes
 
 	var diags diag.Diagnostics
 
-	if (!plan.AssignedRole.IsUnknown() || !plan.OrganizationalUnitIds.IsUnknown()) &&
-		!plan.AccessControlConfiguration.IsUnknown() {
-		summary := fmt.Sprintf("Unable to update %s", r.name)
-		detail := "Both access_control_configuration and assigned_role/organizational_unit_ids" +
-			" cannot be configured. Please configure access_control_configuration only."
-		diags.AddError(summary, detail)
-		return diags
-	}
-
 	updateRequest := &models.UpdateUserV2Request{}
 	if !plan.FullName.IsUnknown() &&
 		state.FullName != plan.FullName {
 		updateRequest.FullName = plan.FullName.ValueStringPointer()
 	}
-	if !plan.AccessControlConfiguration.IsUnknown() {
-		add, remove := getAccessControlCfgUpdates(ctx, state.AccessControlConfiguration.Elements(),
-			plan.AccessControlConfiguration.Elements())
+	add, remove := getAccessControlCfgUpdates(ctx, state.AccessControlConfiguration.Elements(),
+		plan.AccessControlConfiguration.Elements())
 
-		updateRequest.AccessControlConfigurationUpdates = &models.EntityGroupAssignmentUpdates{
-			Add:    add,
-			Remove: remove,
-		}
-	} else if !plan.OrganizationalUnitIds.IsUnknown() && !plan.AssignedRole.IsUnknown() {
-
-		// If AssignedRole and OrganizationalUnitIds are set in the plan, then first create
-		// an accessControlConfiguration and use it to call getAccessControlCfgUpdates() to
-		// calculate the EntityGroupAssignmentUpdates Add and Remove values. This is being done so
-		// that we could reuse the getAccessControlCfgUpdates() even in the case
-		// AccessControlConfiguration is not set in the plan.
-		accessControlConfiguration := make([]*roleForOrganizationalUnitModel, 0)
-		accessControlConfiguration = append(accessControlConfiguration,
-			&roleForOrganizationalUnitModel{
-				RoleId:                plan.AssignedRole,
-				OrganizationalUnitIds: plan.OrganizationalUnitIds,
-			})
-		accessControlList, conversionDiags := types.SetValueFrom(ctx, types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				schemaRoleId: types.StringType,
-				schemaOrganizationalUnitIds: types.SetType{
-					ElemType: types.StringType,
-				},
-			},
-		}, accessControlConfiguration)
-		diags.Append(conversionDiags...)
-		add, remove := getAccessControlCfgUpdates(ctx, state.AccessControlConfiguration.Elements(),
-			accessControlList.Elements())
-
-		updateRequest.AccessControlConfigurationUpdates = &models.EntityGroupAssignmentUpdates{
-			Add:    add,
-			Remove: remove,
-		}
+	updateRequest.AccessControlConfigurationUpdates = &models.EntityGroupAssignmentUpdates{
+		Add:    add,
+		Remove: remove,
 	}
+
 	userId, perr := strconv.ParseInt(plan.Id.ValueString(), 10, 64)
 	if perr != nil {
 		summary := invalidUserMsg
@@ -273,12 +192,6 @@ func (r *clumioUserResource) updateUser(ctx context.Context, plan *clumioUserRes
 	accessControlCfg := getAccessControlCfgFromHTTPRes(
 		ctx, res.AccessControlConfiguration, &diags)
 	plan.AccessControlConfiguration = accessControlCfg
-	ouIds, conversionDiags := types.SetValueFrom(
-		ctx, types.StringType, res.AccessControlConfiguration[0].OrganizationalUnitIds)
-	diags.Append(conversionDiags...)
-	plan.OrganizationalUnitIds = ouIds
-	plan.AssignedRole = basetypes.NewStringPointerValue(
-		res.AccessControlConfiguration[0].RoleId)
 
 	return diags
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -26,14 +25,13 @@ import (
 // is used by customers to configure the resource and by the Clumio provider to read and write the
 // resource.
 type clumioProtectionGroupResourceModel struct {
-	ID                   types.String         `tfsdk:"id"`
-	Name                 types.String         `tfsdk:"name"`
-	Description          types.String         `tfsdk:"description"`
-	BucketRule           types.String         `tfsdk:"bucket_rule"`
-	ObjectFilter         []*objectFilterModel `tfsdk:"object_filter"`
-	ProtectionStatus     types.String         `tfsdk:"protection_status"`
-	ProtectionInfo       types.List           `tfsdk:"protection_info"`
-	OrganizationalUnitID types.String         `tfsdk:"organizational_unit_id"`
+	ID               types.String         `tfsdk:"id"`
+	Name             types.String         `tfsdk:"name"`
+	Description      types.String         `tfsdk:"description"`
+	BucketRule       types.String         `tfsdk:"bucket_rule"`
+	ObjectFilter     []*objectFilterModel `tfsdk:"object_filter"`
+	ProtectionStatus types.String         `tfsdk:"protection_status"`
+	ProtectionInfo   types.List           `tfsdk:"protection_info"`
 }
 
 // objectFilterModel maps to the 'object_filter' field in clumioProtectionGroupResourceModel and
@@ -123,23 +121,6 @@ func (r *clumioProtectionGroupResource) Schema(
 					" to a protection group. For example: " +
 					"{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}",
 				Optional: true,
-			},
-			schemaOrganizationalUnitId: schema.StringAttribute{
-				Description: "Identifier of the Clumio organizational unit associated with the " +
-					"protection group. If not provided, the protection group will be associated " +
-					"with the default organizational unit associated with the credentials used " +
-					"to create the protection group.",
-				Optional: true,
-				Computed: true,
-				DeprecationMessage: "Use the provider schema attribute " +
-					"clumio_organizational_unit_context to create the resource in the context of " +
-					"an Organizational Unit.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
 			},
 			schemaProtectionStatus: schema.StringAttribute{
 				Description: "The protection status of the protection group. Possible values include" +

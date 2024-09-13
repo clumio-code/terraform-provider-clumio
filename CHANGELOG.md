@@ -1,3 +1,8 @@
+## 0.11.0
+This update contains the following changes:
+* Removed the deprecated organizational_unit_id schema attribute from the resources.
+* Updates to documentation.
+
 ## 0.10.2
 Updated schema validation for policy resource.
 

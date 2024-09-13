@@ -11,8 +11,6 @@ import (
 	"net/http"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -26,17 +24,6 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	var diags diag.Diagnostics
 	sdkPolicyAssignments := r.sdkPolicyAssignments
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK clients are temporarily re-initialized in the context of
-	// the desired OU so that API calls are made on behalf of the OU.
-	if plan.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(config)
-		sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(config)
-	}
-
 	policyOperationType := protectionGroupBackup
 	if plan.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
 		policyOperationType = dynamodbTableBackup
@@ -100,7 +87,6 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	entityType := plan.EntityType.ValueString()
 	plan.ID = types.StringValue(
 		fmt.Sprintf("%s_%s_%s", *assignment.PolicyId, *assignment.Entity.Id, entityType))
-	plan.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
 
 	return diags
 }
@@ -117,17 +103,6 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 	sdkProtectionGroups := r.sdkProtectionGroups
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 	sdkDynamoDBTables := r.sdkDynamoDBTables
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK clients are temporarily re-initialized in the context of
-	// the desired OU so that API calls are made on behalf of the OU.
-	if state.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
-		sdkProtectionGroups = sdkclients.NewProtectionGroupClient(config)
-		sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(config)
-		sdkDynamoDBTables = sdkclients.NewDynamoDBTableClient(config)
-	}
 
 	// Call the Clumio API to read the policy definition.
 	policyId := state.PolicyID.ValueString()
@@ -167,17 +142,9 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 	entityType := state.EntityType.ValueString()
 	switch entityType {
 	case entityTypeProtectionGroup:
-		remove, diags := r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
-		if !remove && !diags.HasError() {
-			state.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
-		}
-		return remove, diags
+		return r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
 	case entityTypeAWSDynamoDBTable:
-		remove, diags := r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
-		if !remove && !diags.HasError() {
-			state.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
-		}
-		return remove, diags
+		return r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
 	default:
 		summary := "Invalid entityType"
 		detail := fmt.Sprintf("The entity type %v is not supported.", entityType)
@@ -195,16 +162,6 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 	var diags diag.Diagnostics
 	sdkPolicyAssignments := r.sdkPolicyAssignments
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK clients are temporarily re-initialized in the context of
-	// the desired OU so that API calls are made on behalf of the OU.
-	if plan.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, plan.OrganizationalUnitID.ValueString())
-		sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(config)
-		sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(config)
-	}
 
 	// Validation to check if the policy id mentioned supports protection_group_backup operation.
 	policyId := plan.PolicyID.ValueString()
@@ -264,7 +221,6 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 		return diags
 	}
 
-	plan.OrganizationalUnitID = types.StringPointerValue(policy.OrganizationalUnitId)
 	return diags
 }
 
@@ -274,15 +230,6 @@ func (r *clumioPolicyAssignmentResource) deletePolicyAssignment(
 
 	var diags diag.Diagnostics
 	sdkPolicyAssignments := r.sdkPolicyAssignments
-
-	// If the OrganizationalUnitID is specified, then execute the API in that Organizational Unit
-	// (OU) context. To that end, the SDK client is temporarily re-initialized in the context of the
-	// desired OU so that API calls are made on behalf of the OU.
-	if state.OrganizationalUnitID.ValueString() != "" {
-		config := common.GetSDKConfigForOU(
-			r.client.ClumioConfig, state.OrganizationalUnitID.ValueString())
-		sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(config)
-	}
 
 	paRequest := mapSchemaPolicyAssignmentToClumioPolicyAssignment(*state, true)
 	// Call the Clumio API to remove the policy assignment.

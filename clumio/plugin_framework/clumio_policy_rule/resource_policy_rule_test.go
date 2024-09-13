@@ -149,22 +149,6 @@ func TestAccResourceClumioPolicyRuleImport(t *testing.T) {
 	})
 }
 
-// Tests that empty organizational_unit returns error
-func TestAccResourceClumioPolicyRuleWithEmptyOU(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(testAccResourceClumioPolicyRuleEmptyOU,
-					os.Getenv(common.ClumioApiBaseUrl)),
-				ExpectError: regexp.MustCompile(
-					"Attribute organizational_unit_id string length must be at least 1"),
-			},
-		},
-	})
-}
-
 // createPolicyRuleUsingSDK creates a policy and policy rule using the Clumio API. This
 // is required simulate importing an existing policy_rule. Since the policy_rule requires
 // the policy_id, first the policy is created and then using the policy_id, the
@@ -317,21 +301,5 @@ resource "clumio_policy_rule" "test_policy_rule" {
   policy_id = "%s"
   before_rule_id = ""
   condition = "{\"entity_type\":{\"$in\":[\"aws_ebs_volume\",\"aws_ec2_instance\"]}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
-}
-`
-
-// testAccResourceClumioPolicyRuleEmptyOU is the Terraform configuration for creating a policy rule
-// with empty value for organizational_unit_id
-const testAccResourceClumioPolicyRuleEmptyOU = `
-provider clumio{
-   clumio_api_base_url = "%s"
-}
-
-resource "clumio_policy_rule" "test_policy_rule" {
-  name = "acceptance-test-policy-rule"
-  policy_id = "some-id"
-  before_rule_id = ""
-  condition = "{\"entity_type\":{\"$in\":[\"aws_ebs_volume\",\"aws_ec2_instance\"]}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
-  organizational_unit_id = ""
 }
 `

@@ -128,35 +128,6 @@ func TestAccResourceClumioAWSConnectionNoDescription(t *testing.T) {
 	})
 }
 
-// Tests creation of a AWS connection without setting the description schema attribute in the config.
-// This test is ensures that after creating the resource, when we refresh the state it does not
-// generate a non-empty plan.
-func TestAccResourceClumioAWSConnectionInvalidOU(t *testing.T) {
-
-	// Retrieve the environment variables required for the test.
-	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId)
-	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	testAwsRegion := os.Getenv(common.AwsRegion)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
-		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(testAccResourceClumioAwsConnectionInvalidOU, baseUrl,
-					accountNativeId, testAwsRegion, "00000000-0000-0000-0000-000000000001"),
-				ExpectError: regexp.MustCompile(".*unable to retrieve Organizational Unit.*"),
-			},
-			{
-				Config: fmt.Sprintf(testAccResourceClumioAwsConnectionInvalidOU, baseUrl,
-					accountNativeId, testAwsRegion, ""),
-				ExpectError: regexp.MustCompile(
-					"Attribute organizational_unit_id string length must be at least 1"),
-			},
-		},
-	})
-}
-
 // Tests that an external deletion of a clumio_aws_connection resource leads to the resource needing
 // to be re-created during the next plan. NOTE the Check function below as it is utilized to delete
 // the resource using the Clumio API after the plan is applied.
@@ -350,19 +321,5 @@ provider clumio{
 resource "clumio_aws_connection" "test_conn" {
   account_native_id = "%s"
   aws_region = "%s"
-}
-`
-
-// testAccResourceClumioAwsConnectionInvalidOU is the Terraform configuration for a
-// clumio_aws_connection resource with organizational_unit_id set to an invalid OU.
-const testAccResourceClumioAwsConnectionInvalidOU = `
-provider clumio{
-   clumio_api_base_url = "%s"
-}
-
-resource "clumio_aws_connection" "test_conn" {
-  account_native_id = "%s"
-  aws_region = "%s"
-  organizational_unit_id = "%s"
 }
 `

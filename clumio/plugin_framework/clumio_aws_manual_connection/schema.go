@@ -102,9 +102,6 @@ func (r *clumioAWSManualConnectionResource) Schema(
 			schemaId: schema.StringAttribute{
 				Description: "Unique identifier for the Clumio AWS manual connection.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			schemaAccountId: schema.StringAttribute{
 				Description: "Identifier of the AWS account to be linked with Clumio.",

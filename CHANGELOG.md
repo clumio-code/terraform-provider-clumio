@@ -1,3 +1,6 @@
+## 0.11.1
+This update contains a fix to the clumio_aws_manual_connection resource.
+
 ## 0.11.0
 This update contains the following changes:
 * Removed the deprecated organizational_unit_id schema attribute from the resources.

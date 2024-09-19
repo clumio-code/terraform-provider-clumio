@@ -51,5 +51,10 @@ func (r *clumioAWSManualConnectionResource) updateAWSManualConnection(
 	// Call the Clumio API to update the manual connection.
 	diags = r.clumioSetManualResourcesCommon(ctx, *plan)
 	diags.Append(diags...)
+
+	accountId := plan.AccountId.ValueString()
+	awsRegion := plan.AwsRegion.ValueString()
+	plan.ID = types.StringValue(fmt.Sprintf("%v_%v", accountId, awsRegion))
+
 	return diags
 }

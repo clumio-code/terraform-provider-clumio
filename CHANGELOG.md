@@ -1,3 +1,6 @@
+## 0.11.2
+This update contains a fix to the timezone behavior of clumio_policy resource.
+
 ## 0.11.1
 This update contains a fix to the clumio_aws_manual_connection resource.
 

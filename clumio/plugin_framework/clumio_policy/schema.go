@@ -376,9 +376,6 @@ func (r *policyResource) Schema(
 			Optional: true,
 			// Use computed property to accept null value.
 			Computed: true,
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
-			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
 			},
@@ -453,9 +450,6 @@ func (r *policyResource) Schema(
 					"attribute within each policy operation.",
 				// Use computed property to accept null value.
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			schemaActivationStatus: schema.StringAttribute{
 				Description: "The status of the policy. Valid values are: `activated` and `deactivated`." +

@@ -315,5 +315,6 @@ provider clumio{
 resource "clumio_user" "test_user" {
   full_name = "acceptance-test-user"
   email = "test@clumio.com"
+  access_control_configuration = []
 }
 `

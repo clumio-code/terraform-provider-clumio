@@ -118,8 +118,9 @@ func (r *clumioAWSManualConnectionResource) Schema(
 				},
 			},
 			schemaAssetsEnabled: schema.ObjectAttribute{
-				Description: "Assets enabled for the connection.",
-				Required:    true,
+				Description: "Assets enabled for the connection. Note that `mssql` is only " +
+					"available for legacy connections.",
+				Required: true,
 				AttributeTypes: map[string]attr.Type{
 					schemaIsEbsEnabled:      types.BoolType,
 					schemaIsDynamoDBEnabled: types.BoolType,

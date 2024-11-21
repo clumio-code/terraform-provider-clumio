@@ -102,8 +102,9 @@ func (r *postProcessAWSConnectionResource) Schema(
 				Optional:    true,
 			},
 			schemaProtectEc2MssqlVersion: schema.StringAttribute{
-				Description: "Clumio EC2 MSSQL Protect version.",
-				Optional:    true,
+				Description: "Clumio EC2 MSSQL Protect version. This feature is only available " +
+					"for legacy connections.",
+				Optional: true,
 			},
 			schemaProtectS3Version: schema.StringAttribute{
 				Description: "Clumio S3 Protect version.",

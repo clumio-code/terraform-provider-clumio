@@ -19,7 +19,7 @@ resource "clumio_s3_bucket_properties" "enable_cb" {
 }
 
 # Below example shows how to get the bucket_id from the clumio_s3_bucket data source and use
-# it in the clumio_s3_bucket_properties resource.
+# it in the clumio_s3_bucket_properties resource
 
 data "clumio_s3_bucket" "bucket" {
   bucket_names = ["test-bucket"]

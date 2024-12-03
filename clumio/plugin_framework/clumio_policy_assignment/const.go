@@ -14,6 +14,7 @@ const (
 	entityTypeAWSDynamoDBTable = "aws_dynamodb_table"
 	protectionGroupBackup      = "protection_group_backup"
 	dynamodbTableBackup        = "aws_dynamodb_table_backup"
+	awsS3Backtrack             = "aws_s3_backtrack"
 
 	//Common error messages used by the resource.
 	readProtectionGroupErrFmt = "Unable to read Protection Group %v."
@@ -21,7 +22,11 @@ const (
 )
 
 var (
-	actionAssign   = "assign"
-	actionUnassign = "unassign"
-	policyIdEmpty  = ""
+	actionAssign     = "assign"
+	actionUnassign   = "unassign"
+	policyIdEmpty    = ""
+	allowedOperation = map[string][]string{
+		entityTypeAWSDynamoDBTable: {dynamodbTableBackup},
+		entityTypeProtectionGroup:  {protectionGroupBackup, awsS3Backtrack},
+	}
 )

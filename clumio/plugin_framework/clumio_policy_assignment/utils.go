@@ -136,3 +136,32 @@ func (r *clumioPolicyAssignmentResource) readAndValidateDynamoDBTable(ctx contex
 	}
 	return false, diags
 }
+
+func isOperationAllowed(entityType, operation string) bool {
+	for _, allowedOp := range allowedOperation[entityType] {
+		if operation == allowedOp {
+			return true
+		}
+	}
+	return false
+}
+
+func isOperationsSupported(entityType, policyId string,
+	operations []*models.PolicyOperation) diag.Diagnostics {
+	var diags diag.Diagnostics
+	correctPolicyType := false
+	for _, operation := range operations {
+		if isOperationAllowed(entityType, *operation.ClumioType) {
+			correctPolicyType = true
+			break
+		}
+	}
+	if !correctPolicyType {
+		summary := "Invalid Policy operation."
+		detail := fmt.Sprintf("Policy id %s does not contain support %v operation", policyId,
+			allowedOperation[entityType])
+		diags.AddError(summary, detail)
+		return diags
+	}
+	return diags
+}

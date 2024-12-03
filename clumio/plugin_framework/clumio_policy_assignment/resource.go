@@ -24,10 +24,7 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	var diags diag.Diagnostics
 	sdkPolicyAssignments := r.sdkPolicyAssignments
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
-	policyOperationType := protectionGroupBackup
-	if plan.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
-		policyOperationType = dynamodbTableBackup
-	}
+	entityType := plan.EntityType.ValueString()
 	// Validation to check if the policy id mentioned supports protection_group_backup operation.
 	policyId := plan.PolicyID.ValueString()
 	policy, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
@@ -37,17 +34,8 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 		diags.AddError(summary, detail)
 		return diags
 	}
-	correctPolicyType := false
-	for _, operation := range policy.Operations {
-		if *operation.ClumioType == policyOperationType {
-			correctPolicyType = true
-		}
-	}
-	if !correctPolicyType {
-		summary := "Invalid Policy operation."
-		detail := fmt.Sprintf(
-			"Policy id %s does not contain support protection_group_backup operation", policyId)
-		diags.AddError(summary, detail)
+	diags = isOperationsSupported(entityType, policyId, policy.Operations)
+	if diags.HasError() {
 		return diags
 	}
 
@@ -84,7 +72,6 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 
 	// Populate all computed fields of the plan including the ID given that the resource is getting
 	// created.
-	entityType := plan.EntityType.ValueString()
 	plan.ID = types.StringValue(
 		fmt.Sprintf("%s_%s_%s", *assignment.PolicyId, *assignment.Entity.Id, entityType))
 
@@ -122,33 +109,33 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 		}
 		return remove, diags
 	}
-	policyOperationType := protectionGroupBackup
-	if state.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
-		policyOperationType = dynamodbTableBackup
+	entityType := state.EntityType.ValueString()
+	if entityType != entityTypeProtectionGroup && entityType != entityTypeAWSDynamoDBTable {
+		summary := "Invalid entityType"
+		detail := fmt.Sprintf("The entity type %v is not supported for policy assignment.",
+			entityType)
+		diags.AddError(summary, detail)
+		return false, diags
 	}
 	correctPolicyType := false
 	for _, operation := range policy.Operations {
-		if *operation.ClumioType == policyOperationType {
+		if isOperationAllowed(entityType, *operation.ClumioType) {
 			correctPolicyType = true
+			break
 		}
 	}
 	if !correctPolicyType {
-		msgStr := fmt.Sprintf(
-			"Policy does not support required policy operation: %s", policyOperationType)
+		msgStr := fmt.Sprintf("Policy id %s does not support required policy operation: %v",
+			policyId, allowedOperation[entityType])
 		tflog.Warn(ctx, msgStr)
 		return true, diags
 	}
 
-	entityType := state.EntityType.ValueString()
 	switch entityType {
 	case entityTypeProtectionGroup:
 		return r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
 	case entityTypeAWSDynamoDBTable:
 		return r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
-	default:
-		summary := "Invalid entityType"
-		detail := fmt.Sprintf("The entity type %v is not supported.", entityType)
-		diags.AddError(summary, detail)
 	}
 	return false, diags
 }
@@ -173,22 +160,9 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 		return diags
 	}
 
-	policyOperationType := protectionGroupBackup
-	if plan.EntityType.ValueString() == entityTypeAWSDynamoDBTable {
-		policyOperationType = dynamodbTableBackup
-	}
-	correctPolicyType := false
-	for _, operation := range policy.Operations {
-		if *operation.ClumioType == policyOperationType {
-			correctPolicyType = true
-		}
-	}
-
-	if !correctPolicyType {
-		summary := "Invalid Policy operation."
-		detail := fmt.Sprintf(
-			"Policy id %s does not contain support %s operation", policyId, policyOperationType)
-		diags.AddError(summary, detail)
+	entityType := plan.EntityType.ValueString()
+	diags = isOperationsSupported(entityType, policyId, policy.Operations)
+	if diags.HasError() {
 		return diags
 	}
 

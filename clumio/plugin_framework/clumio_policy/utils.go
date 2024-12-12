@@ -140,8 +140,11 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 			buildSchemaOperationAdvancedSettings(operation, schemaOperation)
 		}
 
-		if operation.Timezone != nil && *operation.Timezone != "" {
-			schemaOperation.Timezone = types.StringPointerValue(operation.Timezone)
+		// Since the Timezone field is optional but does not allow for a non-empty string, it should
+		// only be populated if a non-empty string was returned.
+		timezone := types.StringPointerValue(operation.Timezone)
+		if timezone.ValueString() != "" {
+			schemaOperation.Timezone = timezone
 		}
 
 		schemaOperations = append(schemaOperations, schemaOperation)

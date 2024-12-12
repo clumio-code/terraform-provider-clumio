@@ -43,7 +43,6 @@ func readPolicyAndUpdateModel(ctx context.Context,
 	}
 	state.LockStatus = types.StringPointerValue(res.LockStatus)
 	state.Name = types.StringPointerValue(res.Name)
-	state.Timezone = types.StringPointerValue(res.Timezone)
 	state.ActivationStatus = types.StringPointerValue(res.ActivationStatus)
 	stateOp, diags := mapClumioOperationsToSchemaOperations(ctx, res.Operations)
 	state.Operations = stateOp
@@ -141,7 +140,7 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 			buildSchemaOperationAdvancedSettings(operation, schemaOperation)
 		}
 
-		if operation.Timezone != nil {
+		if operation.Timezone != nil && *operation.Timezone != "" {
 			schemaOperation.Timezone = types.StringPointerValue(operation.Timezone)
 		}
 

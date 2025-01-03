@@ -51,7 +51,6 @@ module "clumio_protect" {
   # Enable protection of all data sources.
   is_ebs_enabled       = true
   is_rds_enabled       = true
-  is_ec2_mssql_enabled = true
   is_dynamodb_enabled  = true
   is_s3_enabled        = true
 }

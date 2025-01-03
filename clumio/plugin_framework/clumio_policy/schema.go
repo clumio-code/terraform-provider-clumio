@@ -374,11 +374,6 @@ func (r *policyResource) Schema(
 				"For more information, see the Time Zone Database " +
 				"(https://www.iana.org/time-zones) on the IANA website.",
 			Optional: true,
-			// Use computed property to accept null value.
-			Computed: true,
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
-			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
 			},
@@ -451,10 +446,8 @@ func (r *policyResource) Schema(
 				Optional: true,
 				DeprecationMessage: "Global timezone is deprecated. Instead, use the timezone " +
 					"attribute within each policy operation.",
-				// Use computed property to accept null value.
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			schemaActivationStatus: schema.StringAttribute{

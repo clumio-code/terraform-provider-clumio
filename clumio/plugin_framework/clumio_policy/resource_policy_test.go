@@ -571,14 +571,96 @@ func TestAccResourceClumioPolicyErrorEmptyActivationStatus(t *testing.T) {
 	})
 }
 
-// Tests to check if creating a policy with child-level timezone works as expected.
-func TestAccResourceClumioPolicyTimezone(t *testing.T) {
+// Tests to check if creating a policy with parent-level and child-level timezone works as expected.
+func TestAccResourceClumioPolicyParentAndChildTimezone(t *testing.T) {
+	seoul := "Asia/Seoul"
+	la := "America/Los_Angeles"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
 		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getTestAccResourceClumioPolicyTimezone("US/Pacific", "US/Eastern"),
+				Config: getTestAccResourceClumioPolicyParentAndChildTimezone(nil, nil),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.tf_timezone_policy",
+							plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"timezone", regexp.MustCompile("")),
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"operations.0.timezone", regexp.MustCompile("")),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyParentAndChildTimezone(nil, &seoul),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.tf_timezone_policy",
+							plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"timezone", regexp.MustCompile("")),
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"operations.0.timezone", regexp.MustCompile(seoul)),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyParentAndChildTimezone(&la, nil),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.tf_timezone_policy",
+							plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"timezone", regexp.MustCompile(la)),
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"operations.0.timezone", regexp.MustCompile("")),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyParentAndChildTimezone(nil, &seoul),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.tf_timezone_policy",
+							plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"timezone", regexp.MustCompile("")),
+					resource.TestMatchResourceAttr("clumio_policy.tf_timezone_policy",
+						"operations.0.timezone", regexp.MustCompile(seoul)),
+				),
+			},
+			{
+				Config:      getTestAccResourceClumioPolicyParentAndChildTimezone(&la, &seoul),
+				ExpectError: regexp.MustCompile("Timezone exists in both"),
+			},
+		},
+	})
+}
+
+// Tests to check if creating a policy with child-level timezone works as expected.
+func TestAccResourceClumioPolicyTimezone(t *testing.T) {
+	pacific := "US/Pacific"
+	eastern := "US/Eastern"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyChildTimezone(&pacific, &eastern),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -589,14 +671,14 @@ func TestAccResourceClumioPolicyTimezone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
 						"operations.0.timezone",
-						regexp.MustCompile("US/Pacific")),
+						regexp.MustCompile(pacific)),
 					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
 						"operations.1.timezone",
-						regexp.MustCompile("US/Eastern")),
+						regexp.MustCompile(eastern)),
 				),
 			},
 			{
-				Config: getTestAccResourceClumioPolicyTimezone("US/Eastern", "US/Pacific"),
+				Config: getTestAccResourceClumioPolicyChildTimezone(&eastern, &pacific),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -607,10 +689,28 @@ func TestAccResourceClumioPolicyTimezone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
 						"operations.0.timezone",
-						regexp.MustCompile("US/Eastern")),
+						regexp.MustCompile(eastern)),
 					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
 						"operations.1.timezone",
-						regexp.MustCompile("US/Pacific")),
+						regexp.MustCompile(pacific)),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyChildTimezone(&eastern, nil),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy.tf_child_timezone_policy", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
+						"operations.0.timezone",
+						regexp.MustCompile(eastern)),
+					resource.TestMatchResourceAttr("clumio_policy.tf_child_timezone_policy",
+						"operations.1.timezone",
+						regexp.MustCompile("")),
 				),
 			},
 		},
@@ -931,11 +1031,35 @@ func getTestClumioPolicyRdsPitrAdv(immediate bool) string {
 	return fmt.Sprintf(testClumioPolicyRdsPolicyTemplate, baseUrl, name, operations)
 }
 
-// getTestAccResourceClumioPolicyTimezone returns the Terraform configuration for a clumio_policy resource
-// containing a child-level timezone and a backup window.
-func getTestAccResourceClumioPolicyTimezone(timezone1, timezone2 string) string {
+// getTestAccResourceClumioPolicyParentAndChildTimezone returns the Terraform configuration for a
+// clumio_policy resource containing a parent-level and child-level timezone and a backup window.
+func getTestAccResourceClumioPolicyParentAndChildTimezone(parentTimezone,
+	childTimezone *string) string {
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
-	return fmt.Sprintf(testAccResourceClumioPolicyTimezone, baseUrl, timezone1, timezone2)
+	parent := ""
+	child := ""
+	if parentTimezone != nil {
+		parent = fmt.Sprintf(`timezone = "%s"`, *parentTimezone)
+	}
+	if childTimezone != nil && *childTimezone != "" {
+		child = fmt.Sprintf(`timezone = "%s"`, *childTimezone)
+	}
+	return fmt.Sprintf(testAccResourceClumioPolicyParentAndChildTimezone, baseUrl, parent, child)
+}
+
+// getTestAccResourceClumioPolicyChildTimezone returns the Terraform configuration for a clumio_policy resource
+// containing a child-level timezone and a backup window.
+func getTestAccResourceClumioPolicyChildTimezone(timezone1, timezone2 *string) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	child1 := ""
+	child2 := ""
+	if timezone1 != nil {
+		child1 = fmt.Sprintf(`timezone = "%s"`, *timezone1)
+	}
+	if timezone2 != nil {
+		child2 = fmt.Sprintf(`timezone = "%s"`, *timezone2)
+	}
+	return fmt.Sprintf(testAccResourceClumioPolicyChildTimezone, baseUrl, child1, child2)
 }
 
 // getTestClumioPolicyEmptyParams returns the Terraform configuration for a clumio_policy resource with
@@ -1046,9 +1170,40 @@ resource "clumio_policy" "test_policy" {
 }
 `
 
+// testAccResourceClumioPolicyParentAndChildTimezone is the Terraform configuration for a testing
+// interactions of parent-level and child-level timezone of clumio_policy resource.
+const testAccResourceClumioPolicyParentAndChildTimezone = `
+provider clumio{
+	clumio_api_base_url = "%s"
+}
+resource "clumio_policy" "tf_timezone_policy" {
+	name = "test_timezone_policy"
+	%s
+	operations {
+		action_setting = "immediate"
+		type = "aws_ebs_volume_backup"
+		slas {
+			retention_duration {
+				unit = "days"
+				value = 5
+			}
+			rpo_frequency {
+				unit = "days"
+				value = 1
+			}
+		}
+		backup_window_tz {
+			start_time = "05:00"
+			end_time = ""
+		}
+		%s
+	}
+}
+`
+
 // testAccResourceClumioPolicyTimezone is the Terraform configuration for a testing child-level timezone
 // of clumio_policy resource.
-const testAccResourceClumioPolicyTimezone = `
+const testAccResourceClumioPolicyChildTimezone = `
 provider clumio{
 	clumio_api_base_url = "%s"
 }
@@ -1072,7 +1227,7 @@ resource "clumio_policy" "tf_child_timezone_policy" {
 			start_time = "05:00"
 			end_time = ""
 		}
-		timezone = "%s"
+		%s
 	}
 	operations {
 		action_setting = "immediate"
@@ -1091,7 +1246,7 @@ resource "clumio_policy" "tf_child_timezone_policy" {
 			start_time = "05:00"
 			end_time = "10:00"
 		}
-		timezone = "%s"
+		%s
 	}
 }
 `

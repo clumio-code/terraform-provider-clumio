@@ -72,7 +72,6 @@ module "clumio_protect_account_1_west" {
   # Enablement of datasources in the module are based on the registered connection
   is_ebs_enabled       = true
   is_rds_enabled       = true
-  is_ec2_mssql_enabled = true
   is_dynamodb_enabled  = true
   is_s3_enabled        = true
 }
@@ -94,7 +93,6 @@ module "clumio_protect_account_2_east" {
   # Enablement of datasources in the module are based on the registered connection
   is_ebs_enabled       = true
   is_rds_enabled       = true
-  is_ec2_mssql_enabled = true
   is_dynamodb_enabled  = true
   is_s3_enabled        = true
 }

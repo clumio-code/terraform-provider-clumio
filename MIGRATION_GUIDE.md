@@ -3,6 +3,124 @@
 This document is meant to help you migrate your Clumio Terraform config to the newer version.
 In migration guides, we will only describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior across different versions.
 
+## v0.11.1 ➞ v0.12.0
+
+### Updated attribute timezone in resource clumio_policy
+- [Immediate action](#immediate-action-for-timezone)
+- [Config, Plan, State in existing version](#config-plan-state-in-existing-version)
+- [Config, Plan, State in updated version](#config-plan-state-in-updated-version)
+
+
+#### Immediate action for timezone
+Starting with version 0.12.0, the default value of the `timezone` is changed from `"UTC"` to `null` on the server side.
+While the upgraded provider may show an `update` plan, this changes does not affect the actual behavior of the resource and no change to the Terraform config is required.
+
+#### Config, Plan, State in existing version
+```hcl
+resource "clumio_policy" "example_policy_without_timezone" {
+  name              = "example-policy-not-configure-timezone"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      protection_group_backup {
+        backup_tier = "cold"
+      }
+    }
+  }
+}
+```
+
+When creating the resource, the plan will display the `timezone` as `(known after apply)`:
+
+```
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # clumio_policy.example_policy_without_timezone will be created
+  + resource "clumio_policy" "example_policy_without_timezone" {
+      ...
+      + timezone          = (known after apply)
+      ...
+    }
+```
+
+After applying the plan, the `timezone` defaults to `"UTC"`:
+
+```
+# clumio_policy.example_policy_without_timezone:
+resource "clumio_policy" "example_policy_without_timezone" {
+    ...
+    timezone          = "UTC"
+    ...
+}
+```
+
+#### Config, Plan, State in updated version
+
+The plan will now show an one-time update to the `timezone`:
+
+```
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # clumio_policy.example_policy_without_timezone will be updated in-place
+  ~ resource "clumio_policy" "example_policy_without_timezone" {
+      - timezone          = "UTC" -> null
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+```
+
+The `timezone` attribute will now be `null` in the resource state:
+
+```
+# clumio_policy.example_policy_without_timezone:
+resource "clumio_policy" "example_policy_without_timezone" {
+    activation_status = "activated"
+    id                = "c92fe8d1-26d8-4f73-9df4-f625b7bc699f"
+    lock_status       = "unlocked"
+    name              = "example-policy-not-configure-timezone"
+
+    operations {
+        action_setting = "immediate"
+        type           = "protection_group_backup"
+
+        advanced_settings {
+            protection_group_backup {
+                backup_tier = "cold"
+            }
+        }
+
+        slas {
+            retention_duration {
+                unit  = "months"
+                value = 3
+            }
+            rpo_frequency {
+                unit  = "days"
+                value = 1
+            }
+        }
+    }
+}
+```
+
 ## v0.6.2 ➞ v0.7.0
 
 ### Deprecated attribute organizational_unit_id
@@ -136,6 +254,7 @@ resource "clumio_ou_0_policy" "test_policy_1" { ### context aware clumio provide
 - [Configs](#configstz)
 - [Existing Sample Config with timezone at the toplevel of policy specification](#sampletz1)
 - [Sample Config using timezone attribute at the operations specification](#sampletz2)
+
 Release 0.7.0 onwards of the Terraform provider
 timezone attribute in clumio_policy at the toplevel of policy specification is being deprecated as an attribute.
 timezone attribute is now supported at the operations part of the resource config, which provides

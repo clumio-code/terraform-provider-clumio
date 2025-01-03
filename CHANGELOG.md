@@ -1,5 +1,12 @@
-## 0.11.2
-This update contains a fix to the timezone behavior of clumio_policy resource.
+## 0.12.0
+This update contains the following changes:
+* The default timezone in clumio_policy resource has been replaced with an empty configuration. For detailed information about this change, please refer to '[Migration guide](https://github.com/clumio-code/terraform-provider-clumio/blob/main/MIGRATION_GUIDE.md)'.
+* Added support of S3 backtrack policy, available to EA customers.
+
+### Note
+The global timezone attribute in clumio_policy resource is scheduled to be removed in version 0.13.0, as it has been deprecated since version 0.7.0.
+
+> Deprecated the global timezone attribute in clumio_policy resource.
 
 ## 0.11.1
 This update contains a fix to the clumio_aws_manual_connection resource.

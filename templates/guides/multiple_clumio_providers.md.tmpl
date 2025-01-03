@@ -1,3 +1,7 @@
+---
+page_title: "Using Multiple Clumio Providers"
+---
+
 # Using Multiple Clumio Providers
 
 In this guide, we will explore how to use two Clumio providers in Terraform, distinguished by the `clumio_organizational_unit_context` variable.

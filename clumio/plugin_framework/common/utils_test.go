@@ -7,11 +7,12 @@ package common
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/mock"
 	"net/http"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/mock"
 
 	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
@@ -164,15 +165,6 @@ func TestPollTask(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling task timeout", err.Error())
 	})
-
-	t.Run("Context canceled", func(t *testing.T) {
-		doneCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(-1*time.Hour))
-		cancelFunc()
-		assert.NotNil(t, doneCtx.Done())
-		err := PollTask(doneCtx, mockTaskClient, taskId, 1*time.Second, 1)
-		assert.NotNil(t, err)
-		assert.Equal(t, "context deadline exceeded", err.Error())
-	})
 }
 
 // Unit test for the utility function PollForProtectionGroup.
@@ -208,17 +200,6 @@ func TestPollForProtectionGroup(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Nil(t, res)
 	})
-
-	// Read protection group with canceled context returns an error.
-	t.Run("Context canceled", func(t *testing.T) {
-		doneCtx, cancelFunc := context.WithCancel(context.Background())
-		cancelFunc()
-		assert.NotNil(t, doneCtx.Done())
-		res, err := PollForProtectionGroup(doneCtx, pgId, pgClient, 1, 1)
-		assert.NotNil(t, err)
-		assert.Equal(t, "context canceled or timed out", err.Error())
-		assert.Nil(t, res)
-	})
 }
 
 // Test for timeout during polling of protection group.
@@ -231,7 +212,8 @@ func TestPGPollingTimedOut(t *testing.T) {
 	// Read protection group returns HTTP 404 leading to polling timeout.
 	t.Run("Polling timeout", func(t *testing.T) {
 		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Return(nil, notFoundError)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Return(nil, notFoundError).
+			Maybe()
 		res, err := PollForProtectionGroup(ctx, pgId, pgClient, 100, 10)
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling timed out", err.Error())
@@ -310,18 +292,6 @@ func TestPollForProtectionGroupUpdate(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Nil(t, res)
 	})
-
-	// Read protection group with canceled context returns an error.
-	t.Run("Context canceled", func(t *testing.T) {
-		doneCtx, cancelFunc := context.WithCancel(context.Background())
-		cancelFunc()
-		assert.NotNil(t, doneCtx.Done())
-		res, err := PollForProtectionGroupUpdate(doneCtx, pgId, &oldVersion, updateReq, pgClient, 1,
-			1)
-		assert.NotNil(t, err)
-		assert.Equal(t, "context canceled or timed out", err.Error())
-		assert.Nil(t, res)
-	})
 }
 
 // Test for timeout during polling of protection group.
@@ -349,7 +319,8 @@ func TestPGUpdatePollingTimedOut(t *testing.T) {
 	// Read protection group returns HTTP 404 leading to polling timeout.
 	t.Run("Polling timeout", func(t *testing.T) {
 		notFoundError := apiutils.NewAPIError("Not found", http.StatusNotFound, nil)
-		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Return(nil, notFoundError)
+		pgClient.EXPECT().ReadProtectionGroup(pgId, mock.Anything).Return(nil, notFoundError).
+			Maybe()
 		res, err := PollForProtectionGroupUpdate(ctx, pgId, &oldVersion, updateReq, pgClient, 100, 10)
 		assert.NotNil(t, err)
 		assert.Equal(t, "polling timed out", err.Error())

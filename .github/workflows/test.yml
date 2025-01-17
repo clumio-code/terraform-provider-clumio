@@ -11,23 +11,41 @@ on:
 env:
   # This activates boringcrypto which provides FIPS compliant crypto libraries.
   GOEXPERIMENT: boringcrypto
+  # Prevent Go from downloading other versions from the Internet.
+  GOTOOLCHAIN: local
   ENABLE_TEST_REPORTS: false
+  # This should be the latest 2 major releases of Go, older versions are
+  # not maintained and lack security updates.
+  GO_LATEST: 1.23
+  GO_PREVIOUS: 1.22
 
 jobs:
+  # This prepare stage allows us to export and re-use information
+  # under the matrix strategy where `env.` resolution does not work.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      go_versions: ${{ steps.go_versions.outputs.go_versions }}
+      go_latest: ${{ env.GO_LATEST }}
+    steps:
+      - name: Select Go versions
+        id: go_versions
+        run: echo "go_versions=['$GO_LATEST','$GO_PREVIOUS']" | tee -a "$GITHUB_OUTPUT"
+
   build-and-test:
     name: Build
+    needs: prepare
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        go: [ 1.21, 1.22 ]
+        go: ${{ fromJson(needs.prepare.outputs.go_versions) }}
         # Use a dynamic matrix to allow testing multiple OSes and Go versions
         # in the public repository but reduce combinations in private clones.
         exclude:
           - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'macos-latest' }}
           - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'windows-latest' }}
-          - go: ${{ github.repository_owner == 'clumio-code' && '_' || '1.22' }}
-            # If updating the Go version to exclude here, ensure to update the
-            # SonarCloud Scan condition below.
+          - go: ${{ github.repository_owner == 'clumio-code' && '_' || needs.prepare.outputs.go_latest }}
+
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
@@ -41,7 +59,7 @@ jobs:
 
     - name: Extend environment for test reports
       # When updating the Go versions in the excluded matrix, update the condition below.
-      if: github.repository_owner == 'clumio' && matrix.os == 'ubuntu-latest' && matrix.go == '1.21'
+      if: github.repository_owner == 'clumio' && matrix.os == 'ubuntu-latest' && matrix.go == env.GO_PREVIOUS
       run: |
         echo "ENABLE_TEST_REPORTS=true" >> $GITHUB_ENV
         echo "REPOSITORY_NAME=$(cut -d/ -f2 <<< ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
@@ -74,7 +92,7 @@ jobs:
     - name: Setup gotestsum
       uses: autero1/action-gotestsum@v2.0.0
       with:
-        gotestsum_version: 1.11.0
+        gotestsum_version: 1.12.0
         # https://github.com/gotestyourself/gotestsum/releases
 
     - name: Unit Tests
@@ -97,7 +115,7 @@ jobs:
 
     - name: SonarCloud Scan
       if: ${{ env.ENABLE_TEST_REPORTS == 'true' }}
-      uses: SonarSource/sonarcloud-github-action@v2
+      uses: SonarSource/sonarcloud-github-action@v4
       timeout-minutes: 5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

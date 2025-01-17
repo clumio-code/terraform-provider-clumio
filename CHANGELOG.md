@@ -1,3 +1,8 @@
+## 0.12.1
+This update contains the following changes:
+* Update supported Go versions to `1.22` and `1.23` to ensure compatibility with the two most recent major release of Go.
+* Upgraded Go dependencies to address Dependabot security alerts.
+
 ## 0.12.0
 This update contains the following changes:
 * The default timezone in clumio_policy resource has been replaced with an empty configuration. For detailed information about this change, please refer to '[Migration guide](https://github.com/clumio-code/terraform-provider-clumio/blob/main/MIGRATION_GUIDE.md)'.

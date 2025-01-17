@@ -15,8 +15,11 @@ on:
     tags:
       - 'v*'
 env:
-  GO_VERSION: 1.21
+  # This should be the latest major release of Go.
+  GO_VERSION: 1.23
   GOEXPERIMENT: boringcrypto
+  # Prevent Go from downloading other versions from the Internet.
+  GOTOOLCHAIN: local
 
 jobs:
   goreleaser:

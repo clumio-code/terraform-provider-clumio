@@ -79,7 +79,7 @@ To create or update the documentation, use the command `go generate`.
 
 We follow the [Go support policy](https://golang.org/doc/devel/release.html#policy): the two most recent major releases of Go are supported to compile.
 
-Currently, that means Go **1.21** or later must be used when compiling the provider from source.
+Currently, that means Go **1.22** or later must be used when compiling the provider from source.
 
 
 ## Running Tests

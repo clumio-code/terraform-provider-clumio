@@ -7,7 +7,7 @@ resource "clumio_aws_manual_connection" "test_update_resources" {
     rds   = true
     ddb   = true
     s3    = true
-    mssql = true
+    mssql = false  # Note that "mssql" is only available on legacy connections.
   }
   resources = {
     clumio_iam_role_arn     = "clumio_iam_role_arn"

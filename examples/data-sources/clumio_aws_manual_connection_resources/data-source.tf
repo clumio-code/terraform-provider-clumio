@@ -6,6 +6,6 @@ data "clumio_aws_manual_connection_resources" "test_get_resources" {
     rds   = true
     ddb   = true
     s3    = true
-    mssql = true
+    mssql = false  # Note that "mssql" is only available on legacy connections.
   }
 }

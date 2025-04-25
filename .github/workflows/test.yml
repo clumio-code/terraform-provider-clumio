@@ -16,8 +16,8 @@ env:
   ENABLE_TEST_REPORTS: false
   # This should be the latest 2 major releases of Go, older versions are
   # not maintained and lack security updates.
-  GO_LATEST: 1.23
-  GO_PREVIOUS: 1.22
+  GO_LATEST: 1.24
+  GO_PREVIOUS: 1.23
 
 jobs:
   # This prepare stage allows us to export and re-use information
@@ -44,7 +44,7 @@ jobs:
         exclude:
           - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'macos-latest' }}
           - os: ${{ github.repository_owner == 'clumio-code' && '_' || 'windows-latest' }}
-          - go: ${{ github.repository_owner == 'clumio-code' && '_' || needs.prepare.outputs.go_latest }}
+          # - go: ${{ github.repository_owner == 'clumio-code' && '_' || needs.prepare.outputs.go_latest }}
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -90,9 +90,10 @@ jobs:
       timeout-minutes: 1
 
     - name: Setup gotestsum
+      # Note that `v2.0.0` is required, there is no `v2` tag for this action.
       uses: autero1/action-gotestsum@v2.0.0
       with:
-        gotestsum_version: 1.12.0
+        gotestsum_version: 1.12.1
         # https://github.com/gotestyourself/gotestsum/releases
 
     - name: Unit Tests
@@ -115,7 +116,7 @@ jobs:
 
     - name: SonarCloud Scan
       if: ${{ env.ENABLE_TEST_REPORTS == 'true' }}
-      uses: SonarSource/sonarcloud-github-action@v4
+      uses: SonarSource/sonarcloud-github-action@v5
       timeout-minutes: 5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

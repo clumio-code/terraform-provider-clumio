@@ -128,3 +128,17 @@ jobs:
     - name: Check Unit Tests failure
       if: ${{ env.TEST_FAILURE == 'true' }}
       run: echo "Tests failed during the Unit Test step."; exit 1
+
+  check-build-and-test:
+    # This job checks if any of the jobs in the matrix failed.
+    # This allows us to have a single check target for the branch protection rules.
+    name: Check Build and Test
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for failed jobs
+        run: |
+          if [[ "${{ needs.build-and-test.result }}" != "success" ]]; then
+            echo "One or more matrix jobs failed."
+            exit 1
+          fi

@@ -29,7 +29,8 @@ func TestMapClumioObjectFilterToSchemaObjectFilter(t *testing.T) {
 				ExcludedSubPrefixes: []*string{&exclPrefix, &exclPrefix2},
 			},
 		},
-		StorageClasses: []*string{&storageClass, &storageClass2},
+		StorageClasses:                []*string{&storageClass, &storageClass2},
+		EarliestLastModifiedTimestamp: &earliestLastModifiedTimestamp,
 	}
 
 	t.Run("All object filter attributes populated", func(t *testing.T) {
@@ -41,6 +42,8 @@ func TestMapClumioObjectFilterToSchemaObjectFilter(t *testing.T) {
 		assert.Equal(t, *modelOF.LatestVersionOnly, schemaOF.LatestVersionOnly.ValueBool())
 		assert.Equal(t, *modelOF.StorageClasses[0], schemaOF.StorageClasses[0].ValueString())
 		assert.Equal(t, *modelOF.StorageClasses[1], schemaOF.StorageClasses[1].ValueString())
+		assert.Equal(t, *modelOF.EarliestLastModifiedTimestamp,
+			schemaOF.EarliestLastModifiedTimestamp.ValueString())
 
 		// Ensure the first prefix filter attributes are correct.
 		modelPF := modelOF.PrefixFilters[0]
@@ -92,6 +95,8 @@ func TestMapSchemaObjectFilterToClumioObjectFilter(t *testing.T) {
 				basetypes.NewStringValue(storageClass),
 				basetypes.NewStringValue(storageClass2),
 			},
+			EarliestLastModifiedTimestamp: basetypes.NewStringValue(
+				earliestLastModifiedTimestamp),
 		},
 	}
 
@@ -102,6 +107,8 @@ func TestMapSchemaObjectFilterToClumioObjectFilter(t *testing.T) {
 		assert.Equal(t, schemaOF[0].LatestVersionOnly.ValueBool(), *modelOF.LatestVersionOnly)
 		assert.Equal(t, schemaOF[0].StorageClasses[0].ValueString(), *modelOF.StorageClasses[0])
 		assert.Equal(t, schemaOF[0].StorageClasses[1].ValueString(), *modelOF.StorageClasses[1])
+		assert.Equal(t, schemaOF[0].EarliestLastModifiedTimestamp.ValueString(),
+			*modelOF.EarliestLastModifiedTimestamp)
 
 		// Ensure the first prefix filter attributes are correct.
 		modelPF := modelOF.PrefixFilters[0]

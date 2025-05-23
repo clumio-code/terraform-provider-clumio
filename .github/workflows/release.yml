@@ -15,8 +15,11 @@ on:
     tags:
       - 'v*'
 env:
-  GO_VERSION: 1.21
+  # This should be the latest major release of Go.
+  GO_VERSION: 1.24
   GOEXPERIMENT: boringcrypto
+  # Prevent Go from downloading other versions from the Internet.
+  GOTOOLCHAIN: local
 
 jobs:
   goreleaser:
@@ -42,7 +45,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --rm-dist

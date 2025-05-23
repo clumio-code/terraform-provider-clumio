@@ -82,7 +82,7 @@ func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) RunAndReturn(run
 	return _c
 }
 
-// ReadConnectionTemplates provides a mock function with given fields:
+// ReadConnectionTemplates provides a mock function with no fields
 func (_m *MockAWSTemplatesClient) ReadConnectionTemplates() (*models.ReadAWSTemplatesV2Response, *apiutils.APIError) {
 	ret := _m.Called()
 

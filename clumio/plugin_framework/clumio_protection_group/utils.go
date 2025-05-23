@@ -16,11 +16,12 @@ import (
 func mapSchemaObjectFilterToClumioObjectFilter(
 	objectFilterSlice []*objectFilterModel) *models.ObjectFilter {
 
-	if objectFilterSlice == nil || len(objectFilterSlice) == 0 {
+	if len(objectFilterSlice) == 0 {
 		return nil
 	}
 	objectFilter := objectFilterSlice[0]
 	latestVersionOnly := objectFilter.LatestVersionOnly.ValueBool()
+	earliestLastModifiedTimestamp := objectFilter.EarliestLastModifiedTimestamp.ValueString()
 
 	// Loop over StorageClasses field and map each item inside array to model
 	storageClasses := make([]*string, 0)
@@ -49,9 +50,10 @@ func mapSchemaObjectFilterToClumioObjectFilter(
 		}
 	}
 	return &models.ObjectFilter{
-		LatestVersionOnly: &latestVersionOnly,
-		PrefixFilters:     modelPrefixFilters,
-		StorageClasses:    storageClasses,
+		LatestVersionOnly:             &latestVersionOnly,
+		PrefixFilters:                 modelPrefixFilters,
+		StorageClasses:                storageClasses,
+		EarliestLastModifiedTimestamp: &earliestLastModifiedTimestamp,
 	}
 }
 
@@ -64,6 +66,10 @@ func mapClumioObjectFilterToSchemaObjectFilter(
 	if modelObjectFilter.LatestVersionOnly != nil {
 		schemaObjFilter.LatestVersionOnly = types.BoolValue(
 			*modelObjectFilter.LatestVersionOnly)
+	}
+	if modelObjectFilter.EarliestLastModifiedTimestamp != nil {
+		schemaObjFilter.EarliestLastModifiedTimestamp = types.StringValue(
+			*modelObjectFilter.EarliestLastModifiedTimestamp)
 	}
 	// Loop over PrefixFilters field and map each item inside array to schema
 	if modelObjectFilter.PrefixFilters != nil {

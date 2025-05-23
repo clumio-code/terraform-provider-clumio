@@ -22,7 +22,7 @@ func (_m *MockAutoUserProvisioningSettingClient) EXPECT() *MockAutoUserProvision
 	return &MockAutoUserProvisioningSettingClient_Expecter{mock: &_m.Mock}
 }
 
-// ReadAutoUserProvisioningSetting provides a mock function with given fields:
+// ReadAutoUserProvisioningSetting provides a mock function with no fields
 func (_m *MockAutoUserProvisioningSettingClient) ReadAutoUserProvisioningSetting() (*models.ReadAutoUserProvisioningSettingResponse, *apiutils.APIError) {
 	ret := _m.Called()
 

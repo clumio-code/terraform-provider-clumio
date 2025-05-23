@@ -22,7 +22,7 @@ func (_m *MockRoleClient) EXPECT() *MockRoleClient_Expecter {
 	return &MockRoleClient_Expecter{mock: &_m.Mock}
 }
 
-// ListRoles provides a mock function with given fields:
+// ListRoles provides a mock function with no fields
 func (_m *MockRoleClient) ListRoles() (*models.ListRolesResponse, *apiutils.APIError) {
 	ret := _m.Called()
 

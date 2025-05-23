@@ -46,23 +46,24 @@ type assetTypesEnabledModel struct {
 func (*clumioAwsManualConnectionResourcesDatasource) Schema(
 	_ context.Context, req datasource.SchemaRequest, res *datasource.SchemaResponse) {
 	res.Schema = schema.Schema{
-		Description: "Clumio AWS Manual Connection Resources Datasource to get resources for manual connections",
+		Description: "Clumio AWS Manual Connection Resources Datasource to get resources for manual connections.",
 		Attributes: map[string]schema.Attribute{
 			schemaId: schema.StringAttribute{
-				Description: "Combination of provided Account Native ID and Aws Region",
+				Description: "Combination of provided Account Native ID and AWS Region.",
 				Computed:    true,
 			},
 			schemaAccountNativeId: schema.StringAttribute{
-				Description: "AWS Account ID to be connected to Clumio",
+				Description: "AWS Account ID to be connected to Clumio.",
 				Required:    true,
 			},
 			schemaAwsRegion: schema.StringAttribute{
-				Description: "AWS Region to be connected to Clumio",
+				Description: "AWS Region to be connected to Clumio.",
 				Required:    true,
 			},
 			schemaAssetTypesEnabled: schema.ObjectAttribute{
-				Description: "Assets to be connected to Clumio",
-				Required:    true,
+				Description: "Assets to be connected to Clumio. Note that `mssql` is only " +
+					"available for legacy connections.",
+				Required: true,
 				AttributeTypes: map[string]attr.Type{
 					schemaIsEbsEnabled:      types.BoolType,
 					schemaIsDynamoDBEnabled: types.BoolType,
@@ -72,7 +73,7 @@ func (*clumioAwsManualConnectionResourcesDatasource) Schema(
 				},
 			},
 			schemaResources: schema.StringAttribute{
-				Description: "Generated manual resources for provided configuration",
+				Description: "Generated manual resources for provided configuration.",
 				Computed:    true,
 			},
 		},

@@ -37,9 +37,10 @@ type clumioProtectionGroupResourceModel struct {
 // objectFilterModel maps to the 'object_filter' field in clumioProtectionGroupResourceModel and
 // refers to the list of object filters in a protection group
 type objectFilterModel struct {
-	LatestVersionOnly types.Bool           `tfsdk:"latest_version_only"`
-	PrefixFilters     []*prefixFilterModel `tfsdk:"prefix_filters"`
-	StorageClasses    []types.String       `tfsdk:"storage_classes"`
+	LatestVersionOnly             types.Bool           `tfsdk:"latest_version_only"`
+	PrefixFilters                 []*prefixFilterModel `tfsdk:"prefix_filters"`
+	StorageClasses                []types.String       `tfsdk:"storage_classes"`
+	EarliestLastModifiedTimestamp types.String         `tfsdk:"earliest_last_modified_timestamp"`
 }
 
 // prefixFilterModel maps to 'prefix_filters' field in objectFilterModel and refers to list of
@@ -86,6 +87,14 @@ func (r *clumioProtectionGroupResource) Schema(
 			ElementType: types.StringType,
 			Required:    true,
 		},
+		schemaEarliestLastModifiedTimestamp: schema.StringAttribute{
+			Description: "The cutoff date for inclusion objects from the backup. Any object with" +
+				" a last modified date after or equal than this value will be included in the " +
+				"backup. This is useful for filtering out old or irrelevant objects based on " +
+				"their modification timestamps. This supports RFC-3339 format.",
+			Optional: true,
+			Computed: true,
+		},
 	}
 
 	objectFilterSchemaBlocks := map[string]schema.Block{
@@ -117,9 +126,21 @@ func (r *clumioProtectionGroupResource) Schema(
 				Required:    true,
 			},
 			schemaBucketRule: schema.StringAttribute{
-				Description: "Describes the possible conditions for a bucket to be  automatically added" +
-					" to a protection group. For example: " +
-					"{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}",
+				Description: "The following table describes the possible conditions for a bucket" +
+					" to be automatically added to a protection group. <br><table><tr><th>Field" +
+					"</th><th>Rule Condition</th><th>Description</th></tr><tr><td>aws_tag</td>" +
+					"<td>$eq, $not_eq, $contains, $not_contains, $all, $not_all, $in, $not_in" +
+					"</td><td>Denotes the AWS tag(s) to conditionalize on<code>{\"aws_tag\":" +
+					"{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}</code></td></tr>" +
+					"<tr><td>aws_account_native_id</td><td>$eq, $in</td><td>Denotes the AWS " +
+					"account to conditionalize on<code>{\"aws_account_native_id\":{\"$eq\":" +
+					"\"111111111111\"}}</code></td></tr><tr><td>account_native_id<br><b>" +
+					"Deprecated</b></td><td>$eq, $in</td><td>This will be deprecated and use " +
+					"aws_account_native_id instead.<br>Denotes the AWS account to conditionalize" +
+					" on<code>{\"account_native_id\":{\"$in\":[\"111111111111\"]}}</code></td>" +
+					"</tr><tr><td>aws_region</td><td>$eq, $in</td><td>Denotes the AWS region to " +
+					"conditionalize on<code>{\"aws_region\":{\"$eq\":\"us-west-2\"}}</code></td>" +
+					"</tr></table>",
 				Optional: true,
 			},
 			schemaProtectionStatus: schema.StringAttribute{

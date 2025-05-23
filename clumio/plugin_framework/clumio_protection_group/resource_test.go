@@ -24,21 +24,22 @@ import (
 )
 
 var (
-	name             = "test-protection-group"
-	resourceName     = "test_protection_group"
-	id               = "mock-pg-id"
-	testError        = "Test Error"
-	description      = "test-description"
-	bucketRule       = "test-bucket-rule"
-	prefix           = "test-prefix"
-	exclPrefix       = "test-excluded-prefix-1"
-	exclPrefix2      = "test-excluded-prefix-2"
-	storageClass     = "test-storage-class-1"
-	storageClass2    = "test-storage-class-2"
-	protectionStatus = "protection-status"
-	entityId         = "test-entity-id"
-	entityType       = "test-entity-type"
-	policyId         = "test-policy-id"
+	name                          = "test-protection-group"
+	resourceName                  = "test_protection_group"
+	id                            = "mock-pg-id"
+	testError                     = "Test Error"
+	description                   = "test-description"
+	bucketRule                    = "test-bucket-rule"
+	prefix                        = "test-prefix"
+	exclPrefix                    = "test-excluded-prefix-1"
+	exclPrefix2                   = "test-excluded-prefix-2"
+	storageClass                  = "test-storage-class-1"
+	storageClass2                 = "test-storage-class-2"
+	protectionStatus              = "protection-status"
+	entityId                      = "test-entity-id"
+	entityType                    = "test-entity-type"
+	policyId                      = "test-policy-id"
+	earliestLastModifiedTimestamp = "test-earliest-last-modified-timestamp"
 )
 
 // Unit test for the following cases:

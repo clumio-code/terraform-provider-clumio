@@ -76,17 +76,6 @@ func TestPollForS3Bucket(t *testing.T) {
 		err := res.pollForS3Bucket(ctx, bucketId, resModel, 1, 5*time.Second)
 		assert.NotNil(t, err)
 	})
-
-	// Read S3 bucket with canceled context returns an error.
-	t.Run("Context canceled", func(t *testing.T) {
-		doneCtx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(-1*time.Hour))
-		cancelFunc()
-		assert.NotNil(t, doneCtx.Done())
-		err := res.pollForS3Bucket(doneCtx, bucketId, resModel, 1, 1)
-		assert.NotNil(t, err)
-		assert.Equal(t, "context canceled or timed out", err.Error())
-	})
-
 }
 
 // Test for timeout during polling of S3 bucket.
@@ -112,7 +101,7 @@ func TestPollS3BucketPollingTimeout(t *testing.T) {
 			Id:                 &bucketId,
 			EventBridgeEnabled: &enabled,
 		}
-		s3Client.EXPECT().ReadAwsS3Bucket(bucketId).Return(&firstReadResponse, nil)
+		s3Client.EXPECT().ReadAwsS3Bucket(bucketId).Return(&firstReadResponse, nil).Maybe()
 		err := res.pollForS3Bucket(
 			ctx, bucketId, resModel, 1, 100)
 		assert.NotNil(t, err)

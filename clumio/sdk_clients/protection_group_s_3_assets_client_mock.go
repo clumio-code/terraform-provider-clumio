@@ -22,6 +22,69 @@ func (_m *MockProtectionGroupS3AssetsClient) EXPECT() *MockProtectionGroupS3Asse
 	return &MockProtectionGroupS3AssetsClient_Expecter{mock: &_m.Mock}
 }
 
+// ListProtectionGroupS3AssetPitrIntervals provides a mock function with given fields: protectionGroupS3AssetId, limit, start, filter
+func (_m *MockProtectionGroupS3AssetsClient) ListProtectionGroupS3AssetPitrIntervals(protectionGroupS3AssetId string, limit *int64, start *string, filter *string) (*models.ListProtectionGroupS3AssetPitrIntervalsResponse, *apiutils.APIError) {
+	ret := _m.Called(protectionGroupS3AssetId, limit, start, filter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListProtectionGroupS3AssetPitrIntervals")
+	}
+
+	var r0 *models.ListProtectionGroupS3AssetPitrIntervalsResponse
+	var r1 *apiutils.APIError
+	if rf, ok := ret.Get(0).(func(string, *int64, *string, *string) (*models.ListProtectionGroupS3AssetPitrIntervalsResponse, *apiutils.APIError)); ok {
+		return rf(protectionGroupS3AssetId, limit, start, filter)
+	}
+	if rf, ok := ret.Get(0).(func(string, *int64, *string, *string) *models.ListProtectionGroupS3AssetPitrIntervalsResponse); ok {
+		r0 = rf(protectionGroupS3AssetId, limit, start, filter)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.ListProtectionGroupS3AssetPitrIntervalsResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, *int64, *string, *string) *apiutils.APIError); ok {
+		r1 = rf(protectionGroupS3AssetId, limit, start, filter)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*apiutils.APIError)
+		}
+	}
+
+	return r0, r1
+}
+
+// MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListProtectionGroupS3AssetPitrIntervals'
+type MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call struct {
+	*mock.Call
+}
+
+// ListProtectionGroupS3AssetPitrIntervals is a helper method to define mock.On call
+//   - protectionGroupS3AssetId string
+//   - limit *int64
+//   - start *string
+//   - filter *string
+func (_e *MockProtectionGroupS3AssetsClient_Expecter) ListProtectionGroupS3AssetPitrIntervals(protectionGroupS3AssetId interface{}, limit interface{}, start interface{}, filter interface{}) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call {
+	return &MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call{Call: _e.mock.On("ListProtectionGroupS3AssetPitrIntervals", protectionGroupS3AssetId, limit, start, filter)}
+}
+
+func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call) Run(run func(protectionGroupS3AssetId string, limit *int64, start *string, filter *string)) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(*int64), args[2].(*string), args[3].(*string))
+	})
+	return _c
+}
+
+func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call) Return(_a0 *models.ListProtectionGroupS3AssetPitrIntervalsResponse, _a1 *apiutils.APIError) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call) RunAndReturn(run func(string, *int64, *string, *string) (*models.ListProtectionGroupS3AssetPitrIntervalsResponse, *apiutils.APIError)) *MockProtectionGroupS3AssetsClient_ListProtectionGroupS3AssetPitrIntervals_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListProtectionGroupS3Assets provides a mock function with given fields: limit, start, filter, lookbackDays
 func (_m *MockProtectionGroupS3AssetsClient) ListProtectionGroupS3Assets(limit *int64, start *string, filter *string, lookbackDays *int64) (*models.ListProtectionGroupS3AssetsResponse, *apiutils.APIError) {
 	ret := _m.Called(limit, start, filter, lookbackDays)

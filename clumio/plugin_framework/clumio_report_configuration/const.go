@@ -1,0 +1,46 @@
+// Copyright 2025. Clumio, Inc.
+
+package clumio_report_configuration
+
+const (
+	// Constants used by the resource model for the clumio_report_configuration Terraform resource.
+	// These values should match the schema tfsdk tags on the resource model struct in schema.go.
+	schemaCreatedAt                     = "created"
+	schemaDescription                   = "description"
+	schemaID                            = "id"
+	schemaName                          = "name"
+	schemaNotification                  = "notification"
+	schemaParameter                     = "parameter"
+	schemaSchedule                      = "schedule"
+	schemaEmailList                     = "email_list"
+	schemaControls                      = "controls"
+	schemaFilters                       = "filters"
+	schemaAssetBackupControl            = "asset_backup"
+	schemaAssetProtectionControl        = "asset_protection"
+	schemaPolicyControl                 = "policy"
+	schemaLookBackPeriod                = "look_back_period"
+	schemaMinimumRetentionDuration      = "minimum_retention_duration"
+	schemaWindowSize                    = "window_size"
+	schemaShouldIgnoreDeactivatedPolicy = "should_ignore_deactivated_policy"
+	schemaMinimumRpoFrequency           = "minimum_rpo_frequency"
+	schemaAssetFilter                   = "asset"
+	schemaCommonFilter                  = "common"
+	schemaAssetGroupFilter              = "groups"
+	schemaTagOpMode                     = "tag_op_mode"
+	schemaTagFilter                     = "tags"
+	schemaAssetGroupID                  = "id"
+	schemaAssetGroupRegion              = "region"
+	schemaAssetGroupType                = "type"
+	schemaTagKey                        = "key"
+	schemaTagValue                      = "value"
+	schemaAssetTypes                    = "asset_types"
+	schemaDataSources                   = "data_sources"
+	schemaOrganizationalUnits           = "organizational_units"
+	schemaDayOfMonth                    = "day_of_month"
+	schemaDayOfWeek                     = "day_of_week"
+	schemaFrequency                     = "frequency"
+	schemaStartTime                     = "start_time"
+	schemaTimezone                      = "timezone"
+	schemaUnit                          = "unit"
+	schemaValue                         = "value"
+)

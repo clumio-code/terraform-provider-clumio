@@ -40,3 +40,6 @@ packages:
       RoleClient:
       AWSTemplatesClient:
       S3BucketClient:
+      DynamoDBTableClient:
+      ProtectionGroupS3AssetsClient:
+      ReportConfigurationClient:

@@ -7,9 +7,6 @@ package clumio_pf
 
 import (
 	"context"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_asset"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_bucket"
 	"os"
 	"strings"
 
@@ -18,6 +15,7 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection_resources"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_organizational_unit"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy_assignment"
@@ -25,6 +23,9 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_post_process_aws_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_post_process_kms"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_asset"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_bucket"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_report_configuration"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_role"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket_properties"
@@ -185,5 +186,6 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_aws_manual_connection.NewClumioAWSManualConnectionResource,
 		clumio_s3_bucket_properties.NewClumioS3BucketPropertiesResource,
 		clumio_protection_group_bucket.NewClumioProtectionGroupBucketResource,
+		clumio_report_configuration.NewReportConfigurationResource,
 	}
 }

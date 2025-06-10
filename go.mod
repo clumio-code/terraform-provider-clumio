@@ -6,7 +6,7 @@ module github.com/clumio-code/terraform-provider-clumio
 go 1.23.0
 
 require (
-	github.com/clumio-code/clumio-go-sdk v0.22.1
+	github.com/clumio-code/clumio-go-sdk v0.23.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-docs v0.20.1
 	github.com/hashicorp/terraform-plugin-framework v1.13.0

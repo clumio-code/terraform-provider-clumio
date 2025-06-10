@@ -1,3 +1,7 @@
+## 0.14.0
+This update contains the following changes:
+* Added `clumio_report_configuration` resource for setting an report for overall backup information.
+
 ## 0.13.0
 This update contains the following changes:
 * Updated documents and examples to reflect MSSQL is deprecated.

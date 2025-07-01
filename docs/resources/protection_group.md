@@ -17,7 +17,14 @@ Clumio S3 Protection Group Resource used to create and manage Protection Groups.
 resource "clumio_protection_group" "basic_example" {
   name        = "example-protection_group-1"
   description = "example protection group-1"
-  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
+  bucket_rule = jsonencode({
+    "aws_tag" = {
+      "$eq" = {
+        "key"   = "Key1"
+        "value" = "Value1"
+      }
+    }
+  })
   object_filter {
     storage_classes = [
       "S3 Standard"
@@ -36,15 +43,15 @@ resource "clumio_protection_group" "advanced_example" {
     {
       "aws_tag" : {
         "$eq" : {
-          "key" : "Environment",
-          "value" : "Prod"
+          "key" : "Key1",
+          "value" : "Value1"
         }
       },
       "account_native_id" : {
-        "$eq" : "AWS Account ID"
+        "$eq" : "123456789012"
       },
       "aws_region" : {
-        "$eq" : "AWS Region"
+        "$eq" : "us-west-2"
       }
     }
   )

@@ -1,7 +1,7 @@
 resource "clumio_aws_manual_connection" "test_update_resources" {
 
-  account_id = "aws_account_id"
-  aws_region = "aws_region"
+  account_id = "123456789012" # Replace with your actual AWS account ID.
+  aws_region = "us-west-2" # Replace with your actual AWS region.
   assets_enabled = {
     ebs   = true
     rds   = true

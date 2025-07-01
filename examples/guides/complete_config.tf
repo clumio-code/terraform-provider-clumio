@@ -58,7 +58,14 @@ module "clumio_protect" {
 # Create a Clumio protection group that aggregates S3 buckets with the tag "clumio:example"
 resource "clumio_protection_group" "protection_group" {
   name        = "My Clumio Protection Group"
-  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"clumio\", \"value\":\"example\"}}}"
+  bucket_rule = jsonencode({
+    "aws_tag" = {
+      "$eq" = {
+        "key"   = "Key1"
+        "value" = "Value1"
+      }
+    }
+  })
   object_filter {
     storage_classes = ["S3 Standard", "S3 Standard-IA"]
   }
@@ -113,7 +120,17 @@ resource "clumio_policy_assignment" "assignment" {
 resource "clumio_policy_rule" "rule_1" {
   name           = "First Rule"
   policy_id      = clumio_policy.policy.id
-  condition      = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_tag\":{\"$eq\":{\"key\":\"clumio\", \"value\":\"demo\"}}}"
+  condition = jsonencode({
+    "entity_type" : {
+      "$eq" : "aws_ebs_volume"
+    },
+    "aws_tag" : {
+      "$eq" : {
+        "key"   = "Key2"
+        "value" = "Value2"
+      }
+    }
+  })
   before_rule_id = clumio_policy_rule.rule_2.id
 }
 
@@ -121,7 +138,17 @@ resource "clumio_policy_rule" "rule_1" {
 resource "clumio_policy_rule" "rule_2" {
   name           = "Second Rule"
   policy_id      = clumio_policy.policy.id
-  condition      = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_tag\":{\"$eq\":{\"key\":\"clumio\", \"value\":\"example\"}}}"
+  condition = jsonencode({
+    "entity_type" : {
+      "$eq" : "aws_ebs_volume"
+    },
+    "aws_tag" : {
+      "$eq" : {
+        "key"   = "Key3"
+        "value" = "Value3"
+      }
+    }
+  })
   before_rule_id = ""
 }
 

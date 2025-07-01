@@ -120,7 +120,14 @@ S3 bucket with the tag key-value clumio:example will be protected:
 # Create a Clumio protection group that aggregates S3 buckets with the tag "clumio:example"
 resource "clumio_protection_group" "protection_group" {
   name        = "My Clumio Protection Group"
-  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"clumio\", \"value\":\"example\"}}}"
+  bucket_rule = jsonencode({
+    "aws_tag" = {
+      "$eq" = {
+        "key"   = "Key1"
+        "value" = "Value1"
+      }
+    }
+  })
   object_filter {
     storage_classes = ["S3 Standard", "S3 Standard-IA"]
   }

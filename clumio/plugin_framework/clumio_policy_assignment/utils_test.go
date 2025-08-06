@@ -53,6 +53,7 @@ func TestIsOperationsSupported(t *testing.T) {
 	operationDDB := dynamodbTableBackup
 	operationS3 := protectionGroupBackup
 	operationBacktrack := awsS3Backtrack
+	operationContinuous := awsS3Continuous
 	operationEBS := "aws_ebs_backup"
 	modelOperations := []*models.PolicyOperation{
 		{
@@ -74,6 +75,12 @@ func TestIsOperationsSupported(t *testing.T) {
 	// Tests that the Protection Group entity allows S3 backtrack type operation.
 	t.Run("Allow S3 backtrack policy assignment", func(t *testing.T) {
 		modelOperations[0].ClumioType = &operationBacktrack
+		assert.Nil(t, isOperationsSupported(entityTypeProtectionGroup, policyId, modelOperations))
+	})
+
+	// Tests that the Protection Group entity allows S3 continuous backup type operation.
+	t.Run("Allow S3 continuous policy assignment", func(t *testing.T) {
+		modelOperations[0].ClumioType = &operationContinuous
 		assert.Nil(t, isOperationsSupported(entityTypeProtectionGroup, policyId, modelOperations))
 	})
 

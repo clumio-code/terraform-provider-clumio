@@ -62,6 +62,54 @@ resource "clumio_policy" "example_s3_backtrack" {
 }
 ```
 
+### S3 Continuous Backup Example
+
+```terraform
+resource "clumio_policy" "policy" {
+  name = "S3 Continuous"
+  operations {
+    action_setting = "immediate"
+    type           = "protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      protection_group_backup {
+        backup_tier = "cold"
+      }
+    }
+  }
+  operations {
+    action_setting = "immediate"
+    type           = "aws_s3_continuous_backup"
+    slas {
+      # Use the same retention as PG backup
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      # RPO can be set to minutely or hourly intervals.
+      rpo_frequency {
+        unit  = "minutes"
+        value = 15
+      }
+    }
+    advanced_settings {
+      protection_group_continuous_backup {
+        disable_eventbridge_notification = true
+      }
+    }
+  }
+}
+```
+
 ### EBS Volume Example
 
 ```terraform
@@ -269,7 +317,7 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 Required:
 
 - `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values are: `immediate` and `window`. `immediate` starts the backup process immediately while `window` starts the backup in the specified window.
-- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the [API Documentation for List policies](https://help.clumio.com/reference/list-policy-definitions) for more information about the supported types.
+- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the [API Documentation for List policies](https://api.commvault.com/docs/SP38/api/cv/ClumioAPIs/list-policy-definitions/) for more information about the supported types.
 
 Optional:
 
@@ -293,6 +341,7 @@ Optional:
 - `mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_database_backup))
 - `mssql_log_backup` (Block Set) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_log_backup))
 - `protection_group_backup` (Block Set) Additional policy configuration settings for the protection_group_backup operation. If this operation is not of type protection_group_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--protection_group_backup))
+- `protection_group_continuous_backup` (Block Set) Additional policy configuration settings for the `aws_s3_continuous_backup` operation. If this operation is not of type `aws_s3_continuous_backup`, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--protection_group_continuous_backup))
 
 <a id="nestedblock--operations--advanced_settings--aws_ebs_volume_backup"></a>
 ### Nested Schema for `operations.advanced_settings.aws_ebs_volume_backup`
@@ -376,6 +425,14 @@ Optional:
 - `backup_tier` (String) Backup tier to store the backup in. Valid values are: `cold` and `frozen`.
 	- `cold` = Clumio SecureVault Standard
 	- `frozen` = Clumio SecureVault Archive
+
+
+<a id="nestedblock--operations--advanced_settings--protection_group_continuous_backup"></a>
+### Nested Schema for `operations.advanced_settings.protection_group_continuous_backup`
+
+Optional:
+
+- `disable_eventbridge_notification` (Boolean) If true, tries to disable EventBridge notification for the given bucket, when continuous backup no longer conducts. It may override the existing bucket notification configuration in the customer's account. This takes effect only when event_bridge_enabled is set to false.
 
 
 

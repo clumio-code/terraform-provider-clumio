@@ -69,7 +69,7 @@ func TestReadAWSManualConnectionResources(t *testing.T) {
 				Resources: &models.CategorisedResources{},
 			}
 			// Setup expectations.
-			templatesClient.EXPECT().CreateConnectionTemplate(mock.Anything).Times(1).Return(
+			templatesClient.EXPECT().CreateConnectionTemplate(mock.Anything, mock.Anything).Times(1).Return(
 				readResponse, nil)
 
 			diags := rds.readAWSManualConnectionResources(ctx, rdsm)
@@ -81,7 +81,7 @@ func TestReadAWSManualConnectionResources(t *testing.T) {
 	t.Run("CreateConnectionTemplate returns an error", func(t *testing.T) {
 
 		// Setup expectations.
-		templatesClient.EXPECT().CreateConnectionTemplate(mock.Anything).Times(1).Return(
+		templatesClient.EXPECT().CreateConnectionTemplate(mock.Anything, mock.Anything).Times(1).Return(
 			nil, apiError)
 
 		diags := rds.readAWSManualConnectionResources(ctx, rdsm)
@@ -93,7 +93,7 @@ func TestReadAWSManualConnectionResources(t *testing.T) {
 	t.Run("CreateConnectionTemplate returns an empty response", func(t *testing.T) {
 
 		// Setup expectations.
-		templatesClient.EXPECT().CreateConnectionTemplate(mock.Anything).Times(1).Return(nil, nil)
+		templatesClient.EXPECT().CreateConnectionTemplate(mock.Anything, mock.Anything).Times(1).Return(nil, nil)
 
 		diags := rds.readAWSManualConnectionResources(ctx, rdsm)
 		assert.NotNil(t, diags)

@@ -15,7 +15,8 @@ Clumio Wallet Resource to create and manage wallets in Clumio. Wallets should be
 ```terraform
 resource "clumio_wallet" "example" {
   # example configuration here
-  account_native_id = "account_native_id"
+  account_native_id = "123456789012"
+  aws_region        = "us-west-2"
 }
 ```
 
@@ -25,6 +26,10 @@ resource "clumio_wallet" "example" {
 ### Required
 
 - `account_native_id` (String) Identifier of the AWS account to be setup with BYOK and associated with the wallet.
+
+### Optional
+
+- `aws_region` (String) The AWS region where the wallet is located.
 
 ### Read-Only
 

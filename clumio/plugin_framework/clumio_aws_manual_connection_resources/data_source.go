@@ -44,16 +44,18 @@ func (r *clumioAwsManualConnectionResourcesDatasource) readAWSManualConnectionRe
 		assetsEnabled = append(assetsEnabled, &enabled)
 	}
 	showManualResources := true
+	returnGroupToken := false
 
 	// Call the Clumio API to read the resources for the provided configuration.
 	apiRes, apiErr := r.awsTemplates.CreateConnectionTemplate(
+		&returnGroupToken,
 		&models.CreateConnectionTemplateV1Request{
 			ShowManualResources: &showManualResources,
 			AssetTypesEnabled:   assetsEnabled,
 			AwsAccountId:        state.AccountId.ValueStringPointer(),
 			AwsRegion:           state.AwsRegion.ValueStringPointer(),
 		})
-	
+
 	if apiErr != nil {
 		summary := "Failed to get resources from API"
 		detail := common.ParseMessageFromApiError(apiErr)

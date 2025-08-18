@@ -28,6 +28,7 @@ func (r *clumioWalletResource) createWallet(
 	// Call the Clumio API to create the wallet.
 	res, apiErr := r.sdkWallets.CreateWallet(&models.CreateWalletV1Request{
 		AccountNativeId: plan.AccountNativeId.ValueStringPointer(),
+		AwsRegion:       plan.AwsRegion.ValueStringPointer(),
 	})
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to create %s", r.name)
@@ -48,6 +49,7 @@ func (r *clumioWalletResource) createWallet(
 	plan.State = types.StringPointerValue(res.State)
 	plan.Token = types.StringPointerValue(res.Token)
 	plan.ClumioAccountId = types.StringPointerValue(res.ClumioAwsAccountId)
+	plan.AwsRegion = types.StringPointerValue(res.AwsRegion)
 	return diags
 }
 
@@ -91,6 +93,7 @@ func (r *clumioWalletResource) readWallet(
 	state.AccountNativeId = types.StringPointerValue(res.AccountNativeId)
 	state.Token = types.StringPointerValue(res.Token)
 	state.ClumioAccountId = types.StringPointerValue(res.ClumioAwsAccountId)
+	state.AwsRegion = types.StringPointerValue(res.AwsRegion)
 
 	return false, diags
 }

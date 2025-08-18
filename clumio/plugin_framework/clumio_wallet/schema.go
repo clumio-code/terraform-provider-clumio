@@ -24,6 +24,7 @@ type clumioWalletResourceModel struct {
 	Token           types.String `tfsdk:"token"`
 	State           types.String `tfsdk:"state"`
 	ClumioAccountId types.String `tfsdk:"clumio_account_id"`
+	AwsRegion       types.String `tfsdk:"aws_region"`
 }
 
 // Schema defines the structure and constraints of the clumio_wallet Terraform resource.
@@ -72,6 +73,15 @@ func (r *clumioWalletResource) Schema(
 					"identifier is provided so that access to the service role for Clumio can be " +
 					"restricted to just this account.",
 				Computed: true,
+			},
+			schemaAwsRegion: schema.StringAttribute{
+				Description: "The AWS region where the wallet is located.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}

@@ -1,3 +1,8 @@
+## 0.15.0
+This update contains the following changes:
+* New field `aws_region` for clumio wallet is introduced.
+* Updated documentations and examples to use `jsonencode` for JSON fields
+
 ## 0.14.0
 This update contains the following changes:
 * Added `clumio_report_configuration` resource for setting an report for overall backup information.

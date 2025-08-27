@@ -3,7 +3,7 @@ module github.com/clumio-code/terraform-provider-clumio
 // The `go` line should be the most recent version of Go minus one.
 // For example if the latest Go version is 1.23, then this should be 1.22.
 // Keep this in sync with the go version in the .github/workflows/ files.
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/clumio-code/clumio-go-sdk v0.24.0

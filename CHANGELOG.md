@@ -2,6 +2,7 @@
 This update contains the following changes:
 * New field `aws_region` for clumio wallet is introduced.
 * Updated documentations and examples to use `jsonencode` for JSON fields
+* Updated supported Go versions to `1.24` and `1.25` to ensure compatibility with the two most recent major release of Go.
 
 ## 0.14.0
 This update contains the following changes:

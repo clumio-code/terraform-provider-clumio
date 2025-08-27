@@ -16,7 +16,7 @@ on:
       - 'v*'
 env:
   # This should be the latest major release of Go.
-  GO_VERSION: 1.24
+  GO_VERSION: 1.25
   GOEXPERIMENT: boringcrypto
   # Prevent Go from downloading other versions from the Internet.
   GOTOOLCHAIN: local

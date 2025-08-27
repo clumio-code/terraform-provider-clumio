@@ -16,8 +16,8 @@ env:
   ENABLE_TEST_REPORTS: false
   # This should be the latest 2 major releases of Go, older versions are
   # not maintained and lack security updates.
-  GO_LATEST: 1.24
-  GO_PREVIOUS: 1.23
+  GO_LATEST: 1.25
+  GO_PREVIOUS: 1.24
 
 jobs:
   # This prepare stage allows us to export and re-use information

@@ -1,19 +1,19 @@
 resource "clumio_protection_group" "advanced_example" {
-  name                   = "example-protection_group-2"
-  description            = "example protection group-2"
+  name        = "example-protection_group-2"
+  description = "example protection group-2"
   bucket_rule = jsonencode(
     {
-      "aws_tag": {
-        "$eq": {
-          "key": "Environment",
-          "value": "Prod"
+      "aws_tag" : {
+        "$eq" : {
+          "key" : "Key1",
+          "value" : "Value1"
         }
       },
-      "account_native_id": {
-        "$eq": "AWS Account ID"
+      "account_native_id" : {
+        "$eq" : "123456789012"
       },
-      "aws_region": {
-        "$eq": "AWS Region"
+      "aws_region" : {
+        "$eq" : "us-west-2"
       }
     }
   )

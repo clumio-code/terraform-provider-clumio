@@ -241,6 +241,15 @@ func buildSchemaOperationAdvancedSettings(
 			},
 		}
 	}
+	if operation.AdvancedSettings.ProtectionGroupContinuousBackup != nil {
+		advSettings.S3ContinuousBackup = []*ContinuousConfigModel{
+			{
+				DisableEventbridgeNotification: types.BoolPointerValue(
+					operation.AdvancedSettings.ProtectionGroupContinuousBackup.
+						DisableEventbridgeNotification),
+			},
+		}
+	}
 	if operation.AdvancedSettings.AwsEbsVolumeBackup != nil {
 		advSettings.EBSVolumeBackup = []*backupTierModel{
 			{
@@ -300,6 +309,13 @@ func getOperationAdvancedSettings(
 				&models.ProtectionGroupBackupAdvancedSetting{
 					BackupTier: operation.AdvancedSettings[0].ProtectionGroupBackup[0].
 						BackupTier.ValueStringPointer(),
+				}
+		}
+		if operation.AdvancedSettings[0].S3ContinuousBackup != nil {
+			advancedSettings.ProtectionGroupContinuousBackup =
+				&models.ProtectionGroupContinuousBackupAdvancedSetting{
+					DisableEventbridgeNotification: operation.AdvancedSettings[0].
+						S3ContinuousBackup[0].DisableEventbridgeNotification.ValueBoolPointer(),
 				}
 		}
 		if operation.AdvancedSettings[0].EC2MssqlDatabaseBackup != nil {

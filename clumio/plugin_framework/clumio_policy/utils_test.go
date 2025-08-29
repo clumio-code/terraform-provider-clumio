@@ -17,32 +17,34 @@ import (
 )
 
 var (
-	actionSetting      = "immediate"
-	operationType      = "aws_ebs_volume_backup"
-	operationType2     = "aws_ec2_instance_backup"
-	operationType3     = "aws_rds_resource_aws_snapshot"
-	operationType4     = "aws_rds_resource_granular_backup"
-	operationType5     = "ec2_mssql_database_backup"
-	operationType6     = "ec2_mssql_log_backup"
-	operationType7     = "mssql_database_backup"
-	operationType8     = "mssql_log_backup"
-	operationType9     = "protection_group_backup"
-	retUnit            = "days"
-	retValue           = int64(5)
-	retUnit2           = "hours"
-	retValue2          = int64(6)
-	rpoUnit            = "days"
-	rpoValue           = int64(1)
-	rpoUnit2           = "hours"
-	rpoValue2          = int64(2)
-	offset             = int64(1)
-	backupRegion       = "us-east-1"
-	backupTier         = "mock-backup-tier"
-	startTime          = "start-time"
-	endTime            = "end-time"
-	rdsConfigSyncApply = "immediate"
-	preferredReplica   = "mock-preferred-replica"
-	alternativeReplica = "mock-alternate-replica"
+	actionSetting                  = "immediate"
+	operationType                  = "aws_ebs_volume_backup"
+	operationType2                 = "aws_ec2_instance_backup"
+	operationType3                 = "aws_rds_resource_aws_snapshot"
+	operationType4                 = "aws_rds_resource_granular_backup"
+	operationType5                 = "ec2_mssql_database_backup"
+	operationType6                 = "ec2_mssql_log_backup"
+	operationType7                 = "mssql_database_backup"
+	operationType8                 = "mssql_log_backup"
+	operationType9                 = "protection_group_backup"
+	operationType10                = "aws_s3_continuous_backup"
+	retUnit                        = "days"
+	retValue                       = int64(5)
+	retUnit2                       = "hours"
+	retValue2                      = int64(6)
+	rpoUnit                        = "days"
+	rpoValue                       = int64(1)
+	rpoUnit2                       = "hours"
+	rpoValue2                      = int64(2)
+	offset                         = int64(1)
+	backupRegion                   = "us-east-1"
+	backupTier                     = "mock-backup-tier"
+	startTime                      = "start-time"
+	endTime                        = "end-time"
+	rdsConfigSyncApply             = "immediate"
+	preferredReplica               = "mock-preferred-replica"
+	alternativeReplica             = "mock-alternate-replica"
+	disableEventbridgeNotification = true
 )
 
 // Unit test for the utility function to convert ClumioOperations to SchemaOperations. This tests
@@ -295,6 +297,20 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, *modelOpAdvSettings.ProtectionGroupBackup.BackupTier,
 			schemaOpAdvSettings.ProtectionGroupBackup[0].BackupTier.ValueString())
+	})
+	t.Run("Test S3 Continuous Backup Advanced Setting", func(t *testing.T) {
+		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
+			ProtectionGroupContinuousBackup: &models.ProtectionGroupContinuousBackupAdvancedSetting{
+				DisableEventbridgeNotification: &disableEventbridgeNotification,
+			},
+		}
+		modelOperations[0].ClumioType = &operationType10
+		schemaOperations, diags := mapClumioOperationsToSchemaOperations(ctx, modelOperations)
+		assert.Nil(t, diags)
+		modelOpAdvSettings := modelOperations[0].AdvancedSettings
+		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
+		assert.Equal(t, *modelOpAdvSettings.ProtectionGroupContinuousBackup.DisableEventbridgeNotification,
+			schemaOpAdvSettings.S3ContinuousBackup[0].DisableEventbridgeNotification.ValueBool())
 	})
 }
 
@@ -631,5 +647,25 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, schemaOpAdvSettings.ProtectionGroupBackup[0].BackupTier.ValueString(),
 			*modelOpAdvSettings.ProtectionGroupBackup.BackupTier)
+	})
+
+	t.Run("Test S3 Continuous Backup Advanced Setting", func(t *testing.T) {
+		schemaOperations[0].AdvancedSettings = []*advancedSettingsModel{
+			{
+				S3ContinuousBackup: []*ContinuousConfigModel{
+					{
+						DisableEventbridgeNotification: basetypes.NewBoolValue(
+							disableEventbridgeNotification),
+					},
+				},
+			},
+		}
+		schemaOperations[0].OperationType = basetypes.NewStringValue(operationType10)
+		modelOperations, diags := mapSchemaOperationsToClumioOperations(ctx, schemaOperations)
+		assert.Nil(t, diags)
+		modelOpAdvSettings := modelOperations[0].AdvancedSettings
+		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
+		assert.Equal(t, schemaOpAdvSettings.S3ContinuousBackup[0].DisableEventbridgeNotification.ValueBool(),
+			*modelOpAdvSettings.ProtectionGroupContinuousBackup.DisableEventbridgeNotification)
 	})
 }

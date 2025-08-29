@@ -22,9 +22,9 @@ func (_m *MockAWSTemplatesClient) EXPECT() *MockAWSTemplatesClient_Expecter {
 	return &MockAWSTemplatesClient_Expecter{mock: &_m.Mock}
 }
 
-// CreateConnectionTemplate provides a mock function with given fields: body
-func (_m *MockAWSTemplatesClient) CreateConnectionTemplate(body *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError) {
-	ret := _m.Called(body)
+// CreateConnectionTemplate provides a mock function with given fields: returnGroupToken, body
+func (_m *MockAWSTemplatesClient) CreateConnectionTemplate(returnGroupToken *bool, body *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError) {
+	ret := _m.Called(returnGroupToken, body)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateConnectionTemplate")
@@ -32,19 +32,19 @@ func (_m *MockAWSTemplatesClient) CreateConnectionTemplate(body *models.CreateCo
 
 	var r0 *models.CreateAWSTemplateV2Response
 	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func(*models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)); ok {
-		return rf(body)
+	if rf, ok := ret.Get(0).(func(*bool, *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)); ok {
+		return rf(returnGroupToken, body)
 	}
-	if rf, ok := ret.Get(0).(func(*models.CreateConnectionTemplateV1Request) *models.CreateAWSTemplateV2Response); ok {
-		r0 = rf(body)
+	if rf, ok := ret.Get(0).(func(*bool, *models.CreateConnectionTemplateV1Request) *models.CreateAWSTemplateV2Response); ok {
+		r0 = rf(returnGroupToken, body)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.CreateAWSTemplateV2Response)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*models.CreateConnectionTemplateV1Request) *apiutils.APIError); ok {
-		r1 = rf(body)
+	if rf, ok := ret.Get(1).(func(*bool, *models.CreateConnectionTemplateV1Request) *apiutils.APIError); ok {
+		r1 = rf(returnGroupToken, body)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -60,14 +60,15 @@ type MockAWSTemplatesClient_CreateConnectionTemplate_Call struct {
 }
 
 // CreateConnectionTemplate is a helper method to define mock.On call
+//   - returnGroupToken *bool
 //   - body *models.CreateConnectionTemplateV1Request
-func (_e *MockAWSTemplatesClient_Expecter) CreateConnectionTemplate(body interface{}) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
-	return &MockAWSTemplatesClient_CreateConnectionTemplate_Call{Call: _e.mock.On("CreateConnectionTemplate", body)}
+func (_e *MockAWSTemplatesClient_Expecter) CreateConnectionTemplate(returnGroupToken interface{}, body interface{}) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
+	return &MockAWSTemplatesClient_CreateConnectionTemplate_Call{Call: _e.mock.On("CreateConnectionTemplate", returnGroupToken, body)}
 }
 
-func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) Run(run func(body *models.CreateConnectionTemplateV1Request)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
+func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) Run(run func(returnGroupToken *bool, body *models.CreateConnectionTemplateV1Request)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*models.CreateConnectionTemplateV1Request))
+		run(args[0].(*bool), args[1].(*models.CreateConnectionTemplateV1Request))
 	})
 	return _c
 }
@@ -77,7 +78,7 @@ func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) Return(_a0 *mode
 	return _c
 }
 
-func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) RunAndReturn(run func(*models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
+func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) RunAndReturn(run func(*bool, *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
 	_c.Call.Return(run)
 	return _c
 }

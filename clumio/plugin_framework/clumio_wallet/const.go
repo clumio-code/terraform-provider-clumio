@@ -10,4 +10,5 @@ const (
 	schemaToken           = "token"
 	schemaState           = "state"
 	schemaClumioAccountId = "clumio_account_id"
+	schemaAwsRegion       = "aws_region"
 )

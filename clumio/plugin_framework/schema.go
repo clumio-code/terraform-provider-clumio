@@ -48,7 +48,9 @@ func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 					"Portal: https://canada.portal.clumio.com/\n\n\t\t" +
 					"API Base URL:  https://ca-central-1.ca.api.clumio.com\n\n\t\t" +
 					"Portal: https://eu1.portal.clumio.com/\n\n\t\t" +
-					"API Base URL:  https://eu-central-1.de.api.clumio.com\n\n\t\t",
+					"API Base URL:  https://eu-central-1.de.api.clumio.com\n\n\t\t" +
+					"Portal: https://au.portal.clumio.com/\n\n\t\t" +
+					"API Base URL:  https://ap-southeast-2.au.api.clumio.com\n\n\t\t",
 				Optional: true,
 			},
 			"clumio_organizational_unit_context": schema.StringAttribute{

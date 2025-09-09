@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
     # Allows us to trigger this action manually.
 env:
-  # This activates boringcrypto which provides FIPS compliant crypto libraries.
-  GOEXPERIMENT: boringcrypto
+  # Use the latest FIPS 140 modules.
+  GOFIPS140: inprocess
   # Prevent Go from downloading other versions from the Internet.
   GOTOOLCHAIN: local
   ENABLE_TEST_REPORTS: false
@@ -30,7 +30,8 @@ jobs:
     steps:
       - name: Select Go versions
         id: go_versions
-        run: echo "go_versions=['$GO_LATEST','$GO_PREVIOUS']" | tee -a "$GITHUB_OUTPUT"
+        run: |
+          echo "go_versions=[\"$GO_LATEST\",\"$GO_PREVIOUS\"]" | tee -a "$GITHUB_OUTPUT"
 
   build-and-test:
     name: Build
@@ -93,7 +94,7 @@ jobs:
       # Note that `v2.0.0` is required, there is no `v2` tag for this action.
       uses: autero1/action-gotestsum@v2.0.0
       with:
-        gotestsum_version: 1.12.1
+        gotestsum_version: 1.12.3
         # https://github.com/gotestyourself/gotestsum/releases
 
     - name: Unit Tests

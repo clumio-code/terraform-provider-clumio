@@ -315,19 +315,19 @@ func (r *clumioReportConfigurationResource) Schema(
 		Description: "The common filter which will be applied to all controls.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				schemaAssetTypes: schema.ListAttribute{
+				schemaAssetTypes: schema.SetAttribute{
 					Description: "The asset types to be included in the report. For example, " +
 						"[`aws_ec2_instance`, `microsoft365_drive`].",
 					Optional:    true,
 					ElementType: types.StringType,
 				},
-				schemaDataSources: schema.ListAttribute{
+				schemaDataSources: schema.SetAttribute{
 					Description: "The data sources to be included in the report. Possible values " +
 						"include `aws`, `microsoft365` or `vmware`.",
 					Optional:    true,
 					ElementType: types.StringType,
 				},
-				schemaOrganizationalUnits: schema.ListAttribute{
+				schemaOrganizationalUnits: schema.SetAttribute{
 					Description: "The organizational units to be included in the report.",
 					Optional:    true,
 					ElementType: types.StringType,

@@ -226,9 +226,9 @@ Required:
 
 Optional:
 
-- `asset_types` (List of String) The asset types to be included in the report. For example, [`aws_ec2_instance`, `microsoft365_drive`].
-- `data_sources` (List of String) The data sources to be included in the report. Possible values include `aws`, `microsoft365` or `vmware`.
-- `organizational_units` (List of String) The organizational units to be included in the report.
+- `asset_types` (Set of String) The asset types to be included in the report. For example, [`aws_ec2_instance`, `microsoft365_drive`].
+- `data_sources` (Set of String) The data sources to be included in the report. Possible values include `aws`, `microsoft365` or `vmware`.
+- `organizational_units` (Set of String) The organizational units to be included in the report.
 
 
 

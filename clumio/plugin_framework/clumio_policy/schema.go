@@ -378,8 +378,8 @@ func (r *policyResource) Schema(
 			Description: "The type of operation to be performed. Depending on the type " +
 				"selected, `advanced_settings` may also be required. See the [API " +
 				"Documentation for List policies]" +
-				"(https://help.clumio.com/reference/list-policy-definitions) for more information " +
-				"about the supported types.",
+				"(https://api.commvault.com/docs/SP38/api/cv/ClumioAPIs/list-policy-definitions/)" +
+				" for more information about the supported types.",
 			Required: true,
 		},
 		schemaBackupAwsRegion: schema.StringAttribute{

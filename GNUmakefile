@@ -40,6 +40,10 @@ testacc_sso:
 testacc_bucket:
 	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -v ./... $(TESTARGS) -tags="bucket" -timeout 120m
 
+.PHONY: testacc_general_settings
+testacc_general_settings:
+	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -v ./... $(TESTARGS) -tags="general_settings" -timeout 120m
+
 .PHONY: testunit
 testunit:
 	gotestsum $(TESTSUM_ARGS) -- -vet=off ./... -v $(TESTARGS) -tags="unit" -timeout 90s

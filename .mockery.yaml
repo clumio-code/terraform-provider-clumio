@@ -43,3 +43,4 @@ packages:
       DynamoDBTableClient:
       ProtectionGroupS3AssetsClient:
       ReportConfigurationClient:
+      GeneralSettingsClient:

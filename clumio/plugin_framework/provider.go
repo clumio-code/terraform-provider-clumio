@@ -16,6 +16,7 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection_resources"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_general_settings"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_organizational_unit"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy_assignment"
@@ -187,5 +188,6 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_s3_bucket_properties.NewClumioS3BucketPropertiesResource,
 		clumio_protection_group_bucket.NewClumioProtectionGroupBucketResource,
 		clumio_report_configuration.NewReportConfigurationResource,
+		clumio_general_settings.NewGeneralSettingsResource,
 	}
 }

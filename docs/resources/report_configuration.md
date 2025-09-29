@@ -75,7 +75,7 @@ resource "clumio_report_configuration" "example_report_configuration" {
 
 - `description` (String) The user-provided description of the compliance report configuration.
 - `notification` (Block Set) Notification channels to send the generated report runs. (see [below for nested schema](#nestedblock--notification))
-- `parameter` (Block Set) Parameters for the report configuration. (see [below for nested schema](#nestedblock--parameter))
+- `parameter` (Block Set) Filter and control parameters of compliance report. (see [below for nested schema](#nestedblock--parameter))
 - `schedule` (Block Set) When the report will be generated and sent. If the schedule is not provided then a default value will be used. (see [below for nested schema](#nestedblock--schedule))
 
 ### Read-Only
@@ -96,7 +96,7 @@ Optional:
 
 Optional:
 
-- `controls` (Block Set) The set of controls supported in compliance report. (see [below for nested schema](#nestedblock--parameter--controls))
+- `controls` (Block Set) Compliance controls to evaluate policy or assets for compliance. (see [below for nested schema](#nestedblock--parameter--controls))
 - `filters` (Block Set) The set of filters supported in compliance report. (see [below for nested schema](#nestedblock--parameter--filters))
 
 <a id="nestedblock--parameter--controls"></a>
@@ -104,18 +104,18 @@ Optional:
 
 Optional:
 
-- `asset_backup` (Block Set) The control for asset backup. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup))
-- `asset_protection` (Block Set) The control for asset protection. (see [below for nested schema](#nestedblock--parameter--controls--asset_protection))
-- `policy` (Block Set) The control for policy. (see [below for nested schema](#nestedblock--parameter--controls--policy))
+- `asset_backup` (Block Set) The control evaluating whether assets have at least one backup within each window of the specified look back period, with retention meeting the minimum required duration. For example, a look_back_period of 7 days, window_size of 1 day, and retention_duration of 1 month means that there should be a backup every day for the past week and that the retention of that backup should be at least 1 month. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup))
+- `asset_protection` (Block Set) The control evaluating if all assets are protected with a policy or not. (see [below for nested schema](#nestedblock--parameter--controls--asset_protection))
+- `policy` (Block Set) The control evaluating if policies have a minimum backup retention and frequency. (see [below for nested schema](#nestedblock--parameter--controls--policy))
 
 <a id="nestedblock--parameter--controls--asset_backup"></a>
 ### Nested Schema for `parameter.controls.asset_backup`
 
 Optional:
 
-- `look_back_period` (Block Set) The time unit used in control definition. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup--look_back_period))
-- `minimum_retention_duration` (Block Set) The time unit used in control definition. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup--minimum_retention_duration))
-- `window_size` (Block Set) The time unit used in control definition. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup--window_size))
+- `look_back_period` (Block Set) The duration prior to the compliance evaluation point to look back. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup--look_back_period))
+- `minimum_retention_duration` (Block Set) The minimum required retention duration for a backup to be considered compliant. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup--minimum_retention_duration))
+- `window_size` (Block Set) The size of each evaluation window within the look back period in which at least one compliant backup must exist. (see [below for nested schema](#nestedblock--parameter--controls--asset_backup--window_size))
 
 <a id="nestedblock--parameter--controls--asset_backup--look_back_period"></a>
 ### Nested Schema for `parameter.controls.asset_backup.look_back_period`
@@ -150,7 +150,7 @@ Required:
 
 Required:
 
-- `should_ignore_deactivated_policy` (Boolean) Whether the report should ignore deactivated policy or not.
+- `should_ignore_deactivated_policy` (Boolean) Treat deactivated policies as compliant if true.
 
 
 <a id="nestedblock--parameter--controls--policy"></a>
@@ -158,8 +158,8 @@ Required:
 
 Optional:
 
-- `minimum_retention_duration` (Block Set) The time unit used in control definition. (see [below for nested schema](#nestedblock--parameter--controls--policy--minimum_retention_duration))
-- `minimum_rpo_frequency` (Block Set) The time unit used in control definition. (see [below for nested schema](#nestedblock--parameter--controls--policy--minimum_rpo_frequency))
+- `minimum_retention_duration` (Block Set) The minimum retention duration for policy control. (see [below for nested schema](#nestedblock--parameter--controls--policy--minimum_retention_duration))
+- `minimum_rpo_frequency` (Block Set) The minimum RPO frequency for policy control. (see [below for nested schema](#nestedblock--parameter--controls--policy--minimum_rpo_frequency))
 
 <a id="nestedblock--parameter--controls--policy--minimum_retention_duration"></a>
 ### Nested Schema for `parameter.controls.policy.minimum_retention_duration`

@@ -112,3 +112,7 @@ by default. To include these tests in the acceptance test suite, SSO must be set
 variable should be set to true. For guidance on configuring SSO, please consult the following documentation: [Authentication and Access](https://support.clumio.com/hc/en-us/sections/13440186425364-Authentication-and-Access)
 
 In order to run the full suite of acceptance tests, run `make testacc`.
+
+
+## MCP Server
+A Model Context Protocol (MCP) server for the Clumio Terraform Provider that helps generate and manage Terraform configurations for the Clumio platform is available heere: [Clumio Terraform Provider MCP Server](https://github.com/clumio-code/clumio-terraform-mcp)

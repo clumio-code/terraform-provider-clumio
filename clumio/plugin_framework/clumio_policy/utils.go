@@ -282,6 +282,14 @@ func buildSchemaOperationAdvancedSettings(
 			},
 		}
 	}
+	if operation.AdvancedSettings.AwsIcebergTableBackup != nil {
+		advSettings.IcebergTableBackup = []*backupTierModel{
+			{
+				BackupTier: types.StringPointerValue(
+					operation.AdvancedSettings.AwsIcebergTableBackup.BackupTier),
+			},
+		}
+	}
 	schemaOperation.AdvancedSettings = []*advancedSettingsModel{advSettings}
 }
 
@@ -365,6 +373,13 @@ func getOperationAdvancedSettings(
 			advancedSettings.AwsRdsResourceGranularBackup =
 				&models.RDSLogicalBackupAdvancedSetting{
 					BackupTier: operation.AdvancedSettings[0].RDSLogicalBackup[0].
+						BackupTier.ValueStringPointer(),
+				}
+		}
+		if operation.AdvancedSettings[0].IcebergTableBackup != nil {
+			advancedSettings.AwsIcebergTableBackup =
+				&models.IcebergBackupAdvancedSetting{
+					BackupTier: operation.AdvancedSettings[0].IcebergTableBackup[0].
 						BackupTier.ValueStringPointer(),
 				}
 		}

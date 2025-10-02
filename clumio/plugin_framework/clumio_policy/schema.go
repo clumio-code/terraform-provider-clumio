@@ -71,6 +71,7 @@ type advancedSettingsModel struct {
 	EC2InstanceBackup      []*backupTierModel       `tfsdk:"aws_ec2_instance_backup"`
 	RDSPitrConfigSync      []*pitrConfigModel       `tfsdk:"aws_rds_config_sync"`
 	RDSLogicalBackup       []*backupTierModel       `tfsdk:"aws_rds_resource_granular_backup"`
+	IcebergTableBackup     []*backupTierModel       `tfsdk:"aws_iceberg_table_backup"`
 }
 
 // policyOperationModel maps to the Operations attribute in policyResourceModel and contains
@@ -294,6 +295,20 @@ func (r *policyResource) Schema(
 					schemaBackupTier: schema.StringAttribute{
 						Optional:    true,
 						Description: rdsLogicalBackupAdvancedSettingDesc,
+					},
+				},
+			},
+			Validators: []validator.Set{
+				common.WrapSetValidator(setvalidator.SizeAtMost(1)),
+			},
+		},
+		schemaIcebergTableBackup: schema.SetNestedBlock{
+			Description: "The advanced settings for Iceberg backup operations.",
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					schemaBackupTier: schema.StringAttribute{
+						Optional:    true,
+						Description: "Backup tier to store the backup in. Valid values are: `standard`.",
 					},
 				},
 			},

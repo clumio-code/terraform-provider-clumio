@@ -55,7 +55,8 @@ func (r *clumioPolicyAssignmentResource) Schema(
 				Required:      true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{
-					validators.OneOf(entityTypeProtectionGroup, entityTypeAWSDynamoDBTable),
+					validators.OneOf(entityTypeProtectionGroup, entityTypeAWSDynamoDBTable,
+						entityTypeIcebergGlueTable, entityTypeIcebergS3Table),
 				},
 			},
 			schemaPolicyId: schema.StringAttribute{

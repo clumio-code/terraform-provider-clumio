@@ -22,6 +22,8 @@ const (
 	schemaProtectWarmTierVersion         = "protect_warm_tier_version"
 	schemaProtectWarmTierDynamodbVersion = "protect_warm_tier_dynamodb_version"
 	schemaProtectEc2MssqlVersion         = "protect_ec2_mssql_version"
+	schemaProtectIcebergOnGlueVersion    = "protect_iceberg_on_glue_version"
+	schemaProtectIcebergOnS3TableVersion = "protect_iceberg_on_s3_table_version"
 	schemaClumioEventPubId               = "clumio_event_pub_id"
 	schemaProperties                     = "properties"
 	schemaIntermediateRoleArn            = "intermediate_role_arn"

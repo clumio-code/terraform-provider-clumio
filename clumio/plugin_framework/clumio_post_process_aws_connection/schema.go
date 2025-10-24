@@ -37,6 +37,8 @@ type postProcessAWSConnectionResourceModel struct {
 	ProtectEC2MssqlVersion         types.String `tfsdk:"protect_ec2_mssql_version"`
 	ProtectWarmTierVersion         types.String `tfsdk:"protect_warm_tier_version"`
 	ProtectWarmTierDynamoDBVersion types.String `tfsdk:"protect_warm_tier_dynamodb_version"`
+	ProtectIcebergOnGlueVersion    types.String `tfsdk:"protect_iceberg_on_glue_version"`
+	ProtectIcebergOnS3TableVersion types.String `tfsdk:"protect_iceberg_on_s3_table_version"`
 	Properties                     types.Map    `tfsdk:"properties"`
 	IntermediateRoleArn            types.String `tfsdk:"intermediate_role_arn"`
 	WaitForIngestion               types.Bool   `tfsdk:"wait_for_ingestion"`
@@ -120,6 +122,14 @@ func (r *postProcessAWSConnectionResource) Schema(
 			},
 			schemaProtectWarmTierDynamodbVersion: schema.StringAttribute{
 				Description: "Clumio DynamoDB Warm Tier Protect version.",
+				Optional:    true,
+			},
+			schemaProtectIcebergOnGlueVersion: schema.StringAttribute{
+				Description: "Clumio Iceberg on Glue Protect version.",
+				Optional:    true,
+			},
+			schemaProtectIcebergOnS3TableVersion: schema.StringAttribute{
+				Description: "Clumio Iceberg on S3 Table Protect version.",
 				Optional:    true,
 			},
 			schemaClumioEventPubId: schema.StringAttribute{

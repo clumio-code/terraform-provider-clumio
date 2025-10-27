@@ -109,7 +109,7 @@ This step is required only once.
 
 Furthermore, some acceptance tests necessitate the configuration of Single Sign-On (SSO) prior to execution. Therefore, these tests are not run
 by default. To include these tests in the acceptance test suite, SSO must be set up in advance, and the CLUMIO_TEST_IS_SSO_CONFIGURED environment
-variable should be set to true. For guidance on configuring SSO, please consult the following documentation: [Authentication and Access](https://support.clumio.com/hc/en-us/sections/13440186425364-Authentication-and-Access)
+variable should be set to true. For guidance on configuring SSO, please consult the following documentation: [Authentication and Access](https://documentation.commvault.com/clumio/authentication.html)
 
 In order to run the full suite of acceptance tests, run `make testacc`.
 

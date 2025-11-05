@@ -53,7 +53,7 @@ var (
 			isConfig:  false,
 		},
 		"iceberg_on_s3_table": {
-			sourceKey: "ProtectIcebergOnS3TableVersion",
+			sourceKey: "ProtectIcebergOnS3TablesVersion",
 			isConfig:  false,
 		},
 	}

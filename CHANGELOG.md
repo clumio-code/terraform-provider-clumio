@@ -1,3 +1,9 @@
+## 0.16.0
+This update contains the following changes:
+* New resource `clumio_general_settings` resource is introduced for setting auto logout duration, password expiration duration, and IP Allow list.
+* Added support for Iceberg asset types in connection and backup policy.
+* Updated documentations for `clumio_report_configuration` to be more specific.
+
 ## 0.15.0
 This update contains the following changes:
 * Added support for S3 continuous backup policy.

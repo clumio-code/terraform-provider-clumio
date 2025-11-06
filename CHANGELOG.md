@@ -1,3 +1,6 @@
+## 0.16.1
+This update contains a fix to the clumio_post_process_aws_connection resource.
+
 ## 0.16.0
 This update contains the following changes:
 * New resource `clumio_general_settings` resource is introduced for setting auto logout duration, password expiration duration, and IP Allow list.

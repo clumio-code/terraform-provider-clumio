@@ -52,7 +52,7 @@ var (
 			sourceKey: "ProtectIcebergOnGlueVersion",
 			isConfig:  false,
 		},
-		"iceberg_on_s3_table": {
+		"iceberg_on_s3_tables": {
 			sourceKey: "ProtectIcebergOnS3TablesVersion",
 			isConfig:  false,
 		},

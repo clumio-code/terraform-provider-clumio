@@ -12,10 +12,13 @@ const (
 
 	entityTypeProtectionGroup  = "protection_group"
 	entityTypeAWSDynamoDBTable = "aws_dynamodb_table"
+	entityTypeIcebergGlueTable = "aws_iceberg_glue_table"
+	entityTypeIcebergS3Table   = "aws_iceberg_s3_table"
 	protectionGroupBackup      = "protection_group_backup"
 	dynamodbTableBackup        = "aws_dynamodb_table_backup"
 	awsS3Backtrack             = "aws_s3_backtrack"
 	awsS3Continuous            = "aws_s3_continuous_backup"
+	awsIcebergTableBackup      = "aws_iceberg_table_backup"
 
 	//Common error messages used by the resource.
 	readProtectionGroupErrFmt = "Unable to read Protection Group %v."
@@ -29,5 +32,7 @@ var (
 	allowedOperation = map[string][]string{
 		entityTypeAWSDynamoDBTable: {dynamodbTableBackup},
 		entityTypeProtectionGroup:  {protectionGroupBackup, awsS3Backtrack, awsS3Continuous},
+		entityTypeIcebergGlueTable: {awsIcebergTableBackup},
+		entityTypeIcebergS3Table:   {awsIcebergTableBackup},
 	}
 )

@@ -40,6 +40,7 @@ const (
 	schemaRDSPitrConfigSync              = "aws_rds_config_sync"
 	schemaApply                          = "apply"
 	schemaRdsLogicalBackup               = "aws_rds_resource_granular_backup"
+	schemaIcebergTableBackup             = "aws_iceberg_table_backup"
 	schemaNameBeginsWith                 = "name_begins_with"
 	schemaOperationTypes                 = "operation_types"
 	schemaPolicies                       = "policies"

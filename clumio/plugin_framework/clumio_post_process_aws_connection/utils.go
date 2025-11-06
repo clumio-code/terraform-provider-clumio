@@ -48,6 +48,14 @@ var (
 			sourceKey: "ProtectDynamoDBVersion",
 			isConfig:  false,
 		},
+		"iceberg_on_glue": {
+			sourceKey: "ProtectIcebergOnGlueVersion",
+			isConfig:  false,
+		},
+		"iceberg_on_s3_table": {
+			sourceKey: "ProtectIcebergOnS3TablesVersion",
+			isConfig:  false,
+		},
 	}
 	// warmtierInfoMap is the mapping of the the warm tier datasource to the resource
 	// parameter and if a config section is required, then isConfig will be true.

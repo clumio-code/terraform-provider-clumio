@@ -317,7 +317,7 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 Required:
 
 - `action_setting` (String) Determines whether the policy should take action now or during the specified backup window. Valid values are: `immediate` and `window`. `immediate` starts the backup process immediately while `window` starts the backup in the specified window.
-- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the [API Documentation for List policies](https://api.commvault.com/docs/SP38/api/cv/ClumioAPIs/list-policy-definitions/) for more information about the supported types.
+- `type` (String) The type of operation to be performed. Depending on the type selected, `advanced_settings` may also be required. See the [API Documentation for List policies](https://api.commvault.com/docs/latest/api/cv/ClumioAPIs/list-policy-definitions/) for more information about the supported types.
 
 Optional:
 

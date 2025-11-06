@@ -132,8 +132,8 @@ func (r *clumioAWSManualConnectionResource) Schema(
 			schemaResources: schema.ObjectAttribute{
 				Description: "An object containing the ARNs of the resources created for the manual AWS" +
 					" connection. Please refer to this guide for instructions on how to create them. - " +
-					"https://help.clumio.com/docs/manual-setup-for-aws-account-integration. If any" +
-					" of the ARNs are not applicable to the manual connection, provide an empty" +
+					"https://documentation.commvault.com/clumio/manual_setup_for_aws_account_integration.html." +
+					" If any of the ARNs are not applicable to the manual connection, provide an empty" +
 					" string \"\".",
 				Required: true,
 				AttributeTypes: map[string]attr.Type{

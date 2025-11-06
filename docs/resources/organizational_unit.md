@@ -3,12 +3,12 @@
 page_title: "clumio_organizational_unit Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  Resource for creating and managing Organizational Unit in Clumio. NOTE: If this is the first time creating an Organizational Unit, the AWS "data group" that denotes the top-most level that an Organizational Unit can see must be manually selected once from the Clumio portal under "Settings -> Access Management -> Organizational Units".
+  Resource for creating and managing Organizational Unit in Clumio.
 ---
 
 # clumio_organizational_unit (Resource)
 
-Resource for creating and managing Organizational Unit in Clumio. NOTE: If this is the first time creating an Organizational Unit, the AWS "data group" that denotes the top-most level that an Organizational Unit can see must be manually selected once from the Clumio portal under "Settings -> Access Management -> Organizational Units".
+Resource for creating and managing Organizational Unit in Clumio.
 
 ## Example Usage
 

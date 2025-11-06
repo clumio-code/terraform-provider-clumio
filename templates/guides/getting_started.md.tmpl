@@ -12,7 +12,7 @@ The following is a quick overview of how to get started with the [Clumio provide
 and the [Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest).
 As the provider uses APIs to abstract the use of the Clumio cloud, you should create an API key from
 the Clumio UI or retrieve an existing one. For help with creating an API key, please refer to:
-[Creating an API Token](https://help.clumio.com/docs/api-tokens#managing-tokens). The subsequent
+[Creating an API Token](https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens). The subsequent
 steps assume that such an API key is available to you. In addition, any use of keys in the following
 documentation is for example use only. Please refer to Terraform documentation with respect to the
 best way to inject keys and secrets into Terraform configurations.

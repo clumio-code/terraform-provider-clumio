@@ -28,6 +28,7 @@ var (
 	operationType8                 = "mssql_log_backup"
 	operationType9                 = "protection_group_backup"
 	operationType10                = "aws_s3_continuous_backup"
+	operationType11                = "aws_iceberg_table_backup"
 	retUnit                        = "days"
 	retValue                       = int64(5)
 	retUnit2                       = "hours"
@@ -311,6 +312,21 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, *modelOpAdvSettings.ProtectionGroupContinuousBackup.DisableEventbridgeNotification,
 			schemaOpAdvSettings.S3ContinuousBackup[0].DisableEventbridgeNotification.ValueBool())
+	})
+
+	t.Run("Test Iceberg Advanced Setting", func(t *testing.T) {
+		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
+			AwsIcebergTableBackup: &models.IcebergBackupAdvancedSetting{
+				BackupTier: &backupTier,
+			},
+		}
+		modelOperations[0].ClumioType = &operationType11
+		schemaOperations, diags := mapClumioOperationsToSchemaOperations(ctx, modelOperations)
+		assert.Nil(t, diags)
+		modelOpAdvSettings := modelOperations[0].AdvancedSettings
+		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
+		assert.Equal(t, *modelOpAdvSettings.AwsIcebergTableBackup.BackupTier,
+			schemaOpAdvSettings.IcebergTableBackup[0].BackupTier.ValueString())
 	})
 }
 
@@ -667,5 +683,24 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, schemaOpAdvSettings.S3ContinuousBackup[0].DisableEventbridgeNotification.ValueBool(),
 			*modelOpAdvSettings.ProtectionGroupContinuousBackup.DisableEventbridgeNotification)
+	})
+
+	t.Run("Test Iceberg Backup Advanced Setting", func(t *testing.T) {
+		schemaOperations[0].AdvancedSettings = []*advancedSettingsModel{
+			{
+				IcebergTableBackup: []*backupTierModel{
+					{
+						BackupTier: basetypes.NewStringValue(backupTier),
+					},
+				},
+			},
+		}
+		schemaOperations[0].OperationType = basetypes.NewStringValue(operationType10)
+		modelOperations, diags := mapSchemaOperationsToClumioOperations(ctx, schemaOperations)
+		assert.Nil(t, diags)
+		modelOpAdvSettings := modelOperations[0].AdvancedSettings
+		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
+		assert.Equal(t, schemaOpAdvSettings.IcebergTableBackup[0].BackupTier.ValueString(),
+			*modelOpAdvSettings.AwsIcebergTableBackup.BackupTier)
 	})
 }

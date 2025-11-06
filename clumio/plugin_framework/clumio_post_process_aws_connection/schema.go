@@ -20,27 +20,29 @@ import (
 // and the data it holds. This schema is used by customers to configure the resource and by the
 // Clumio provider to read and write the resource.
 type postProcessAWSConnectionResourceModel struct {
-	ID                             types.String `tfsdk:"id"`
-	AccountID                      types.String `tfsdk:"account_id"`
-	Token                          types.String `tfsdk:"token"`
-	RoleExternalID                 types.String `tfsdk:"role_external_id"`
-	Region                         types.String `tfsdk:"region"`
-	ClumioEventPubID               types.String `tfsdk:"clumio_event_pub_id"`
-	RoleArn                        types.String `tfsdk:"role_arn"`
-	ConfigVersion                  types.String `tfsdk:"config_version"`
-	DiscoverVersion                types.String `tfsdk:"discover_version"`
-	ProtectConfigVersion           types.String `tfsdk:"protect_config_version"`
-	ProtectEBSVersion              types.String `tfsdk:"protect_ebs_version"`
-	ProtectRDSVersion              types.String `tfsdk:"protect_rds_version"`
-	ProtectS3Version               types.String `tfsdk:"protect_s3_version"`
-	ProtectDynamoDBVersion         types.String `tfsdk:"protect_dynamodb_version"`
-	ProtectEC2MssqlVersion         types.String `tfsdk:"protect_ec2_mssql_version"`
-	ProtectWarmTierVersion         types.String `tfsdk:"protect_warm_tier_version"`
-	ProtectWarmTierDynamoDBVersion types.String `tfsdk:"protect_warm_tier_dynamodb_version"`
-	Properties                     types.Map    `tfsdk:"properties"`
-	IntermediateRoleArn            types.String `tfsdk:"intermediate_role_arn"`
-	WaitForIngestion               types.Bool   `tfsdk:"wait_for_ingestion"`
-	WaitForDataPlaneResources      types.Bool   `tfsdk:"wait_for_data_plane_resources"`
+	ID                              types.String `tfsdk:"id"`
+	AccountID                       types.String `tfsdk:"account_id"`
+	Token                           types.String `tfsdk:"token"`
+	RoleExternalID                  types.String `tfsdk:"role_external_id"`
+	Region                          types.String `tfsdk:"region"`
+	ClumioEventPubID                types.String `tfsdk:"clumio_event_pub_id"`
+	RoleArn                         types.String `tfsdk:"role_arn"`
+	ConfigVersion                   types.String `tfsdk:"config_version"`
+	DiscoverVersion                 types.String `tfsdk:"discover_version"`
+	ProtectConfigVersion            types.String `tfsdk:"protect_config_version"`
+	ProtectEBSVersion               types.String `tfsdk:"protect_ebs_version"`
+	ProtectRDSVersion               types.String `tfsdk:"protect_rds_version"`
+	ProtectS3Version                types.String `tfsdk:"protect_s3_version"`
+	ProtectDynamoDBVersion          types.String `tfsdk:"protect_dynamodb_version"`
+	ProtectEC2MssqlVersion          types.String `tfsdk:"protect_ec2_mssql_version"`
+	ProtectWarmTierVersion          types.String `tfsdk:"protect_warm_tier_version"`
+	ProtectWarmTierDynamoDBVersion  types.String `tfsdk:"protect_warm_tier_dynamodb_version"`
+	ProtectIcebergOnGlueVersion     types.String `tfsdk:"protect_iceberg_on_glue_version"`
+	ProtectIcebergOnS3TablesVersion types.String `tfsdk:"protect_iceberg_on_s3_tables_version"`
+	Properties                      types.Map    `tfsdk:"properties"`
+	IntermediateRoleArn             types.String `tfsdk:"intermediate_role_arn"`
+	WaitForIngestion                types.Bool   `tfsdk:"wait_for_ingestion"`
+	WaitForDataPlaneResources       types.Bool   `tfsdk:"wait_for_data_plane_resources"`
 }
 
 // Schema defines the structure and constraints of the clumio_post_process_aws_connection Terraform
@@ -120,6 +122,14 @@ func (r *postProcessAWSConnectionResource) Schema(
 			},
 			schemaProtectWarmTierDynamodbVersion: schema.StringAttribute{
 				Description: "Clumio DynamoDB Warm Tier Protect version.",
+				Optional:    true,
+			},
+			schemaProtectIcebergOnGlueVersion: schema.StringAttribute{
+				Description: "Clumio Iceberg on Glue Protect version.",
+				Optional:    true,
+			},
+			schemaProtectIcebergOnS3TablesVersion: schema.StringAttribute{
+				Description: "Clumio Iceberg on S3 Table Protect version.",
 				Optional:    true,
 			},
 			schemaClumioEventPubId: schema.StringAttribute{

@@ -37,7 +37,7 @@ func (r *clumioWalletResource) Schema(
 		Description: "Clumio Wallet Resource to create and manage wallets in Clumio. " +
 			"Wallets should be created \"after\" connecting an AWS account to Clumio.<br>" +
 			"**NOTE:** To protect against accidental deletion, wallets cannot be destroyed once the" +
-			" byok-template module has been installed. To remove a wallet, contact Clumio support.",
+			" byok-template module has been installed.",
 		Attributes: map[string]schema.Attribute{
 			schemaId: schema.StringAttribute{
 				Description: "Unique identifier for the Clumio Wallet.",

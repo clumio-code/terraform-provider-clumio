@@ -71,6 +71,7 @@ type advancedSettingsModel struct {
 	EC2InstanceBackup      []*backupTierModel       `tfsdk:"aws_ec2_instance_backup"`
 	RDSPitrConfigSync      []*pitrConfigModel       `tfsdk:"aws_rds_config_sync"`
 	RDSLogicalBackup       []*backupTierModel       `tfsdk:"aws_rds_resource_granular_backup"`
+	IcebergTableBackup     []*backupTierModel       `tfsdk:"aws_iceberg_table_backup"`
 }
 
 // policyOperationModel maps to the Operations attribute in policyResourceModel and contains
@@ -301,6 +302,20 @@ func (r *policyResource) Schema(
 				common.WrapSetValidator(setvalidator.SizeAtMost(1)),
 			},
 		},
+		schemaIcebergTableBackup: schema.SetNestedBlock{
+			Description: "The advanced settings for Iceberg backup operations.",
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					schemaBackupTier: schema.StringAttribute{
+						Optional:    true,
+						Description: "Backup tier to store the backup in. Valid values are: `standard`.",
+					},
+				},
+			},
+			Validators: []validator.Set{
+				common.WrapSetValidator(setvalidator.SizeAtMost(1)),
+			},
+		},
 	}
 
 	backupWindowSchemaAttributes := map[string]schema.Attribute{
@@ -378,8 +393,8 @@ func (r *policyResource) Schema(
 			Description: "The type of operation to be performed. Depending on the type " +
 				"selected, `advanced_settings` may also be required. See the [API " +
 				"Documentation for List policies]" +
-				"(https://help.clumio.com/reference/list-policy-definitions) for more information " +
-				"about the supported types.",
+				"(https://api.commvault.com/docs/latest/api/cv/ClumioAPIs/list-policy-definitions/)" +
+				" for more information about the supported types.",
 			Required: true,
 		},
 		schemaBackupAwsRegion: schema.StringAttribute{

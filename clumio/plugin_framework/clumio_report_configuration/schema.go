@@ -175,70 +175,89 @@ func ifTagExist() validator.String {
 func (r *clumioReportConfigurationResource) Schema(
 	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 
-	TimeUnitSchemaBlock := schema.SetNestedBlock{
-		Description: "The time unit used in control definition.",
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				schemaUnit: schema.StringAttribute{
-					Description: "Enum: `minutes` `hours` `days` `weeks` `months` `years`<br>Unit" +
-						" indicates the unit for time unit param.",
-					Required: true,
-				},
-				schemaValue: schema.Int32Attribute{
-					Description: "Value indicates the value for time unit param.",
-					Required:    true,
-				},
+	TimeUnitObject := schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			schemaUnit: schema.StringAttribute{
+				Description: "Enum: `minutes` `hours` `days` `weeks` `months` `years`<br>Unit" +
+					" indicates the unit for time unit param.",
+				Required: true,
+			},
+			schemaValue: schema.Int32Attribute{
+				Description: "Value indicates the value for time unit param.",
+				Required:    true,
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+	}
+
+	AtMostOneValidator := []validator.Set{
+		common.WrapSetValidator(setvalidator.SizeAtMost(1)),
 	}
 
 	AssetBackupControlSchemaBlock := schema.SetNestedBlock{
-		Description: "The control for asset backup.",
+		Description: "The control evaluating whether assets have at least one backup within each " +
+			"window of the specified look back period, with retention meeting the minimum " +
+			"required duration. For example, a look_back_period of 7 days, window_size of 1 day, " +
+			"and retention_duration of 1 month means that there should be a backup every day for " +
+			"the past week and that the retention of that backup should be at least 1 month.",
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				schemaLookBackPeriod:           TimeUnitSchemaBlock,
-				schemaMinimumRetentionDuration: TimeUnitSchemaBlock,
-				schemaWindowSize:               TimeUnitSchemaBlock,
+				schemaLookBackPeriod: schema.SetNestedBlock{
+					Description:  "The duration prior to the compliance evaluation point to look back.",
+					NestedObject: TimeUnitObject,
+					Validators:   AtMostOneValidator,
+				},
+				schemaMinimumRetentionDuration: schema.SetNestedBlock{
+					Description: "The minimum required retention duration for a backup to be " +
+						"considered compliant.",
+					NestedObject: TimeUnitObject,
+					Validators:   AtMostOneValidator,
+				},
+				schemaWindowSize: schema.SetNestedBlock{
+					Description: "The size of each evaluation window within the look back period " +
+						"in which at least one compliant backup must exist.",
+					NestedObject: TimeUnitObject,
+					Validators:   AtMostOneValidator,
+				},
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+		Validators: AtMostOneValidator,
 	}
 
 	AssetProtectionControlSchemaBlock := schema.SetNestedBlock{
-		Description: "The control for asset protection.",
+		Description: "The control evaluating if all assets are protected with a policy or not.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				schemaShouldIgnoreDeactivatedPolicy: schema.BoolAttribute{
-					Description: "Whether the report should ignore deactivated policy or not.",
+					Description: "Treat deactivated policies as compliant if true.",
 					Required:    true,
 				},
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+		Validators: AtMostOneValidator,
 	}
 
 	PolicyControlSchemaBlock := schema.SetNestedBlock{
-		Description: "The control for policy.",
+		Description: "The control evaluating if policies have a minimum backup retention and " +
+			"frequency.",
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				schemaMinimumRetentionDuration: TimeUnitSchemaBlock,
-				schemaMinimumRpoFrequency:      TimeUnitSchemaBlock,
+				schemaMinimumRetentionDuration: schema.SetNestedBlock{
+					Description:  "The minimum retention duration for policy control.",
+					NestedObject: TimeUnitObject,
+					Validators:   AtMostOneValidator,
+				},
+				schemaMinimumRpoFrequency: schema.SetNestedBlock{
+					Description:  "The minimum RPO frequency for policy control.",
+					NestedObject: TimeUnitObject,
+					Validators:   AtMostOneValidator,
+				},
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+		Validators: AtMostOneValidator,
 	}
 
 	ControlsSchemaBlock := schema.SetNestedBlock{
-		Description: "The set of controls supported in compliance report.",
+		Description: "Compliance controls to evaluate policy or assets for compliance.",
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				schemaAssetBackupControl:     AssetBackupControlSchemaBlock,
@@ -306,37 +325,33 @@ func (r *clumioReportConfigurationResource) Schema(
 				schemaTagFilter:        AssetTagFilterSchemaBlock,
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+		Validators: AtMostOneValidator,
 	}
 
 	CommonFilterSchemaBlock := schema.SetNestedBlock{
 		Description: "The common filter which will be applied to all controls.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				schemaAssetTypes: schema.ListAttribute{
+				schemaAssetTypes: schema.SetAttribute{
 					Description: "The asset types to be included in the report. For example, " +
 						"[`aws_ec2_instance`, `microsoft365_drive`].",
 					Optional:    true,
 					ElementType: types.StringType,
 				},
-				schemaDataSources: schema.ListAttribute{
+				schemaDataSources: schema.SetAttribute{
 					Description: "The data sources to be included in the report. Possible values " +
 						"include `aws`, `microsoft365` or `vmware`.",
 					Optional:    true,
 					ElementType: types.StringType,
 				},
-				schemaOrganizationalUnits: schema.ListAttribute{
+				schemaOrganizationalUnits: schema.SetAttribute{
 					Description: "The organizational units to be included in the report.",
 					Optional:    true,
 					ElementType: types.StringType,
 				},
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+		Validators: AtMostOneValidator,
 	}
 
 	FiltersSchemaBlock := schema.SetNestedBlock{
@@ -347,9 +362,7 @@ func (r *clumioReportConfigurationResource) Schema(
 				schemaCommonFilter: CommonFilterSchemaBlock,
 			},
 		},
-		Validators: []validator.Set{
-			common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-		},
+		Validators: AtMostOneValidator,
 	}
 
 	ScheduleSchemaAttributes := map[string]schema.Attribute{
@@ -429,12 +442,10 @@ func (r *clumioReportConfigurationResource) Schema(
 						},
 					},
 				},
-				Validators: []validator.Set{
-					common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-				},
+				Validators: AtMostOneValidator,
 			},
 			schemaParameter: schema.SetNestedBlock{
-				Description: "Parameters for the report configuration.",
+				Description: "Filter and control parameters of compliance report.",
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						schemaControls: ControlsSchemaBlock,
@@ -452,9 +463,7 @@ func (r *clumioReportConfigurationResource) Schema(
 				NestedObject: schema.NestedBlockObject{
 					Attributes: ScheduleSchemaAttributes,
 				},
-				Validators: []validator.Set{
-					common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-				},
+				Validators: AtMostOneValidator,
 			},
 		},
 	}

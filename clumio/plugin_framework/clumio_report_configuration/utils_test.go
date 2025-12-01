@@ -280,12 +280,118 @@ func TestMapSchemaFiltersToClumioFilters(t *testing.T) {
 	})
 }
 
-// Unit test for the TimeUnit nil check.
-func TestMapSchemaTimeUnitToClumioTimeUnit(t *testing.T) {
+// Unit test for the TimeUnitParamLookbackPeriod conversion function.
+func TestMapSchemaTimeUnitParamLookbackPeriodToClumioTimeUnit(t *testing.T) {
 	// Tests that the schema time unit with nil object returns nil
 	t.Run("with nil object", func(t *testing.T) {
-		clumioTimeUnit := mapSchemaTimeUnitToClumioTimeUnit(nil)
+		clumioTimeUnit := mapSchemaTimeUnitParamLookbackPeriodToClumioTimeUnit(nil)
 		assert.Nil(t, clumioTimeUnit)
+	})
+
+	// Tests that the schema time unit gets converted to SDK model time unit
+	t.Run("with valid data", func(t *testing.T) {
+		schemaTimeUnit := []*timeUnitModel{
+			{
+				Unit:  types.StringValue("days"),
+				Value: types.Int32Value(30),
+			},
+		}
+		clumioTimeUnit := mapSchemaTimeUnitParamLookbackPeriodToClumioTimeUnit(schemaTimeUnit)
+		assert.NotNil(t, clumioTimeUnit)
+		assert.Equal(t, "days", *clumioTimeUnit.Unit)
+		assert.Equal(t, int32(30), *clumioTimeUnit.Value)
+	})
+}
+
+// Unit test for the TimeUnitParamAssetBackupMinRetentionDuration conversion function.
+func TestMapSchemaTimeUnitParamAssetBackupMinRetentionDurationToClumioTimeUnit(t *testing.T) {
+	// Tests that the schema time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		clumioTimeUnit := mapSchemaTimeUnitParamAssetBackupMinRetentionDurationToClumioTimeUnit(nil)
+		assert.Nil(t, clumioTimeUnit)
+	})
+
+	// Tests that the schema time unit gets converted to SDK model time unit
+	t.Run("with valid data", func(t *testing.T) {
+		schemaTimeUnit := []*timeUnitModel{
+			{
+				Unit:  types.StringValue("weeks"),
+				Value: types.Int32Value(4),
+			},
+		}
+		clumioTimeUnit := mapSchemaTimeUnitParamAssetBackupMinRetentionDurationToClumioTimeUnit(schemaTimeUnit)
+		assert.NotNil(t, clumioTimeUnit)
+		assert.Equal(t, "weeks", *clumioTimeUnit.Unit)
+		assert.Equal(t, int32(4), *clumioTimeUnit.Value)
+	})
+}
+
+// Unit test for the TimeUnitParamPolicyMinRetentionDuration conversion function.
+func TestMapSchemaTimeUnitParamPolicyMinRetentionDurationToClumioTimeUnit(t *testing.T) {
+	// Tests that the schema time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		clumioTimeUnit := mapSchemaTimeUnitParamPolicyMinRetentionDurationToClumioTimeUnit(nil)
+		assert.Nil(t, clumioTimeUnit)
+	})
+
+	// Tests that the schema time unit gets converted to SDK model time unit
+	t.Run("with valid data", func(t *testing.T) {
+		schemaTimeUnit := []*timeUnitModel{
+			{
+				Unit:  types.StringValue("months"),
+				Value: types.Int32Value(6),
+			},
+		}
+		clumioTimeUnit := mapSchemaTimeUnitParamPolicyMinRetentionDurationToClumioTimeUnit(schemaTimeUnit)
+		assert.NotNil(t, clumioTimeUnit)
+		assert.Equal(t, "months", *clumioTimeUnit.Unit)
+		assert.Equal(t, int32(6), *clumioTimeUnit.Value)
+	})
+}
+
+// Unit test for the TimeUnitParamRpoDuration conversion function.
+func TestMapSchemaTimeUnitParamRpoDurationToClumioTimeUnit(t *testing.T) {
+	// Tests that the schema time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		clumioTimeUnit := mapSchemaTimeUnitParamRpoDurationToClumioTimeUnit(nil)
+		assert.Nil(t, clumioTimeUnit)
+	})
+
+	// Tests that the schema time unit gets converted to SDK model time unit
+	t.Run("with valid data", func(t *testing.T) {
+		schemaTimeUnit := []*timeUnitModel{
+			{
+				Unit:  types.StringValue("hours"),
+				Value: types.Int32Value(24),
+			},
+		}
+		clumioTimeUnit := mapSchemaTimeUnitParamRpoDurationToClumioTimeUnit(schemaTimeUnit)
+		assert.NotNil(t, clumioTimeUnit)
+		assert.Equal(t, "hours", *clumioTimeUnit.Unit)
+		assert.Equal(t, int32(24), *clumioTimeUnit.Value)
+	})
+}
+
+// Unit test for the TimeUnitParamWindowSize conversion function.
+func TestMapSchemaTimeUnitParamWindowSizeToClumioTimeUnit(t *testing.T) {
+	// Tests that the schema time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		clumioTimeUnit := mapSchemaTimeUnitParamWindowSizeToClumioTimeUnit(nil)
+		assert.Nil(t, clumioTimeUnit)
+	})
+
+	// Tests that the schema time unit gets converted to SDK model time unit
+	t.Run("with valid data", func(t *testing.T) {
+		schemaTimeUnit := []*timeUnitModel{
+			{
+				Unit:  types.StringValue("days"),
+				Value: types.Int32Value(7),
+			},
+		}
+		clumioTimeUnit := mapSchemaTimeUnitParamWindowSizeToClumioTimeUnit(schemaTimeUnit)
+		assert.NotNil(t, clumioTimeUnit)
+		assert.Equal(t, "days", *clumioTimeUnit.Unit)
+		assert.Equal(t, int32(7), *clumioTimeUnit.Value)
 	})
 }
 
@@ -377,7 +483,24 @@ func TestMapClumioScheduleToSchemaSchedule(t *testing.T) {
 func TestMapClumioParameterToSchemaParameter(t *testing.T) {
 	unit := "days"
 	value := int32(7)
-	testTimeUnit := &models.TimeUnitParam{
+	// Note: Using specific TimeUnit types since TimeUnitParam is deprecated
+	testTimeUnitLookback := &models.TimeUnitParamLookbackPeriod{
+		Unit:  &unit,
+		Value: &value,
+	}
+	testTimeUnitMinRetention := &models.TimeUnitParamAssetBackupMinRetentionDuration{
+		Unit:  &unit,
+		Value: &value,
+	}
+	testTimeUnitWindowSize := &models.TimeUnitParamWindowSize{
+		Unit:  &unit,
+		Value: &value,
+	}
+	testTimeUnitPolicyMinRetention := &models.TimeUnitParamPolicyMinRetentionDuration{
+		Unit:  &unit,
+		Value: &value,
+	}
+	testTimeUnitRpoDuration := &models.TimeUnitParamRpoDuration{
 		Unit:  &unit,
 		Value: &value,
 	}
@@ -408,16 +531,16 @@ func TestMapClumioParameterToSchemaParameter(t *testing.T) {
 		clumioParameter := &models.Parameter{
 			Controls: &models.ComplianceControls{
 				AssetBackup: &models.AssetBackupControl{
-					LookBackPeriod:           testTimeUnit,
-					MinimumRetentionDuration: testTimeUnit,
-					WindowSize:               testTimeUnit,
+					LookBackPeriod:           testTimeUnitLookback,
+					MinimumRetentionDuration: testTimeUnitMinRetention,
+					WindowSize:               testTimeUnitWindowSize,
 				},
 				AssetProtection: &models.AssetProtectionControl{
 					ShouldIgnoreDeactivatedPolicy: &shouldIgnoreDeactivatedPolicy,
 				},
 				Policy: &models.PolicyControl{
-					MinimumRetentionDuration: testTimeUnit,
-					MinimumRpoFrequency:      testTimeUnit,
+					MinimumRetentionDuration: testTimeUnitPolicyMinRetention,
+					MinimumRpoFrequency:      testTimeUnitRpoDuration,
 				},
 			},
 			Filters: &models.ComplianceFilters{
@@ -595,11 +718,114 @@ func TestMapClumioCommonFilterToSchemaCommonFilter(t *testing.T) {
 	})
 }
 
-// Unit test for the TimeUnit nil check.
-func TestMapClumioTimeUnitToSchemaTimeUnit(t *testing.T) {
+// Unit tests for the reverse TimeUnit conversion functions
+// These test the conversion from Clumio API models back to schema models
+func TestMapClumioTimeUnitParamLookbackPeriodToSchemaTimeUnit(t *testing.T) {
 	// Tests that the SDK model time unit with nil object returns nil
 	t.Run("with nil object", func(t *testing.T) {
-		schemaTimeUnit := mapClumioTimeUnitToSchemaTimeUnit(nil)
+		schemaTimeUnit := mapClumioTimeUnitParamLookbackPeriodToSchemaTimeUnit(nil)
 		assert.Nil(t, schemaTimeUnit)
+	})
+
+	// Tests that the SDK model gets converted to schema
+	t.Run("with valid data", func(t *testing.T) {
+		unit := "days"
+		value := int32(30)
+		clumioTimeUnit := &models.TimeUnitParamLookbackPeriod{
+			Unit:  &unit,
+			Value: &value,
+		}
+		schemaTimeUnit := mapClumioTimeUnitParamLookbackPeriodToSchemaTimeUnit(clumioTimeUnit)
+		assert.NotNil(t, schemaTimeUnit)
+		assert.Equal(t, unit, schemaTimeUnit[0].Unit.ValueString())
+		assert.Equal(t, value, schemaTimeUnit[0].Value.ValueInt32())
+	})
+}
+
+func TestMapClumioTimeUnitParamAssetBackupMinRetentionDurationToSchemaTimeUnit(t *testing.T) {
+	// Tests that the SDK model time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		schemaTimeUnit := mapClumioTimeUnitParamAssetBackupMinRetentionDurationToSchemaTimeUnit(nil)
+		assert.Nil(t, schemaTimeUnit)
+	})
+
+	// Tests that the SDK model gets converted to schema
+	t.Run("with valid data", func(t *testing.T) {
+		unit := "weeks"
+		value := int32(4)
+		clumioTimeUnit := &models.TimeUnitParamAssetBackupMinRetentionDuration{
+			Unit:  &unit,
+			Value: &value,
+		}
+		schemaTimeUnit := mapClumioTimeUnitParamAssetBackupMinRetentionDurationToSchemaTimeUnit(clumioTimeUnit)
+		assert.NotNil(t, schemaTimeUnit)
+		assert.Equal(t, unit, schemaTimeUnit[0].Unit.ValueString())
+		assert.Equal(t, value, schemaTimeUnit[0].Value.ValueInt32())
+	})
+}
+
+func TestMapClumioTimeUnitParamWindowSizeToSchemaTimeUnit(t *testing.T) {
+	// Tests that the SDK model time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		schemaTimeUnit := mapClumioTimeUnitParamWindowSizeToSchemaTimeUnit(nil)
+		assert.Nil(t, schemaTimeUnit)
+	})
+
+	// Tests that the SDK model gets converted to schema
+	t.Run("with valid data", func(t *testing.T) {
+		unit := "days"
+		value := int32(7)
+		clumioTimeUnit := &models.TimeUnitParamWindowSize{
+			Unit:  &unit,
+			Value: &value,
+		}
+		schemaTimeUnit := mapClumioTimeUnitParamWindowSizeToSchemaTimeUnit(clumioTimeUnit)
+		assert.NotNil(t, schemaTimeUnit)
+		assert.Equal(t, unit, schemaTimeUnit[0].Unit.ValueString())
+		assert.Equal(t, value, schemaTimeUnit[0].Value.ValueInt32())
+	})
+}
+
+func TestMapClumioTimeUnitParamPolicyMinRetentionDurationToSchemaTimeUnit(t *testing.T) {
+	// Tests that the SDK model time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		schemaTimeUnit := mapClumioTimeUnitParamPolicyMinRetentionDurationToSchemaTimeUnit(nil)
+		assert.Nil(t, schemaTimeUnit)
+	})
+
+	// Tests that the SDK model gets converted to schema
+	t.Run("with valid data", func(t *testing.T) {
+		unit := "months"
+		value := int32(6)
+		clumioTimeUnit := &models.TimeUnitParamPolicyMinRetentionDuration{
+			Unit:  &unit,
+			Value: &value,
+		}
+		schemaTimeUnit := mapClumioTimeUnitParamPolicyMinRetentionDurationToSchemaTimeUnit(clumioTimeUnit)
+		assert.NotNil(t, schemaTimeUnit)
+		assert.Equal(t, unit, schemaTimeUnit[0].Unit.ValueString())
+		assert.Equal(t, value, schemaTimeUnit[0].Value.ValueInt32())
+	})
+}
+
+func TestMapClumioTimeUnitParamRpoDurationToSchemaTimeUnit(t *testing.T) {
+	// Tests that the SDK model time unit with nil object returns nil
+	t.Run("with nil object", func(t *testing.T) {
+		schemaTimeUnit := mapClumioTimeUnitParamRpoDurationToSchemaTimeUnit(nil)
+		assert.Nil(t, schemaTimeUnit)
+	})
+
+	// Tests that the SDK model gets converted to schema
+	t.Run("with valid data", func(t *testing.T) {
+		unit := "hours"
+		value := int32(24)
+		clumioTimeUnit := &models.TimeUnitParamRpoDuration{
+			Unit:  &unit,
+			Value: &value,
+		}
+		schemaTimeUnit := mapClumioTimeUnitParamRpoDurationToSchemaTimeUnit(clumioTimeUnit)
+		assert.NotNil(t, schemaTimeUnit)
+		assert.Equal(t, unit, schemaTimeUnit[0].Unit.ValueString())
+		assert.Equal(t, value, schemaTimeUnit[0].Value.ValueInt32())
 	})
 }

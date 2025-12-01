@@ -72,10 +72,12 @@ func mapSchemaControlsToClumioControls(controlsSlice []*controlsModel) *models.C
 	if controls.AssetBackupControl != nil {
 		schemaAssetBackup := controls.AssetBackupControl[0]
 		assetBackupControl = &models.AssetBackupControl{
-			LookBackPeriod: mapSchemaTimeUnitToClumioTimeUnit(schemaAssetBackup.LookBackPeriod),
-			MinimumRetentionDuration: mapSchemaTimeUnitToClumioTimeUnit(
+			LookBackPeriod: mapSchemaTimeUnitParamLookbackPeriodToClumioTimeUnit(
+				schemaAssetBackup.LookBackPeriod),
+			MinimumRetentionDuration: mapSchemaTimeUnitParamAssetBackupMinRetentionDurationToClumioTimeUnit(
 				schemaAssetBackup.MinimumRetentionDuration),
-			WindowSize: mapSchemaTimeUnitToClumioTimeUnit(schemaAssetBackup.WindowSize),
+			WindowSize: mapSchemaTimeUnitParamWindowSizeToClumioTimeUnit(
+				schemaAssetBackup.WindowSize),
 		}
 	}
 
@@ -91,9 +93,9 @@ func mapSchemaControlsToClumioControls(controlsSlice []*controlsModel) *models.C
 	if controls.PolicyControl != nil {
 		schemaPolicyControl := controls.PolicyControl[0]
 		policyControl = &models.PolicyControl{
-			MinimumRetentionDuration: mapSchemaTimeUnitToClumioTimeUnit(
+			MinimumRetentionDuration: mapSchemaTimeUnitParamPolicyMinRetentionDurationToClumioTimeUnit(
 				schemaPolicyControl.MinimumRetentionDuration),
-			MinimumRpoFrequency: mapSchemaTimeUnitToClumioTimeUnit(
+			MinimumRpoFrequency: mapSchemaTimeUnitParamRpoDurationToClumioTimeUnit(
 				schemaPolicyControl.MinimumRpoFrequency),
 		}
 	}
@@ -166,16 +168,67 @@ func mapSchemaFiltersToClumioFilters(filtersSlice []*filtersModel) *models.Compl
 	}
 }
 
-// mapSchemaTimeUnitToClumioTimeUnit converts the schema time unit to the Clumio API request time
-// unit.
-func mapSchemaTimeUnitToClumioTimeUnit(timeUnitSlice []*timeUnitModel) *models.TimeUnitParam {
-
+// Individual conversion functions for each TimeUnit type.
+func mapSchemaTimeUnitParamLookbackPeriodToClumioTimeUnit(
+	timeUnitSlice []*timeUnitModel) *models.TimeUnitParamLookbackPeriod {
 	if len(timeUnitSlice) == 0 {
 		return nil
 	}
 	timeUnit := timeUnitSlice[0]
 
-	return &models.TimeUnitParam{
+	return &models.TimeUnitParamLookbackPeriod{
+		Unit:  timeUnit.Unit.ValueStringPointer(),
+		Value: timeUnit.Value.ValueInt32Pointer(),
+	}
+}
+
+func mapSchemaTimeUnitParamAssetBackupMinRetentionDurationToClumioTimeUnit(
+	timeUnitSlice []*timeUnitModel) *models.TimeUnitParamAssetBackupMinRetentionDuration {
+	if len(timeUnitSlice) == 0 {
+		return nil
+	}
+	timeUnit := timeUnitSlice[0]
+
+	return &models.TimeUnitParamAssetBackupMinRetentionDuration{
+		Unit:  timeUnit.Unit.ValueStringPointer(),
+		Value: timeUnit.Value.ValueInt32Pointer(),
+	}
+}
+
+func mapSchemaTimeUnitParamPolicyMinRetentionDurationToClumioTimeUnit(
+	timeUnitSlice []*timeUnitModel) *models.TimeUnitParamPolicyMinRetentionDuration {
+	if len(timeUnitSlice) == 0 {
+		return nil
+	}
+	timeUnit := timeUnitSlice[0]
+
+	return &models.TimeUnitParamPolicyMinRetentionDuration{
+		Unit:  timeUnit.Unit.ValueStringPointer(),
+		Value: timeUnit.Value.ValueInt32Pointer(),
+	}
+}
+
+func mapSchemaTimeUnitParamRpoDurationToClumioTimeUnit(
+	timeUnitSlice []*timeUnitModel) *models.TimeUnitParamRpoDuration {
+	if len(timeUnitSlice) == 0 {
+		return nil
+	}
+	timeUnit := timeUnitSlice[0]
+
+	return &models.TimeUnitParamRpoDuration{
+		Unit:  timeUnit.Unit.ValueStringPointer(),
+		Value: timeUnit.Value.ValueInt32Pointer(),
+	}
+}
+
+func mapSchemaTimeUnitParamWindowSizeToClumioTimeUnit(
+	timeUnitSlice []*timeUnitModel) *models.TimeUnitParamWindowSize {
+	if len(timeUnitSlice) == 0 {
+		return nil
+	}
+	timeUnit := timeUnitSlice[0]
+
+	return &models.TimeUnitParamWindowSize{
 		Unit:  timeUnit.Unit.ValueStringPointer(),
 		Value: timeUnit.Value.ValueInt32Pointer(),
 	}
@@ -226,11 +279,12 @@ func mapClumioControlsToSchemaControls(controls *models.ComplianceControls) []*c
 	if controls.AssetBackup != nil {
 		schemaControls.AssetBackupControl = []*assetBackupControl{
 			{
-				LookBackPeriod: mapClumioTimeUnitToSchemaTimeUnit(
+				LookBackPeriod: mapClumioTimeUnitParamLookbackPeriodToSchemaTimeUnit(
 					controls.AssetBackup.LookBackPeriod),
-				MinimumRetentionDuration: mapClumioTimeUnitToSchemaTimeUnit(
+				MinimumRetentionDuration: mapClumioTimeUnitParamAssetBackupMinRetentionDurationToSchemaTimeUnit(
 					controls.AssetBackup.MinimumRetentionDuration),
-				WindowSize: mapClumioTimeUnitToSchemaTimeUnit(controls.AssetBackup.WindowSize),
+				WindowSize: mapClumioTimeUnitParamWindowSizeToSchemaTimeUnit(
+					controls.AssetBackup.WindowSize),
 			},
 		}
 	}
@@ -245,9 +299,9 @@ func mapClumioControlsToSchemaControls(controls *models.ComplianceControls) []*c
 	if controls.Policy != nil {
 		schemaControls.PolicyControl = []*policyControl{
 			{
-				MinimumRetentionDuration: mapClumioTimeUnitToSchemaTimeUnit(
+				MinimumRetentionDuration: mapClumioTimeUnitParamPolicyMinRetentionDurationToSchemaTimeUnit(
 					controls.Policy.MinimumRetentionDuration),
-				MinimumRpoFrequency: mapClumioTimeUnitToSchemaTimeUnit(
+				MinimumRpoFrequency: mapClumioTimeUnitParamRpoDurationToSchemaTimeUnit(
 					controls.Policy.MinimumRpoFrequency),
 			},
 		}
@@ -376,9 +430,69 @@ func mapClumioScheduleToSchemaSchedule(schedule *models.ScheduleSetting) []*sche
 	return []*scheduleModel{schemaSchedule}
 }
 
-// mapClumioTimeUnitToSchemaTimeUnit converts the Clumio API time unit to the schema time unit.
-func mapClumioTimeUnitToSchemaTimeUnit(
-	timeUnit *models.TimeUnitParam) []*timeUnitModel {
+// Specific reverse conversion functions for each TimeUnit type
+func mapClumioTimeUnitParamLookbackPeriodToSchemaTimeUnit(
+	timeUnit *models.TimeUnitParamLookbackPeriod) []*timeUnitModel {
+
+	if timeUnit == nil {
+		return nil
+	}
+
+	schemaTimeUnit := &timeUnitModel{
+		Unit:  types.StringValue(*timeUnit.Unit),
+		Value: types.Int32Value(*timeUnit.Value),
+	}
+
+	return []*timeUnitModel{schemaTimeUnit}
+}
+
+func mapClumioTimeUnitParamAssetBackupMinRetentionDurationToSchemaTimeUnit(
+	timeUnit *models.TimeUnitParamAssetBackupMinRetentionDuration) []*timeUnitModel {
+
+	if timeUnit == nil {
+		return nil
+	}
+
+	schemaTimeUnit := &timeUnitModel{
+		Unit:  types.StringValue(*timeUnit.Unit),
+		Value: types.Int32Value(*timeUnit.Value),
+	}
+
+	return []*timeUnitModel{schemaTimeUnit}
+}
+
+func mapClumioTimeUnitParamWindowSizeToSchemaTimeUnit(
+	timeUnit *models.TimeUnitParamWindowSize) []*timeUnitModel {
+
+	if timeUnit == nil {
+		return nil
+	}
+
+	schemaTimeUnit := &timeUnitModel{
+		Unit:  types.StringValue(*timeUnit.Unit),
+		Value: types.Int32Value(*timeUnit.Value),
+	}
+
+	return []*timeUnitModel{schemaTimeUnit}
+}
+
+func mapClumioTimeUnitParamPolicyMinRetentionDurationToSchemaTimeUnit(
+	timeUnit *models.TimeUnitParamPolicyMinRetentionDuration) []*timeUnitModel {
+
+	if timeUnit == nil {
+		return nil
+	}
+
+	schemaTimeUnit := &timeUnitModel{
+		Unit:  types.StringValue(*timeUnit.Unit),
+		Value: types.Int32Value(*timeUnit.Value),
+	}
+
+	return []*timeUnitModel{schemaTimeUnit}
+}
+
+func mapClumioTimeUnitParamRpoDurationToSchemaTimeUnit(
+	timeUnit *models.TimeUnitParamRpoDuration) []*timeUnitModel {
 
 	if timeUnit == nil {
 		return nil

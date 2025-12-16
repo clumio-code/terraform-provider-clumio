@@ -144,67 +144,6 @@ func (_c *MockS3BucketClient_ReadAwsS3Bucket_Call) RunAndReturn(run func(string)
 	return _c
 }
 
-// SetBucketProperties provides a mock function with given fields: bucketId, body
-func (_m *MockS3BucketClient) SetBucketProperties(bucketId string, body *models.SetBucketPropertiesV1Request) (*models.SetBucketPropertiesResponse, *apiutils.APIError) {
-	ret := _m.Called(bucketId, body)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SetBucketProperties")
-	}
-
-	var r0 *models.SetBucketPropertiesResponse
-	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func(string, *models.SetBucketPropertiesV1Request) (*models.SetBucketPropertiesResponse, *apiutils.APIError)); ok {
-		return rf(bucketId, body)
-	}
-	if rf, ok := ret.Get(0).(func(string, *models.SetBucketPropertiesV1Request) *models.SetBucketPropertiesResponse); ok {
-		r0 = rf(bucketId, body)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*models.SetBucketPropertiesResponse)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(string, *models.SetBucketPropertiesV1Request) *apiutils.APIError); ok {
-		r1 = rf(bucketId, body)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*apiutils.APIError)
-		}
-	}
-
-	return r0, r1
-}
-
-// MockS3BucketClient_SetBucketProperties_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetBucketProperties'
-type MockS3BucketClient_SetBucketProperties_Call struct {
-	*mock.Call
-}
-
-// SetBucketProperties is a helper method to define mock.On call
-//   - bucketId string
-//   - body *models.SetBucketPropertiesV1Request
-func (_e *MockS3BucketClient_Expecter) SetBucketProperties(bucketId interface{}, body interface{}) *MockS3BucketClient_SetBucketProperties_Call {
-	return &MockS3BucketClient_SetBucketProperties_Call{Call: _e.mock.On("SetBucketProperties", bucketId, body)}
-}
-
-func (_c *MockS3BucketClient_SetBucketProperties_Call) Run(run func(bucketId string, body *models.SetBucketPropertiesV1Request)) *MockS3BucketClient_SetBucketProperties_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(*models.SetBucketPropertiesV1Request))
-	})
-	return _c
-}
-
-func (_c *MockS3BucketClient_SetBucketProperties_Call) Return(_a0 *models.SetBucketPropertiesResponse, _a1 *apiutils.APIError) *MockS3BucketClient_SetBucketProperties_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *MockS3BucketClient_SetBucketProperties_Call) RunAndReturn(run func(string, *models.SetBucketPropertiesV1Request) (*models.SetBucketPropertiesResponse, *apiutils.APIError)) *MockS3BucketClient_SetBucketProperties_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // NewMockS3BucketClient creates a new instance of MockS3BucketClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMockS3BucketClient(t interface {

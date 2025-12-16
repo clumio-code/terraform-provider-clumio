@@ -7,6 +7,7 @@ package clumio_s3_bucket
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -64,11 +65,6 @@ func (r *clumioS3BucketDataSource) Schema(
 						schemaProtectionGroupCount: schema.Int64Attribute{
 							Description: "Protection group count reflects how many protection groups" +
 								" are linked to this bucket.",
-							Computed: true,
-						},
-						schemaEventBridgeEnabled: schema.BoolAttribute{
-							Description: "Determines if continuous backup is enabled for the S3" +
-								" bucket.",
 							Computed: true,
 						},
 						schemaLastBackupTimestamp: schema.StringAttribute{

@@ -6,6 +6,7 @@ package clumio_s3_bucket
 
 import (
 	"context"
+
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -28,7 +29,6 @@ func populateS3BucketsInDataSourceModel(ctx context.Context,
 			schemaRegion:                        types.StringType,
 			schemaAccountNativeId:               types.StringType,
 			schemaProtectionGroupCount:          types.Int64Type,
-			schemaEventBridgeEnabled:            types.BoolType,
 			schemaLastBackupTimestamp:           types.StringType,
 			schemaLastContinuousBackupTimestamp: types.StringType,
 		},
@@ -41,7 +41,6 @@ func populateS3BucketsInDataSourceModel(ctx context.Context,
 		attrTypes[schemaAccountNativeId] = types.StringType
 		attrTypes[schemaRegion] = types.StringType
 		attrTypes[schemaProtectionGroupCount] = types.Int64Type
-		attrTypes[schemaEventBridgeEnabled] = types.BoolType
 		attrTypes[schemaLastBackupTimestamp] = types.StringType
 		attrTypes[schemaLastContinuousBackupTimestamp] = types.StringType
 
@@ -52,8 +51,6 @@ func populateS3BucketsInDataSourceModel(ctx context.Context,
 		attrValues[schemaRegion] = basetypes.NewStringPointerValue(item.AwsRegion)
 		attrValues[schemaProtectionGroupCount] = basetypes.NewInt64PointerValue(
 			item.ProtectionGroupCount)
-		attrValues[schemaEventBridgeEnabled] = basetypes.NewBoolPointerValue(
-			item.EventBridgeEnabled)
 		attrValues[schemaLastBackupTimestamp] = basetypes.NewStringPointerValue(
 			item.LastBackupTimestamp)
 		attrValues[schemaLastContinuousBackupTimestamp] = basetypes.NewStringPointerValue(

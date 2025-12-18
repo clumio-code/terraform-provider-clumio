@@ -8,8 +8,9 @@ package clumio_s3_bucket
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
@@ -34,7 +35,6 @@ func TestDatasourceReadS3Bucket(t *testing.T) {
 	id := "test-s3-bucket-id"
 	ou := "test-ou"
 	testError := "Test Error"
-	eventBridgeEnabled := true
 	accountNativeId := "test-account-native-id"
 	region := "test-region"
 	lastBackupTimestamp := "test-last-backup-timestamp"
@@ -74,7 +74,6 @@ func TestDatasourceReadS3Bucket(t *testing.T) {
 						AccountNativeId:               &accountNativeId,
 						AwsRegion:                     &region,
 						ProtectionGroupCount:          &pgCount,
-						EventBridgeEnabled:            &eventBridgeEnabled,
 						LastBackupTimestamp:           &lastBackupTimestamp,
 						LastContinuousBackupTimestamp: &lastContinuousBackupTimestamp,
 					},

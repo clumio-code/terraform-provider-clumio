@@ -29,7 +29,6 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_report_configuration"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_role"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket"
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket_properties"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_user"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_wallet"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
@@ -185,7 +184,6 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_auto_user_provisioning_rule.NewAutoUserProvisioningRuleResource,
 		clumio_auto_user_provisioning_setting.NewAutoUserProvisioningSettingResource,
 		clumio_aws_manual_connection.NewClumioAWSManualConnectionResource,
-		clumio_s3_bucket_properties.NewClumioS3BucketPropertiesResource,
 		clumio_protection_group_bucket.NewClumioProtectionGroupBucketResource,
 		clumio_report_configuration.NewReportConfigurationResource,
 		clumio_general_settings.NewGeneralSettingsResource,

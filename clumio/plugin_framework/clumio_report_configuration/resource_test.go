@@ -42,7 +42,23 @@ var (
 	testDataSource2                   = "data_source_2"
 	testOrganizationalUnit1           = "organizational_unit_1"
 	testOrganizationalUnit2           = "organizational_unit_2"
-	testTimeUnitParam                 = &models.TimeUnitParam{
+	testTimeUnitParamLookback         = &models.TimeUnitParamLookbackPeriod{
+		Unit:  &testTimeUnit,
+		Value: &testTimeValue,
+	}
+	testTimeUnitParamMinRetention = &models.TimeUnitParamAssetBackupMinRetentionDuration{
+		Unit:  &testTimeUnit,
+		Value: &testTimeValue,
+	}
+	testTimeUnitParamWindowSize = &models.TimeUnitParamWindowSize{
+		Unit:  &testTimeUnit,
+		Value: &testTimeValue,
+	}
+	testTimeUnitParamPolicyMinRetention = &models.TimeUnitParamPolicyMinRetentionDuration{
+		Unit:  &testTimeUnit,
+		Value: &testTimeValue,
+	}
+	testTimeUnitParamRpoDuration = &models.TimeUnitParamRpoDuration{
 		Unit:  &testTimeUnit,
 		Value: &testTimeValue,
 	}
@@ -169,16 +185,16 @@ func TestReadReportConfiguration(t *testing.T) {
 			Parameter: &models.Parameter{
 				Controls: &models.ComplianceControls{
 					AssetBackup: &models.AssetBackupControl{
-						LookBackPeriod:           testTimeUnitParam,
-						MinimumRetentionDuration: testTimeUnitParam,
-						WindowSize:               testTimeUnitParam,
+						LookBackPeriod:           testTimeUnitParamLookback,
+						MinimumRetentionDuration: testTimeUnitParamMinRetention,
+						WindowSize:               testTimeUnitParamWindowSize,
 					},
 					AssetProtection: &models.AssetProtectionControl{
 						ShouldIgnoreDeactivatedPolicy: &testShouldIgnoreDeactivatedPolicy,
 					},
 					Policy: &models.PolicyControl{
-						MinimumRetentionDuration: testTimeUnitParam,
-						MinimumRpoFrequency:      testTimeUnitParam,
+						MinimumRetentionDuration: testTimeUnitParamPolicyMinRetention,
+						MinimumRpoFrequency:      testTimeUnitParamRpoDuration,
 					},
 				},
 				Filters: &models.ComplianceFilters{

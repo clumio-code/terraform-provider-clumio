@@ -11,7 +11,6 @@ const (
 	schemaRegion                        = "aws_region"
 	schemaAccountNativeId               = "account_native_id"
 	schemaProtectionGroupCount          = "protection_group_count"
-	schemaEventBridgeEnabled            = "event_bridge_enabled"
 	schemaLastBackupTimestamp           = "last_backup_timestamp"
 	schemaLastContinuousBackupTimestamp = "last_continuous_backup_timestamp"
 	schemaS3Buckets                     = "s3_buckets"

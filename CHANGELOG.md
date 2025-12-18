@@ -1,3 +1,12 @@
+## 0.17.0
+This update contains the following changes:
+* Updated Terraform plugin version and related libraries.
+* Updated Go SDK and added corresponding changes.
+  * Separated `TimeUnitParam` model into multiple models with detail descriptions.
+  * Updated mock client for role.
+  * Removed S3 bucket properties.
+  * Removed `EventBridgeEnabled` from S3 bucket model.
+
 ## 0.16.1
 This update contains a fix to the clumio_post_process_aws_connection resource.
 

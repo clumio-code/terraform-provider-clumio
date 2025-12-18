@@ -22,6 +22,65 @@ func (_m *MockRoleClient) EXPECT() *MockRoleClient_Expecter {
 	return &MockRoleClient_Expecter{mock: &_m.Mock}
 }
 
+// ListPermissions provides a mock function with no fields
+func (_m *MockRoleClient) ListPermissions() (*models.ListPermissionsResponse, *apiutils.APIError) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListPermissions")
+	}
+
+	var r0 *models.ListPermissionsResponse
+	var r1 *apiutils.APIError
+	if rf, ok := ret.Get(0).(func() (*models.ListPermissionsResponse, *apiutils.APIError)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *models.ListPermissionsResponse); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.ListPermissionsResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() *apiutils.APIError); ok {
+		r1 = rf()
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*apiutils.APIError)
+		}
+	}
+
+	return r0, r1
+}
+
+// MockRoleClient_ListPermissions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListPermissions'
+type MockRoleClient_ListPermissions_Call struct {
+	*mock.Call
+}
+
+// ListPermissions is a helper method to define mock.On call
+func (_e *MockRoleClient_Expecter) ListPermissions() *MockRoleClient_ListPermissions_Call {
+	return &MockRoleClient_ListPermissions_Call{Call: _e.mock.On("ListPermissions")}
+}
+
+func (_c *MockRoleClient_ListPermissions_Call) Run(run func()) *MockRoleClient_ListPermissions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockRoleClient_ListPermissions_Call) Return(_a0 *models.ListPermissionsResponse, _a1 *apiutils.APIError) *MockRoleClient_ListPermissions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRoleClient_ListPermissions_Call) RunAndReturn(run func() (*models.ListPermissionsResponse, *apiutils.APIError)) *MockRoleClient_ListPermissions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListRoles provides a mock function with no fields
 func (_m *MockRoleClient) ListRoles() (*models.ListRolesResponse, *apiutils.APIError) {
 	ret := _m.Called()

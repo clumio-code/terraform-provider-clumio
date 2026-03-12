@@ -81,9 +81,9 @@ func (_c *MockRoleClient_ListPermissions_Call) RunAndReturn(run func() (*models.
 	return _c
 }
 
-// ListRoles provides a mock function with no fields
-func (_m *MockRoleClient) ListRoles() (*models.ListRolesResponse, *apiutils.APIError) {
-	ret := _m.Called()
+// ListRoles provides a mock function with given fields: filter
+func (_m *MockRoleClient) ListRoles(filter *string) (*models.ListRolesResponse, *apiutils.APIError) {
+	ret := _m.Called(filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListRoles")
@@ -91,19 +91,19 @@ func (_m *MockRoleClient) ListRoles() (*models.ListRolesResponse, *apiutils.APIE
 
 	var r0 *models.ListRolesResponse
 	var r1 *apiutils.APIError
-	if rf, ok := ret.Get(0).(func() (*models.ListRolesResponse, *apiutils.APIError)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(*string) (*models.ListRolesResponse, *apiutils.APIError)); ok {
+		return rf(filter)
 	}
-	if rf, ok := ret.Get(0).(func() *models.ListRolesResponse); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(*string) *models.ListRolesResponse); ok {
+		r0 = rf(filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListRolesResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func() *apiutils.APIError); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(*string) *apiutils.APIError); ok {
+		r1 = rf(filter)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -119,13 +119,14 @@ type MockRoleClient_ListRoles_Call struct {
 }
 
 // ListRoles is a helper method to define mock.On call
-func (_e *MockRoleClient_Expecter) ListRoles() *MockRoleClient_ListRoles_Call {
-	return &MockRoleClient_ListRoles_Call{Call: _e.mock.On("ListRoles")}
+//   - filter *string
+func (_e *MockRoleClient_Expecter) ListRoles(filter interface{}) *MockRoleClient_ListRoles_Call {
+	return &MockRoleClient_ListRoles_Call{Call: _e.mock.On("ListRoles", filter)}
 }
 
-func (_c *MockRoleClient_ListRoles_Call) Run(run func()) *MockRoleClient_ListRoles_Call {
+func (_c *MockRoleClient_ListRoles_Call) Run(run func(filter *string)) *MockRoleClient_ListRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(*string))
 	})
 	return _c
 }
@@ -135,7 +136,7 @@ func (_c *MockRoleClient_ListRoles_Call) Return(_a0 *models.ListRolesResponse, _
 	return _c
 }
 
-func (_c *MockRoleClient_ListRoles_Call) RunAndReturn(run func() (*models.ListRolesResponse, *apiutils.APIError)) *MockRoleClient_ListRoles_Call {
+func (_c *MockRoleClient_ListRoles_Call) RunAndReturn(run func(*string) (*models.ListRolesResponse, *apiutils.APIError)) *MockRoleClient_ListRoles_Call {
 	_c.Call.Return(run)
 	return _c
 }

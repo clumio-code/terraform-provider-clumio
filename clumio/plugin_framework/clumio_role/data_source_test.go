@@ -12,6 +12,7 @@ import (
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
@@ -75,7 +76,8 @@ func TestReadRole(t *testing.T) {
 			},
 		}
 		// Setup expectations.
-		roleClient.EXPECT().ListRoles().Times(1).Return(readResponse, nil)
+
+		roleClient.EXPECT().ListRoles(types.StringValue("").ValueStringPointer()).Times(1).Return(readResponse, nil)
 
 		diags := rds.readRole(ctx, rdsm)
 		assert.Nil(t, diags)
@@ -98,7 +100,7 @@ func TestReadRole(t *testing.T) {
 			},
 		}
 		// Setup expectations.
-		roleClient.EXPECT().ListRoles().Times(1).Return(readResponse, nil)
+		roleClient.EXPECT().ListRoles(types.StringValue("").ValueStringPointer()).Times(1).Return(readResponse, nil)
 
 		diags := rds.readRole(ctx, rdsm)
 		assert.NotNil(t, diags)
@@ -108,7 +110,7 @@ func TestReadRole(t *testing.T) {
 	t.Run("list roles returns an error", func(t *testing.T) {
 
 		// Setup expectations.
-		roleClient.EXPECT().ListRoles().Times(1).Return(nil, apiError)
+		roleClient.EXPECT().ListRoles(types.StringValue("").ValueStringPointer()).Times(1).Return(nil, apiError)
 
 		diags := rds.readRole(ctx, rdsm)
 		assert.NotNil(t, diags)
@@ -118,7 +120,7 @@ func TestReadRole(t *testing.T) {
 	t.Run("list roles returns an empty response", func(t *testing.T) {
 
 		// Setup expectations.
-		roleClient.EXPECT().ListRoles().Times(1).Return(nil, nil)
+		roleClient.EXPECT().ListRoles(types.StringValue("").ValueStringPointer()).Times(1).Return(nil, nil)
 
 		diags := rds.readRole(ctx, rdsm)
 		assert.NotNil(t, diags)

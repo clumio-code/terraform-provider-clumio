@@ -24,7 +24,7 @@ func (r *clumioRoleDataSource) readRole(
 	var diags diag.Diagnostics
 
 	// Call the Clumio API to read the list of roles.
-	res, apiErr := r.roles.ListRoles()
+	res, apiErr := r.roles.ListRoles(types.StringValue("").ValueStringPointer())
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

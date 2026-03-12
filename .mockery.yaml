@@ -44,3 +44,4 @@ packages:
       ProtectionGroupS3AssetsClient:
       ReportConfigurationClient:
       GeneralSettingsClient:
+      GcpConnectionClient:

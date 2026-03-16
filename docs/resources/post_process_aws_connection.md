@@ -56,6 +56,8 @@ resource "clumio_post_process_aws_connection" "example" {
 - `protect_dynamodb_version` (String) Clumio DynamoDB Protect version.
 - `protect_ebs_version` (String) Clumio EBS Protect version.
 - `protect_ec2_mssql_version` (String) Clumio EC2 MSSQL Protect version. This feature is only available for legacy connections.
+- `protect_iceberg_on_glue_version` (String) Clumio Iceberg on Glue Protect version.
+- `protect_iceberg_on_s3_tables_version` (String) Clumio Iceberg on S3 Table Protect version.
 - `protect_rds_version` (String) Clumio RDS Protect version.
 - `protect_s3_version` (String) Clumio S3 Protect version.
 - `protect_warm_tier_dynamodb_version` (String) Clumio DynamoDB Warm Tier Protect version.

@@ -216,27 +216,27 @@ resource "clumio_policy" "example_mssql-ec2" {
     advanced_settings {
       ec2_mssql_database_backup {
         alternative_replica = "sync_secondary"
-        preferred_replica   = "primary"
+        preferred_replica = "primary"
       }
     }
   }
   operations {
     action_setting = "immediate"
-    type           = "ec2_mssql_log_backup"
+    type = "ec2_mssql_log_backup"
     slas {
       retention_duration {
-        unit  = "days"
+        unit = "days"
         value = 5
       }
       rpo_frequency {
-        unit  = "minutes"
+        unit = "minutes"
         value = 15
       }
     }
     advanced_settings {
       ec2_mssql_log_backup {
         alternative_replica = "sync_secondary"
-        preferred_replica   = "primary"
+        preferred_replica = "primary"
       }
     }
   }
@@ -288,7 +288,7 @@ resource "clumio_policy" "example_backup_windown_timezone" {
     backup_window_tz {
       start_time = "05:00"
     }
-    timezone = "America/Los_Angeles"
+    timezone          = "America/Los_Angeles"
   }
 }
 ```
@@ -334,6 +334,7 @@ Optional:
 
 - `aws_ebs_volume_backup` (Block Set) Optional configuration settings for the aws_ebs_volume_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ebs_volume_backup))
 - `aws_ec2_instance_backup` (Block Set) Optional configuration settings for the aws_ec2_instance_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ec2_instance_backup))
+- `aws_iceberg_table_backup` (Block Set) The advanced settings for Iceberg backup operations. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_iceberg_table_backup))
 - `aws_rds_config_sync` (Block Set) Optional configuration settings for the aws_rds_config_sync operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_rds_config_sync))
 - `aws_rds_resource_granular_backup` (Block Set) Optional configuration settings for the aws_rds_resource_granular_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_rds_resource_granular_backup))
 - `ec2_mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
@@ -361,6 +362,14 @@ Optional:
 - `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard` and `lite`. If not provided, the default is `standard`.
 	- `standard` = Clumio SecureVault Standard
 	- `lite` = Clumio SecureVault Lite
+
+
+<a id="nestedblock--operations--advanced_settings--aws_iceberg_table_backup"></a>
+### Nested Schema for `operations.advanced_settings.aws_iceberg_table_backup`
+
+Optional:
+
+- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard`.
 
 
 <a id="nestedblock--operations--advanced_settings--aws_rds_config_sync"></a>

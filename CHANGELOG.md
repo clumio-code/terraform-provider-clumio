@@ -1,3 +1,11 @@
+## 0.18.0
+This update contains the following changes:
+* New resource `clumio_gcp_connection` is introduced to establish a connection between GCP projects and Clumio.
+* New resource `clumio_post_process_gcp_connection` is introduced to post process the GCP connection after creation.
+* Minor update to resource `clumio_role`
+* Updated Clumio Go SDK to v0.28.0
+* Updates to documentation.
+
 ## 0.17.0
 This update contains the following changes:
 * Updated Terraform plugin version and related libraries.

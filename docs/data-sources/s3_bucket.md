@@ -14,7 +14,7 @@ clumio_s3_bucket data source is used to retrieve details of an s3 bucket for use
 
 ```terraform
 data "clumio_s3_bucket" "example" {
-  bucket_names = ["bucket1", "bucket2"]
+  bucket_names=["bucket1", "bucket2"]
 }
 ```
 
@@ -36,7 +36,6 @@ Read-Only:
 
 - `account_native_id` (String) The identifier of the AWS account under which the S3 bucket was created.
 - `aws_region` (String) The AWS region associated with the S3 bucket.
-- `event_bridge_enabled` (Boolean) Determines if continuous backup is enabled for the S3 bucket.
 - `id` (String) Unique identifier of the s3 bucket.
 - `last_backup_timestamp` (String) Time of the last backup in RFC-3339 format.
 - `last_continuous_backup_timestamp` (String) Time of the last continuous backup in RFC-3339 format.

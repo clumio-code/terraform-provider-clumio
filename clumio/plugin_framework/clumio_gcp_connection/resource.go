@@ -39,6 +39,10 @@ func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, sta
 	state.ClumioControlPlaneId = types.StringPointerValue(res.ControlPlaneId)
 	state.ClumioControlPlaneRole = types.StringPointerValue(res.ControlPlaneRole)
 
+	regionsValue, conversionDiags := types.ListValueFrom(ctx, types.StringType, res.Regions)
+	diags.Append(conversionDiags...)
+	state.Regions = regionsValue
+
 	// Description and ProjectID are not computed values
 	return false, diags
 }
@@ -48,10 +52,21 @@ func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, sta
 func (r *clumioGCPConnectionResource) createGcpConnection(ctx context.Context, plan *clumioGCPConnectionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	// Convert regions from the plan to a slice of string pointers for the API request.
+	var regions []*string
+	if !plan.Regions.IsNull() && !plan.Regions.IsUnknown() {
+		conversionDiags := plan.Regions.ElementsAs(ctx, &regions, false)
+		diags.Append(conversionDiags...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
 	// Convert schema to CreateGcpConnectionV1Request model
 	req := &models.CreateGcpConnectionV1Request{
 		Description: plan.Description.ValueStringPointer(),
 		ProjectId:   plan.ProjectID.ValueStringPointer(),
+		Regions:     regions,
 	}
 
 	// Call Clumio API to create a connection
@@ -70,6 +85,10 @@ func (r *clumioGCPConnectionResource) createGcpConnection(ctx context.Context, p
 	plan.ClumioControlPlaneRole = types.StringPointerValue(res.ControlPlaneRole)
 	plan.Token = types.StringPointerValue(res.Token)
 
+	regionsValue, conversionDiags := types.ListValueFrom(ctx, types.StringType, res.Regions)
+	diags.Append(conversionDiags...)
+	plan.Regions = regionsValue
+
 	return diags
 }
 
@@ -78,9 +97,20 @@ func (r *clumioGCPConnectionResource) createGcpConnection(ctx context.Context, p
 func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, plan *clumioGCPConnectionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	// Convert regions from the plan to a slice of string pointers for the API request.
+	var regions []*string
+	if !plan.Regions.IsNull() && !plan.Regions.IsUnknown() {
+		conversionDiags := plan.Regions.ElementsAs(ctx, &regions, false)
+		diags.Append(conversionDiags...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
 	// Convert schema to UpdateGcpConnectionV1Request model
 	req := &models.UpdateGcpConnectionV1Request{
 		Description: plan.Description.ValueStringPointer(),
+		Regions:     regions,
 	}
 
 	// Call Clumio API to update a connection
@@ -92,7 +122,6 @@ func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, p
 		return diags
 	}
 
-	// No need to populate plan since we are only setting user defined description
 	return diags
 }
 

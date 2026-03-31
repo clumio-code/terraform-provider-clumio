@@ -10,5 +10,6 @@ const (
 	schemaClumioControlPlaneRole = "clumio_control_plane_role"
 	schemaProjectId              = "project_id"
 	schemaDescription            = "description"
+	schemaRegions                = "regions"
 	schemaToken                  = "token"
 )

@@ -14,3 +14,10 @@ debug.test
 .idea
 .vscode
 .tags
+
+# Build and test related files
+/build
+
+# Claude Code
+.claude/settings.local.json
+

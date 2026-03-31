@@ -21,6 +21,7 @@ type clumioGCPConnectionResourceModel struct {
 	ClumioControlPlaneRole types.String `tfsdk:"clumio_control_plane_role"`
 	ProjectID              types.String `tfsdk:"project_id"`
 	Description            types.String `tfsdk:"description"`
+	Regions                types.List   `tfsdk:"regions"`
 	Token                  types.String `tfsdk:"token"`
 }
 
@@ -76,6 +77,11 @@ func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.Schem
 			},
 			schemaDescription: schema.StringAttribute{
 				Description: "The user defined description for the connection.",
+				Optional:    true,
+			},
+			schemaRegions: schema.ListAttribute{
+				Description: "The GCP regions to be used for inventory.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
 		},

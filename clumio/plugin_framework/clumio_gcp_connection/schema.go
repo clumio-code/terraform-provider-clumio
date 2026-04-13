@@ -5,10 +5,13 @@ package clumio_gcp_connection
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -20,6 +23,7 @@ type clumioGCPConnectionResourceModel struct {
 	ClumioControlPlaneId   types.String `tfsdk:"clumio_control_plane_id"`
 	ClumioControlPlaneRole types.String `tfsdk:"clumio_control_plane_role"`
 	ProjectID              types.String `tfsdk:"project_id"`
+	DeploymentType         types.String `tfsdk:"deployment_type"`
 	Description            types.String `tfsdk:"description"`
 	Regions                types.List   `tfsdk:"regions"`
 	Token                  types.String `tfsdk:"token"`
@@ -72,6 +76,20 @@ func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.Schem
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					// If the value of this attribute changes, Terraform will destroy and recreate the resource.
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			schemaDeploymentType: schema.StringAttribute{
+				Description: "The method by which the GCP Terraform template was deployed." +
+					" Valid values are: \"direct_terraform\", \"infrastructure_manager\"." +
+					" Defaults to \"direct_terraform\".",
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("direct_terraform"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("direct_terraform", "infrastructure_manager"),
+				},
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},

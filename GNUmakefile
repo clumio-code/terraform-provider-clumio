@@ -4,7 +4,7 @@
 
 # If the version is being changed here, it should also be changed for the variable
 # clumioTfProviderVersionHeaderValue in the file clumio/plugin_framework/const.go.
-VERSION=0.18.1
+VERSION=0.19.0
 ifndef OS_ARCH
 OS_ARCH=darwin_arm64
 endif

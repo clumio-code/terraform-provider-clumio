@@ -43,6 +43,8 @@ func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, sta
 	diags.Append(conversionDiags...)
 	state.Regions = regionsValue
 
+	state.DeploymentType = types.StringPointerValue(res.DeploymentType)
+
 	// Description and ProjectID are not computed values
 	return false, diags
 }
@@ -64,9 +66,10 @@ func (r *clumioGCPConnectionResource) createGcpConnection(ctx context.Context, p
 
 	// Convert schema to CreateGcpConnectionV1Request model
 	req := &models.CreateGcpConnectionV1Request{
-		Description: plan.Description.ValueStringPointer(),
-		ProjectId:   plan.ProjectID.ValueStringPointer(),
-		Regions:     regions,
+		DeploymentType: plan.DeploymentType.ValueStringPointer(),
+		Description:    plan.Description.ValueStringPointer(),
+		ProjectId:      plan.ProjectID.ValueStringPointer(),
+		Regions:        regions,
 	}
 
 	// Call Clumio API to create a connection
@@ -89,6 +92,8 @@ func (r *clumioGCPConnectionResource) createGcpConnection(ctx context.Context, p
 	diags.Append(conversionDiags...)
 	plan.Regions = regionsValue
 
+	plan.DeploymentType = types.StringPointerValue(res.DeploymentType)
+
 	return diags
 }
 
@@ -109,8 +114,9 @@ func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, p
 
 	// Convert schema to UpdateGcpConnectionV1Request model
 	req := &models.UpdateGcpConnectionV1Request{
-		Description: plan.Description.ValueStringPointer(),
-		Regions:     regions,
+		DeploymentType: plan.DeploymentType.ValueStringPointer(),
+		Description:    plan.Description.ValueStringPointer(),
+		Regions:        regions,
 	}
 
 	// Call Clumio API to update a connection

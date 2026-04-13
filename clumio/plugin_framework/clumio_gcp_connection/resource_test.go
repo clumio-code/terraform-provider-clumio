@@ -32,13 +32,15 @@ var (
 	controlPlaneId   = "controlPlaneId"
 	controlPlaneRole = "controlPlaneRole"
 	token            = "token"
-	region1          = "us-east1"
-	region2          = "us-west1"
+	region1        = "us-east1"
+	region2        = "us-west1"
+	deploymentType = "direct_terraform"
 )
 
 // Unit test for the following cases:
 //   - Create GCP connection success scenario.
 //   - Create GCP connection with regions success scenario.
+//   - Create GCP connection with deployment_type success scenario.
 //   - SDK API for create GCP connection returns an error.
 func TestCreateGcpConnection(t *testing.T) {
 	ctx := context.Background()
@@ -135,6 +137,37 @@ func TestCreateGcpConnection(t *testing.T) {
 		assert.Equal(t, region2, *resultRegions[1])
 	})
 
+	t.Run("Create GCP connection with deployment_type success scenario", func(t *testing.T) {
+		modelWithDeploymentType := &clumioGCPConnectionResourceModel{
+			ProjectID:      types.StringValue("1234"),
+			Description:    types.StringValue("Description"),
+			DeploymentType: types.StringValue(deploymentType),
+		}
+
+		reqWithDeploymentType := &models.CreateGcpConnectionV1Request{
+			DeploymentType: modelWithDeploymentType.DeploymentType.ValueStringPointer(),
+			Description:    modelWithDeploymentType.Description.ValueStringPointer(),
+			ProjectId:      modelWithDeploymentType.ProjectID.ValueStringPointer(),
+		}
+
+		respWithDeploymentType := &models.CreateGCPConnectionResponse{
+			ControlPlaneId:   &controlPlaneId,
+			ControlPlaneRole: &controlPlaneRole,
+			Token:            &token,
+			DeploymentType:   &deploymentType,
+		}
+
+		mockSdkConnection.EXPECT().CreateGcpConnection(reqWithDeploymentType).Times(1).
+			Return(respWithDeploymentType, nil)
+
+		createDiags := r.createGcpConnection(ctx, modelWithDeploymentType)
+		assert.False(t, createDiags.HasError())
+		assert.Equal(t, modelWithDeploymentType.ClumioControlPlaneId.ValueString(), controlPlaneId)
+		assert.Equal(t, modelWithDeploymentType.ClumioControlPlaneRole.ValueString(), controlPlaneRole)
+		assert.Equal(t, modelWithDeploymentType.Token.ValueString(), token)
+		assert.Equal(t, modelWithDeploymentType.DeploymentType.ValueString(), deploymentType)
+	})
+
 	t.Run("SDK API for create GCP connection returns an error", func(t *testing.T) {
 		mockSdkConnection.EXPECT().CreateGcpConnection(mock.Anything).Times(1).
 			Return(nil, apiError)
@@ -201,6 +234,28 @@ func TestUpdateGcpConnection(t *testing.T) {
 			}, nil)
 
 		updateDiags := r.updateGcpConnection(ctx, modelWithRegions)
+		assert.False(t, updateDiags.HasError())
+	})
+
+	t.Run("Update GCP connection with deployment_type success scenario", func(t *testing.T) {
+		modelWithDeploymentType := &clumioGCPConnectionResourceModel{
+			ProjectID:      types.StringValue("1234"),
+			Description:    types.StringValue("Updated Description"),
+			DeploymentType: types.StringValue(deploymentType),
+		}
+
+		reqWithDeploymentType := &models.UpdateGcpConnectionV1Request{
+			DeploymentType: modelWithDeploymentType.DeploymentType.ValueStringPointer(),
+			Description:    modelWithDeploymentType.Description.ValueStringPointer(),
+		}
+
+		mockSdkConnection.EXPECT().UpdateGcpConnection(
+			modelWithDeploymentType.ProjectID.ValueString(), reqWithDeploymentType).Times(1).
+			Return(&models.UpdateGCPConnectionResponse{
+				DeploymentType: &deploymentType,
+			}, nil)
+
+		updateDiags := r.updateGcpConnection(ctx, modelWithDeploymentType)
 		assert.False(t, updateDiags.HasError())
 	})
 
@@ -279,6 +334,7 @@ func TestReadGcpConnection(t *testing.T) {
 		Token:            types.StringValue("token").ValueStringPointer(),
 		ControlPlaneId:   types.StringValue("controlPlaneId").ValueStringPointer(),
 		ControlPlaneRole: types.StringValue("controlPlaneRole").ValueStringPointer(),
+		DeploymentType:   &deploymentType,
 		Regions:          regions,
 	}
 
@@ -292,6 +348,8 @@ func TestReadGcpConnection(t *testing.T) {
 		assert.Equal(t, model.Token.ValueString(), *res.Token)
 		assert.Equal(t, model.ClumioControlPlaneId.ValueString(), *res.ControlPlaneId)
 		assert.Equal(t, model.ClumioControlPlaneRole.ValueString(), *res.ControlPlaneRole)
+
+		assert.Equal(t, model.DeploymentType.ValueString(), deploymentType)
 
 		// Verify regions are set correctly from the read response.
 		var resultRegions []*string

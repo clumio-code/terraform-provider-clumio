@@ -1,3 +1,9 @@
+## 0.19.0
+This update contains the following changes:
+* Added `deployment_type` attribute to `clumio_gcp_connection` resource.
+* Added support for in-place region updates on `clumio_gcp_connection` resource.
+* Updated Clumio Go SDK to v0.30.1.
+
 ## 0.18.0
 This update contains the following changes:
 * New resource `clumio_gcp_connection` is introduced to establish a connection between GCP projects and Clumio.

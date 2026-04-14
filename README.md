@@ -1,6 +1,6 @@
 # Clumio Provider for Terraform
 
-![Clumio](.github/logo.svg)
+<img src=".github/logo-small.svg" alt="Clumio" width="50" />
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=alert_status&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=clumio_terraform-provider-clumio-internal&metric=security_rating&token=0a73b8177110fee6d39be9057997d2d666c0d662)](https://sonarcloud.io/summary/new_code?id=clumio_terraform-provider-clumio-internal)

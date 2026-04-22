@@ -13,6 +13,7 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
@@ -24,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+const defaultOrgUnitId = "00000000-0000-0000-0000-000000000000"
 
 // Basic test of the clumio_aws_connection resource. It tests the following scenarios:
 //   - Creates a connection and verifies that the plan was applied properly.
@@ -229,6 +232,114 @@ func TestAccResourceClumioAwsConnectionImport(t *testing.T) {
 	})
 }
 
+// Tests moving an AWS connection between Global OU and a child OU by changing the provider
+// context used by the resource.
+func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
+	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId2)
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	testAwsRegion := os.Getenv(common.AwsRegion)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioAwsConnectionMoveOU(
+					baseUrl, accountNativeId, testAwsRegion, false, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"clumio_aws_connection.test_conn", "organizational_unit_id",
+						defaultOrgUnitId),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioAwsConnectionMoveOU(
+					baseUrl, accountNativeId, testAwsRegion, true, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					waitForAWSConnectionMoveReady("clumio_aws_connection.test_conn"),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioAwsConnectionMoveOU(
+					baseUrl, accountNativeId, testAwsRegion, true, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(
+						"clumio_aws_connection.test_conn", "organizational_unit_id",
+						"clumio_organizational_unit.test_ou", "id"),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioAwsConnectionMoveOU(
+					baseUrl, accountNativeId, testAwsRegion, true, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"clumio_aws_connection.test_conn", "organizational_unit_id",
+						defaultOrgUnitId),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioAwsConnectionMoveOU(
+					baseUrl, accountNativeId, testAwsRegion, false, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"clumio_aws_connection.test_conn", "organizational_unit_id",
+						defaultOrgUnitId),
+				),
+			},
+		},
+	})
+}
+
 // createAWSConnectionUsingSDK creates an AWS connection using the Clumio API.
 func createAWSConnectionUsingSDK(accountID, region, description string) (string, error) {
 	clumioApiToken := os.Getenv(common.ClumioApiToken)
@@ -289,12 +400,77 @@ func deleteAWSConnection(resourceName string) resource.TestCheckFunc {
 	}
 }
 
+// waitForAWSConnectionMoveReady polls until the connection is connected, which is required
+// before OU move operations can succeed.
+func waitForAWSConnectionMoveReady(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("ID is not set")
+		}
+
+		accountID := rs.Primary.Attributes["account_native_id"]
+		awsRegion := rs.Primary.Attributes["aws_region"]
+		if accountID == "" || awsRegion == "" {
+			return fmt.Errorf("missing account_native_id or aws_region in state for %s", resourceName)
+		}
+
+		clumioApiToken := os.Getenv(common.ClumioApiToken)
+		clumioApiBaseUrl := os.Getenv(common.ClumioApiBaseUrl)
+		clumioOrganizationalUnitContext := os.Getenv(common.ClumioOrganizationalUnitContext)
+		config := sdkconfig.Config{
+			Token:                     clumioApiToken,
+			BaseUrl:                   clumioApiBaseUrl,
+			OrganizationalUnitContext: clumioOrganizationalUnitContext,
+			CustomHeaders: map[string]string{
+				"User-Agent": "Clumio-Terraform-Provider-Acceptance-Test",
+			},
+		}
+
+		awsConnection := sdkclients.NewAWSConnectionClient(config)
+		timeout := time.Now().Add(10 * time.Minute)
+		returnExternalID := "true"
+
+		for time.Now().Before(timeout) {
+			conn, apiErr := awsConnection.ReadAwsConnection(rs.Primary.ID, &returnExternalID)
+			if apiErr != nil {
+				return apiErr
+			}
+			if conn != nil && conn.ConnectionStatus != nil && *conn.ConnectionStatus == "connected" {
+				return nil
+			}
+			time.Sleep(10 * time.Second)
+		}
+
+		return fmt.Errorf(
+			"timed out waiting for connection %s to become move-ready", rs.Primary.ID)
+	}
+}
+
 // getTestAccResourceClumioAwsConnection returns the Terraform configuration for a basic
 // clumio_aws_connection resource.
 func getTestAccResourceClumioAwsConnection(
 	baseUrl string, accountId string, awsRegion string, description string) string {
 	return fmt.Sprintf(testAccResourceClumioAwsConnection, baseUrl, accountId,
 		awsRegion, description)
+}
+
+func getTestAccResourceClumioAwsConnectionMoveOU(
+	baseUrl string, accountId string, awsRegion string, includeOUProvider bool,
+	useChildOU bool) string {
+	providerBlock := ""
+	providerRef := "clumio"
+	if includeOUProvider {
+		providerBlock = fmt.Sprintf(testAccResourceClumioAwsConnectionMoveOUProvider, baseUrl)
+	}
+	if includeOUProvider && useChildOU {
+		providerRef = "clumio.test_ou"
+	}
+	return fmt.Sprintf(testAccResourceClumioAwsConnectionMoveOU, baseUrl, providerBlock, providerRef,
+		accountId, awsRegion)
 }
 
 // testAccResourceClumioAwsConnection is the Terraform configuration for a basic
@@ -321,5 +497,56 @@ provider clumio{
 resource "clumio_aws_connection" "test_conn" {
   account_native_id = "%s"
   aws_region = "%s"
+}
+`
+
+const testAccResourceClumioAwsConnectionMoveOU = `
+provider clumio{
+   clumio_api_base_url = "%s"
+}
+
+resource "clumio_organizational_unit" "test_ou" {
+  name = "acceptance-test-aws-connection-move-ou"
+}
+
+%s
+
+resource "clumio_aws_connection" "test_conn" {
+  provider = %s
+
+  account_native_id = "%s"
+  aws_region        = "%s"
+  description       = "test_move_ou"
+}
+
+resource "clumio_post_process_aws_connection" "test" {
+  token                              = clumio_aws_connection.test_conn.token
+  role_external_id                   = clumio_aws_connection.test_conn.role_external_id
+  role_arn                           = "arn:aws:iam::${clumio_aws_connection.test_conn.account_native_id}:role/testRoleArn"
+  account_id                         = clumio_aws_connection.test_conn.account_native_id
+  region                             = clumio_aws_connection.test_conn.aws_region
+  clumio_event_pub_id                = "arn:aws:iam::${clumio_aws_connection.test_conn.account_native_id}:role/ev"
+  config_version                     = "1.1"
+  discover_version                   = "4.1"
+  protect_config_version             = "19.2"
+  protect_ebs_version                = "20.1"
+  protect_rds_version                = "18.1"
+  protect_ec2_mssql_version          = "2.1"
+  protect_warm_tier_version          = "2.1"
+  protect_warm_tier_dynamodb_version = "2.1"
+  protect_dynamodb_version           = "1.1"
+  protect_s3_version                 = "2.1"
+  properties = {
+    key1 = "val1"
+    key2 = "val2"
+  }
+}
+`
+
+const testAccResourceClumioAwsConnectionMoveOUProvider = `
+provider "clumio" {
+  alias                              = "test_ou"
+  clumio_api_base_url                = "%s"
+  clumio_organizational_unit_context = resource.clumio_organizational_unit.test_ou.id
 }
 `

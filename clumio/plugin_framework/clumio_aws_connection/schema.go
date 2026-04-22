@@ -19,17 +19,18 @@ import (
 // resource. It represents the schema of the resource and the data it holds. This schema is used by
 // customers to configure the resource and by the Clumio provider to read and write the resource.
 type clumioAWSConnectionResourceModel struct {
-	ID                 types.String `tfsdk:"id"`
-	AccountNativeID    types.String `tfsdk:"account_native_id"`
-	AWSRegion          types.String `tfsdk:"aws_region"`
-	Description        types.String `tfsdk:"description"`
-	ConnectionStatus   types.String `tfsdk:"connection_status"`
-	Token              types.String `tfsdk:"token"`
-	Namespace          types.String `tfsdk:"namespace"`
-	ClumioAWSAccountID types.String `tfsdk:"clumio_aws_account_id"`
-	ClumioAWSRegion    types.String `tfsdk:"clumio_aws_region"`
-	ExternalID         types.String `tfsdk:"role_external_id"`
-	DataPlaneAccountID types.String `tfsdk:"data_plane_account_id"`
+	ID                   types.String `tfsdk:"id"`
+	AccountNativeID      types.String `tfsdk:"account_native_id"`
+	AWSRegion            types.String `tfsdk:"aws_region"`
+	Description          types.String `tfsdk:"description"`
+	OrganizationalUnitID types.String `tfsdk:"organizational_unit_id"`
+	ConnectionStatus     types.String `tfsdk:"connection_status"`
+	Token                types.String `tfsdk:"token"`
+	Namespace            types.String `tfsdk:"namespace"`
+	ClumioAWSAccountID   types.String `tfsdk:"clumio_aws_account_id"`
+	ClumioAWSRegion      types.String `tfsdk:"clumio_aws_region"`
+	ExternalID           types.String `tfsdk:"role_external_id"`
+	DataPlaneAccountID   types.String `tfsdk:"data_plane_account_id"`
 }
 
 // Schema defines the structure and constraints of the clumio_aws_connection Terraform resource.
@@ -67,6 +68,14 @@ func (r *clumioAWSConnectionResource) Schema(
 			schemaDescription: schema.StringAttribute{
 				Description: "Brief description to denote details of the connection.",
 				Optional:    true,
+			},
+			schemaOrganizationalUnitId: schema.StringAttribute{
+				Description: "Identifier of the Clumio organizational unit associated with the " +
+					"connection. Terraform derives this from the configured provider context.",
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			schemaConnectionStatus: schema.StringAttribute{
 				Description: "Current state of the connection (e.g, `connecting`, `connected`, " +

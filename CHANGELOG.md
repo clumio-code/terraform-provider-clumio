@@ -1,3 +1,9 @@
+## 0.20.0
+This update contains the following changes:
+* Added support AWS Connection OU Moves via Provider Context.
+* Added support for AWS Iceberg S3 tables in policy rule.
+* Updated documentation.
+
 ## 0.19.0
 This update contains the following changes:
 * Added `deployment_type` attribute to `clumio_gcp_connection` resource.

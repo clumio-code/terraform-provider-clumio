@@ -216,27 +216,27 @@ resource "clumio_policy" "example_mssql-ec2" {
     advanced_settings {
       ec2_mssql_database_backup {
         alternative_replica = "sync_secondary"
-        preferred_replica = "primary"
+        preferred_replica   = "primary"
       }
     }
   }
   operations {
     action_setting = "immediate"
-    type = "ec2_mssql_log_backup"
+    type           = "ec2_mssql_log_backup"
     slas {
       retention_duration {
-        unit = "days"
+        unit  = "days"
         value = 5
       }
       rpo_frequency {
-        unit = "minutes"
+        unit  = "minutes"
         value = 15
       }
     }
     advanced_settings {
       ec2_mssql_log_backup {
         alternative_replica = "sync_secondary"
-        preferred_replica = "primary"
+        preferred_replica   = "primary"
       }
     }
   }
@@ -288,7 +288,7 @@ resource "clumio_policy" "example_backup_windown_timezone" {
     backup_window_tz {
       start_time = "05:00"
     }
-    timezone          = "America/Los_Angeles"
+    timezone = "America/Los_Angeles"
   }
 }
 ```

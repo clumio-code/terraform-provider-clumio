@@ -40,12 +40,15 @@ resource "clumio_aws_connection" "example" {
 - `data_plane_account_id` (String) Identifier of the AWS account data plane within Clumio.
 - `id` (String) Unique identifier for the Clumio AWS connection.
 - `namespace` (String, Deprecated) K8S Namespace.
+- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the connection. Terraform derives this from the configured provider context.
 - `role_external_id` (String) Unique identifier Clumio uses to access the service role within your account.
 - `token` (String) Distinct 36-character token used to identify resources set up by the Clumio AWS template installation on the account being connected.
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # format of the Clumio AWS Connection ID is <AWS-ACCOUNT_ID>_<AWS_ACCOUNT_REGION>

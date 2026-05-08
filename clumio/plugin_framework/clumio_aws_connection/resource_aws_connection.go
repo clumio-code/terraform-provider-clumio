@@ -21,6 +21,7 @@ var (
 	_ resource.Resource                = &clumioAWSConnectionResource{}
 	_ resource.ResourceWithConfigure   = &clumioAWSConnectionResource{}
 	_ resource.ResourceWithImportState = &clumioAWSConnectionResource{}
+	_ resource.ResourceWithModifyPlan  = &clumioAWSConnectionResource{}
 )
 
 // clumioAWSConnectionResource is the struct backing the clumio_aws_connection Terraform resource.
@@ -69,6 +70,20 @@ func (r *clumioAWSConnectionResource) Configure(
 	r.sdkTasks = sdkclients.NewTaskClient(r.client.ClumioConfig)
 	r.pollTimeout = 3600 * time.Second
 	r.pollInterval = 5 * time.Second
+}
+
+// ModifyPlan materializes the effective OU from provider context into planned state so Terraform
+// can detect a move when the provider alias/context changes.
+func (r *clumioAWSConnectionResource) ModifyPlan(
+	ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	diags := resp.Plan.SetAttribute(
+		ctx, path.Root(schemaOrganizationalUnitId), getDesiredOrganizationalUnitID(r.client))
+	resp.Diagnostics.Append(diags...)
 }
 
 // Create creates the resource via the Clumio API and sets the initial Terraform state.
@@ -131,7 +146,7 @@ func (r *clumioAWSConnectionResource) Read(
 // Update updates the resource via the Clumio API and updates the Terraform state. NOTE that the
 // update for OU is a separate API call than the update for the AWS connection. Due to this it is
 // possible for one portion of an update to go through but not the other. However, the update is
-// idemptent so if a portion of the update fails, the next apply will attempt to update the failed
+// idempotent so if a portion of the update fails, the next apply will attempt to update the failed
 // portion again.
 func (r *clumioAWSConnectionResource) Update(
 	ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

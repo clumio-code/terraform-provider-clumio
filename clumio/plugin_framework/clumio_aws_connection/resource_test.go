@@ -29,6 +29,8 @@ var (
 	description        = "test-description"
 	resourceName       = "test_aws_connection"
 	id                 = "mock-connection-id"
+	ouId               = "mock-ou-id"
+	parentOuId         = "mock-parent-ou-id"
 	connStatus         = "test-status"
 	token              = "test-token"
 	externalId         = "test-external-id"
@@ -70,29 +72,33 @@ func TestCreateAWSConnection(t *testing.T) {
 
 	// Populate the Clumio AWS connection resource model to be used as input to createAWSConnection()
 	crm := clumioAWSConnectionResourceModel{
-		AccountNativeID: basetypes.NewStringValue(accountId),
-		AWSRegion:       basetypes.NewStringValue(region),
-		Description:     basetypes.NewStringValue(description),
+		AccountNativeID:      basetypes.NewStringValue(accountId),
+		AWSRegion:            basetypes.NewStringValue(region),
+		Description:          basetypes.NewStringValue(description),
+		OrganizationalUnitID: basetypes.NewStringValue(ouId),
 	}
 
 	// Tests the success scenario for clumio aws connection create. It should not return Diagnostics.
 	t.Run("Basic success scenario for create aws connection", func(t *testing.T) {
 
 		createResponse := &models.CreateAWSConnectionResponse{
-			AccountNativeId:    &accountId,
-			AwsRegion:          &region,
-			ClumioAwsAccountId: &clumioAccountId,
-			ClumioAwsRegion:    &region,
-			ConnectionStatus:   &connStatus,
-			DataPlaneAccountId: &dataplaneAccountId,
-			Description:        &description,
-			ExternalId:         &externalId,
-			Id:                 &id,
-			Namespace:          &namespace,
-			Token:              &token,
+			AccountNativeId:      &accountId,
+			AwsRegion:            &region,
+			ClumioAwsAccountId:   &clumioAccountId,
+			ClumioAwsRegion:      &region,
+			ConnectionStatus:     &connStatus,
+			DataPlaneAccountId:   &dataplaneAccountId,
+			Description:          &description,
+			ExternalId:           &externalId,
+			Id:                   &id,
+			Namespace:            &namespace,
+			OrganizationalUnitId: &ouId,
+			Token:                &token,
 		}
 
 		// Setup Expectations
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
 		mockAwsConnClient.EXPECT().CreateAwsConnection(mock.Anything).Times(1).Return(
 			createResponse, nil)
 
@@ -112,7 +118,43 @@ func TestCreateAWSConnection(t *testing.T) {
 	// error.
 	t.Run("CreateAwsConnection returns an error", func(t *testing.T) {
 		// Setup Expectations
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
 		mockAwsConnClient.EXPECT().CreateAwsConnection(mock.Anything).Times(1).Return(
+			nil, apiError)
+
+		diags := cr.createAWSConnection(ctx, &crm)
+		assert.NotNil(t, diags)
+	})
+
+	t.Run("global OU skips validation on create", func(t *testing.T) {
+		crm.OrganizationalUnitID = basetypes.NewStringValue(defaultOrgUnitId)
+		createResponse := &models.CreateAWSConnectionResponse{
+			AccountNativeId:      &accountId,
+			AwsRegion:            &region,
+			ClumioAwsAccountId:   &clumioAccountId,
+			ClumioAwsRegion:      &region,
+			ConnectionStatus:     &connStatus,
+			DataPlaneAccountId:   &dataplaneAccountId,
+			Description:          &description,
+			ExternalId:           &externalId,
+			Id:                   &id,
+			Namespace:            &namespace,
+			OrganizationalUnitId: nil,
+			Token:                &token,
+		}
+
+		mockAwsConnClient.EXPECT().CreateAwsConnection(mock.Anything).Times(1).Return(
+			createResponse, nil)
+
+		diags := cr.createAWSConnection(ctx, &crm)
+		assert.Nil(t, diags)
+		assert.Equal(t, defaultOrgUnitId, crm.OrganizationalUnitID.ValueString())
+	})
+
+	t.Run("CreateAwsConnection returns error when OU validation fails", func(t *testing.T) {
+		crm.OrganizationalUnitID = basetypes.NewStringValue(ouId)
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
 			nil, apiError)
 
 		diags := cr.createAWSConnection(ctx, &crm)
@@ -122,7 +164,10 @@ func TestCreateAWSConnection(t *testing.T) {
 	// Tests that Diagnostics is returned in case the create aws connection API call returns an
 	// empty response.
 	t.Run("CreateAwsConnection returns an empty response", func(t *testing.T) {
+		crm.OrganizationalUnitID = basetypes.NewStringValue(ouId)
 		// Setup Expectations
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
 		mockAwsConnClient.EXPECT().CreateAwsConnection(mock.Anything).Times(1).Return(
 			nil, nil)
 
@@ -160,26 +205,28 @@ func TestReadAWSConnection(t *testing.T) {
 
 	// Populate the Clumio AWS connection resource model to be used as input to readAWSConnection()
 	crm := clumioAWSConnectionResourceModel{
-		ID:              basetypes.NewStringValue(id),
-		AccountNativeID: basetypes.NewStringValue(accountId),
-		AWSRegion:       basetypes.NewStringValue(region),
-		Description:     basetypes.NewStringValue(description),
+		ID:                   basetypes.NewStringValue(id),
+		AccountNativeID:      basetypes.NewStringValue(accountId),
+		AWSRegion:            basetypes.NewStringValue(region),
+		Description:          basetypes.NewStringValue(description),
+		OrganizationalUnitID: basetypes.NewStringValue(ouId),
 	}
 
 	// Tests the success scenario for AWS connection read. It should not return Diagnostics.
 	t.Run("success scenario for read aws connection", func(t *testing.T) {
 		readResponse := &models.ReadAWSConnectionResponse{
-			AccountNativeId:    &accountId,
-			AwsRegion:          &region,
-			ClumioAwsAccountId: &clumioAccountId,
-			ClumioAwsRegion:    &region,
-			ConnectionStatus:   &connStatus,
-			DataPlaneAccountId: &dataplaneAccountId,
-			Description:        &description,
-			ExternalId:         &externalId,
-			Id:                 &id,
-			Namespace:          &namespace,
-			Token:              &token,
+			AccountNativeId:      &accountId,
+			AwsRegion:            &region,
+			ClumioAwsAccountId:   &clumioAccountId,
+			ClumioAwsRegion:      &region,
+			ConnectionStatus:     &connStatus,
+			DataPlaneAccountId:   &dataplaneAccountId,
+			Description:          &description,
+			ExternalId:           &externalId,
+			Id:                   &id,
+			Namespace:            &namespace,
+			OrganizationalUnitId: &ouId,
+			Token:                &token,
 		}
 		// Setup Expectations
 		mockAwsConnClient.EXPECT().ReadAwsConnection(id, mock.Anything).Times(1).
@@ -262,18 +309,20 @@ func TestUpdateAWSConnection(t *testing.T) {
 
 	// Populate the Clumio AWS connection resource model to be used as plan in updateAWSConnection()
 	plan := clumioAWSConnectionResourceModel{
-		ID:              basetypes.NewStringValue(id),
-		AccountNativeID: basetypes.NewStringValue(accountId),
-		AWSRegion:       basetypes.NewStringValue(region),
-		Description:     basetypes.NewStringValue(description),
+		ID:                   basetypes.NewStringValue(id),
+		AccountNativeID:      basetypes.NewStringValue(accountId),
+		AWSRegion:            basetypes.NewStringValue(region),
+		Description:          basetypes.NewStringValue(description),
+		OrganizationalUnitID: basetypes.NewStringValue(ouId),
 	}
 
 	// Populate the Clumio AWS connection resource model to be used as state in updateAWSConnection()
 	state := clumioAWSConnectionResourceModel{
-		ID:              basetypes.NewStringValue(id),
-		AccountNativeID: basetypes.NewStringValue(accountId),
-		AWSRegion:       basetypes.NewStringValue(region),
-		Description:     basetypes.NewStringValue(description),
+		ID:                   basetypes.NewStringValue(id),
+		AccountNativeID:      basetypes.NewStringValue(accountId),
+		AWSRegion:            basetypes.NewStringValue(region),
+		Description:          basetypes.NewStringValue(description),
+		OrganizationalUnitID: basetypes.NewStringValue(ouId),
 	}
 
 	// Tests the success scenario for AWS connection update. It should not return Diagnostics.
@@ -281,17 +330,18 @@ func TestUpdateAWSConnection(t *testing.T) {
 
 		plan.Description = basetypes.NewStringValue(descUpdated)
 		updateResponse := &models.UpdateAWSConnectionResponse{
-			AccountNativeId:    &accountId,
-			AwsRegion:          &region,
-			ClumioAwsAccountId: &clumioAccountId,
-			ClumioAwsRegion:    &region,
-			ConnectionStatus:   &connStatus,
-			DataPlaneAccountId: &dataplaneAccountId,
-			Description:        &description,
-			ExternalId:         &externalId,
-			Id:                 &id,
-			Namespace:          &namespace,
-			Token:              &token,
+			AccountNativeId:      &accountId,
+			AwsRegion:            &region,
+			ClumioAwsAccountId:   &clumioAccountId,
+			ClumioAwsRegion:      &region,
+			ConnectionStatus:     &connStatus,
+			DataPlaneAccountId:   &dataplaneAccountId,
+			Description:          &description,
+			ExternalId:           &externalId,
+			Id:                   &id,
+			Namespace:            &namespace,
+			OrganizationalUnitId: &ouId,
+			Token:                &token,
 		}
 
 		// Setup Expectations
@@ -300,6 +350,53 @@ func TestUpdateAWSConnection(t *testing.T) {
 
 		diags := cr.updateAWSConnection(ctx, &plan, &state)
 		assert.Nil(t, diags)
+	})
+
+	t.Run("success scenario for update aws connection OU only", func(t *testing.T) {
+		plan.Description = basetypes.NewStringValue(description)
+		plan.OrganizationalUnitID = basetypes.NewStringValue(parentOuId)
+		state.OrganizationalUnitID = basetypes.NewStringValue(ouId)
+
+		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{{Id: &envId}},
+			},
+		}
+		taskResponse := &models.ReadTaskResponse{Status: &status}
+		patchResponse := &models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 202,
+			Http202: &models.PatchOrganizationalUnitResponse{
+				TaskId: &taskId,
+			},
+		}
+		readResponse := &models.ReadAWSConnectionResponse{
+			AccountNativeId:      &accountId,
+			AwsRegion:            &region,
+			ClumioAwsAccountId:   &clumioAccountId,
+			ClumioAwsRegion:      &region,
+			ConnectionStatus:     &connStatus,
+			DataPlaneAccountId:   &dataplaneAccountId,
+			Description:          &description,
+			ExternalId:           &externalId,
+			Id:                   &id,
+			Namespace:            &namespace,
+			OrganizationalUnitId: &parentOuId,
+			Token:                &token,
+		}
+
+		mockAwsEnvClient.EXPECT().ListAwsEnvironments(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+			Return(listEnvsResponse, nil)
+		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId, ParentId: &parentOuId}, nil)
+		mockOrgUnitsCient.EXPECT().PatchOrganizationalUnit(ouId, mock.Anything, mock.Anything).
+			Times(1).Return(patchResponse, nil)
+		mockTaskClient.EXPECT().ReadTask(taskId).Times(1).Return(taskResponse, nil)
+		mockAwsConnClient.EXPECT().ReadAwsConnection(id, mock.Anything).Times(1).Return(readResponse, nil)
+
+		diags := cr.updateAWSConnection(ctx, &plan, &state)
+		assert.Nil(t, diags)
+		assert.Equal(t, parentOuId, plan.OrganizationalUnitID.ValueString())
 	})
 
 	// Tests that Diagnostics is returned in case the update AWS connection API call returns an
@@ -311,6 +408,8 @@ func TestUpdateAWSConnection(t *testing.T) {
 			Return(nil, apiError)
 
 		plan.Description = basetypes.NewStringValue(description)
+		plan.OrganizationalUnitID = basetypes.NewStringValue(ouId)
+		state.OrganizationalUnitID = basetypes.NewStringValue(ouId)
 		diags := cr.updateAWSConnection(ctx, &plan, &state)
 		assert.NotNil(t, diags)
 	})
@@ -323,6 +422,8 @@ func TestUpdateAWSConnection(t *testing.T) {
 			Return(nil, nil)
 
 		plan.Description = basetypes.NewStringValue(description)
+		plan.OrganizationalUnitID = basetypes.NewStringValue(ouId)
+		state.OrganizationalUnitID = basetypes.NewStringValue(ouId)
 		diags := cr.updateAWSConnection(ctx, &plan, &state)
 		assert.NotNil(t, diags)
 	})

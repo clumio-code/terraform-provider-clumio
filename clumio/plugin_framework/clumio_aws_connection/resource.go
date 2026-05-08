@@ -25,11 +25,21 @@ func (r *clumioAWSConnectionResource) createAWSConnection(
 
 	var diags diag.Diagnostics
 
+	if plan.OrganizationalUnitID.ValueString() != defaultOrgUnitId {
+		if _, err := getOrgUnitForConnection(
+			r.sdkOrgUnits, plan.OrganizationalUnitID.ValueString()); err != nil {
+			summary := fmt.Sprintf("invalid %s", schemaOrganizationalUnitId)
+			diags.AddError(summary, err.Error())
+			return diags
+		}
+	}
+
 	// Convert the schema to a Clumio API request to create an AWS connection.
 	createReq := &models.CreateAwsConnectionV1Request{
-		AccountNativeId: plan.AccountNativeID.ValueStringPointer(),
-		AwsRegion:       plan.AWSRegion.ValueStringPointer(),
-		Description:     plan.Description.ValueStringPointer(),
+		AccountNativeId:      plan.AccountNativeID.ValueStringPointer(),
+		AwsRegion:            plan.AWSRegion.ValueStringPointer(),
+		Description:          plan.Description.ValueStringPointer(),
+		OrganizationalUnitId: plan.OrganizationalUnitID.ValueStringPointer(),
 	}
 
 	// Call the Clumio API to create the AWS connection.
@@ -50,6 +60,7 @@ func (r *clumioAWSConnectionResource) createAWSConnection(
 	// Convert the Clumio API response back to a schema and populate all computed fields of the plan
 	// including the ID given that the resource is getting created.
 	plan.ID = types.StringPointerValue(res.Id)
+	setOrganizationalUnitID(plan, res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringPointerValue(res.ConnectionStatus)
 	plan.Token = types.StringPointerValue(res.Token)
 	plan.Namespace = types.StringPointerValue(res.Namespace)
@@ -104,6 +115,7 @@ func (r *clumioAWSConnectionResource) readAWSConnection(
 	if !state.Description.IsNull() || description.ValueString() != "" {
 		state.Description = description
 	}
+	setOrganizationalUnitID(state, res.OrganizationalUnitId)
 	state.ConnectionStatus = types.StringPointerValue(res.ConnectionStatus)
 	state.Token = types.StringPointerValue(res.Token)
 	state.Namespace = types.StringPointerValue(res.Namespace)
@@ -122,6 +134,28 @@ func (r *clumioAWSConnectionResource) updateAWSConnection(
 	state *clumioAWSConnectionResourceModel) diag.Diagnostics {
 
 	var diags diag.Diagnostics
+
+	if plan.OrganizationalUnitID != state.OrganizationalUnitID {
+		err := updateOrgUnitForConnection(ctx, r, plan, state)
+		if err != nil {
+			summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, state.ID.ValueString())
+			diags.AddError(summary, err.Error())
+			return diags
+		}
+
+		if plan.Description == state.Description {
+			remove, readDiags := r.readAWSConnection(ctx, plan)
+			diags.Append(readDiags...)
+			if diags.HasError() {
+				return diags
+			}
+			if remove {
+				summary := fmt.Sprintf("Unable to update %s (ID: %v)", r.name, state.ID.ValueString())
+				diags.AddError(summary, "Resource not found after organizational unit move")
+			}
+			return diags
+		}
+	}
 
 	// Call the Clumio API to update the AWS connection. The "Description" parameter, while optional
 	// in the REST API, is deliberately provided to ensure the update process is executed, even in
@@ -150,6 +184,7 @@ func (r *clumioAWSConnectionResource) updateAWSConnection(
 	// update in the backend. Additionally the external ID is currently not returned during an
 	// update call and thus is not updated below. This is okay however as the external ID is not
 	// expected to change once a connection is created.
+	setOrganizationalUnitID(plan, res.OrganizationalUnitId)
 	plan.ConnectionStatus = types.StringPointerValue(res.ConnectionStatus)
 	plan.Token = types.StringPointerValue(res.Token)
 	plan.Namespace = types.StringPointerValue(res.Namespace)

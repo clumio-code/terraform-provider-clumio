@@ -14,7 +14,7 @@ clumio_s3_bucket data source is used to retrieve details of an s3 bucket for use
 
 ```terraform
 data "clumio_s3_bucket" "example" {
-  bucket_names=["bucket1", "bucket2"]
+  bucket_names = ["bucket1", "bucket2"]
 }
 ```
 

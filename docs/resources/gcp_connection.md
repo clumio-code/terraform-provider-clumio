@@ -21,8 +21,8 @@ description: |-
 
 ```terraform
 resource "clumio_gcp_connection" "example" {
-  project_id             = "123456789012"
-  description            = "description"
+  project_id  = "123456789012"
+  description = "description"
 }
 ```
 
@@ -35,7 +35,9 @@ resource "clumio_gcp_connection" "example" {
 
 ### Optional
 
+- `deployment_type` (String) The method by which the GCP Terraform template was deployed. Valid values are: "direct_terraform", "infrastructure_manager". Defaults to "direct_terraform".
 - `description` (String) The user defined description for the connection.
+- `regions` (List of String) The GCP regions to be used for inventory.
 
 ### Read-Only
 

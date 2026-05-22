@@ -97,6 +97,77 @@ func TestAccResourceClumioPolicyRule(t *testing.T) {
 	})
 }
 
+// TestAccResourceClumioPolicyRuleAssetName verifies that a policy rule whose condition uses the
+// name-based `asset_name` filter can be created and then updated to a different asset name. It
+// exercises the CRUD and drift-detection paths for the name-based filter.
+func TestAccResourceClumioPolicyRuleAssetName(t *testing.T) {
+
+	policyName := "test_policy_asset_name"
+	policyRuleName := "acceptance-test-policy-rule-asset-name"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyRuleAssetName(
+					policyName, policyRuleName, "asset-one"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy_rule.test_policy_rule_asset_name",
+							plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy_rule.test_policy_rule_asset_name",
+							plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(
+						"clumio_policy_rule.test_policy_rule_asset_name", "name",
+						regexp.MustCompile(policyRuleName)),
+					resource.TestMatchResourceAttr(
+						"clumio_policy_rule.test_policy_rule_asset_name", "condition",
+						regexp.MustCompile(`asset-one`)),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyRuleAssetName(
+					policyName, policyRuleName, "asset-two"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy_rule.test_policy_rule_asset_name",
+							plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"clumio_policy_rule.test_policy_rule_asset_name",
+							plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(
+						"clumio_policy_rule.test_policy_rule_asset_name", "condition",
+						regexp.MustCompile(`asset-two`)),
+				),
+			},
+		},
+	})
+}
+
 // Test imports a policy rule by ID and ensures that the import is successful.
 func TestAccResourceClumioPolicyRuleImport(t *testing.T) {
 
@@ -286,6 +357,51 @@ resource "clumio_policy_rule" "test_policy_rule_2" {
   policy_id = clumio_policy.%s.id
   before_rule_id = clumio_policy_rule.test_policy_rule.id
   condition = "{\"entity_type\":{\"$eq\":\"aws_ebs_volume\"}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
+}
+`
+
+// getTestAccResourceClumioPolicyRuleAssetName returns the Terraform configuration for a
+// clumio_policy_rule resource whose condition uses the `asset_name` filter. The assetName
+// parameter is interpolated into the `$eq` operator so callers can drive update scenarios.
+func getTestAccResourceClumioPolicyRuleAssetName(
+	policyName string, policyRuleName string, assetName string) string {
+
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	return fmt.Sprintf(testAccResourceClumioPolicyRuleAssetName, baseUrl, policyName, policyName,
+		policyRuleName, policyName, assetName)
+}
+
+// testAccResourceClumioPolicyRuleAssetName is the Terraform configuration for a clumio_policy_rule
+// resource that combines `entity_type`, `asset_name`, and `aws_tag` in a single condition.
+const testAccResourceClumioPolicyRuleAssetName = `
+provider clumio{
+   clumio_api_base_url = "%s"
+}
+
+resource "clumio_policy" "%s" {
+ name = "%s"
+ activation_status = "activated"
+ operations {
+	action_setting = "immediate"
+	type = "aws_ec2_instance_backup"
+	slas {
+		retention_duration {
+			unit = "days"
+			value = 1
+		}
+		rpo_frequency {
+			unit = "days"
+			value = 1
+		}
+	}
+ }
+}
+
+resource "clumio_policy_rule" "test_policy_rule_asset_name" {
+  name = "%s"
+  policy_id = clumio_policy.%s.id
+  before_rule_id = ""
+  condition = "{\"entity_type\":{\"$eq\":\"aws_ec2_instance\"}, \"asset_name\":{\"$eq\":\"%s\"}, \"aws_tag\":{\"$eq\":{\"key\":\"Foo\", \"value\":\"Bar\"}}}"
 }
 `
 

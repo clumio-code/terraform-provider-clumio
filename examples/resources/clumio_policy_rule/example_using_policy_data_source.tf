@@ -18,6 +18,9 @@ resource "clumio_policy_rule" "example_2" {
     "aws_region": {
       "$eq": "us-west-2"
     },
+    "asset_name": {
+      "$eq": "web-server-01"
+    },
     "aws_tag": {
       "$contains": {
         "key": "Key1",

@@ -50,6 +50,9 @@ resource "clumio_policy_rule" "example_1" {
     "aws_account_native_id" : {
       "$in" : ["123456789012", "234567890123"]
     },
+    "asset_name" : {
+      "$contains" : "prod"
+    },
     "aws_tag" : {
       "$eq" : {
         "key" : "Key1",
@@ -83,6 +86,9 @@ resource "clumio_policy_rule" "example_2" {
     "aws_region" : {
       "$eq" : "us-west-2"
     },
+    "asset_name" : {
+      "$eq" : "web-server-01"
+    },
     "aws_tag" : {
       "$contains" : {
         "key" : "Key1",
@@ -104,6 +110,7 @@ resource "clumio_policy_rule" "example_2" {
 	1) `entity_type` is required and supports `$eq` and `$in` filters. `entity_type` must be one of `aws_rds_instance`, `aws_ebs_volume`, `aws_ec2_instance`, `aws_dynamodb_table`, `aws_rds_cluster`, `aws_iceberg_s3_table`, `aws_neptune` or `aws_documentdb`.
 	2) `aws_account_native_id` and `aws_region` are optional and both support `$eq` and `$in` filters.
 	3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` filters.
+	4) `asset_name` is optional and supports `$eq`, `$in`, and `$contains` filters.
 - `name` (String) The name of the policy rule.
 - `policy_id` (String) The Clumio-assigned ID of the policy.
 

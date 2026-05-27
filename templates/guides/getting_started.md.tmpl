@@ -6,6 +6,7 @@ page_title: "Getting Started with Data Protection"
 - [Preparation](#preparation)
 - [Connect an AWS account](#connect)
 - [Automate Data Protection](#automate)
+- [Connect a GCP project](#connect-gcp)
 - [Sample Configuration](#sample)
 
 The following is a quick overview of how to get started with the [Clumio provider](https://registry.terraform.io/providers/clumio-code/clumio/latest)
@@ -29,7 +30,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.11.0"
+      version = "~>0.20.0"
     }
     aws = {}
   }
@@ -169,8 +170,77 @@ Again confirm your work with `terraform plan` (`terraform init` is not required)
 resources will be provisioned. When ready run `terraform apply`. Any S3 bucket with the tag
 key-value clumio:example will start to seed and subsequently backup every 7 days.
 
+<a name="connect-gcp"></a>
+## Connect a GCP project
+
+> ⚠️ **Beta Resource**
+>
+> The Clumio GCP integration is currently in beta and available only to select customers.
+> Behavior, schema, and APIs may change in future releases.
+
+To connect a GCP project to Clumio (in place of, or in addition to, an AWS account), augment the
+Terraform configuration with the [Google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+and the [Clumio GCP module](https://registry.terraform.io/modules/clumio-code/gcp-template/clumio/latest):
+
+```shell
+terraform {
+  required_providers {
+    clumio = {
+      source  = "clumio-code/clumio"
+      version = "~>0.20.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~>5.0"
+    }
+  }
+}
+
+# Instantiate the Google provider for the GCP project to be protected
+provider "google" {
+  project = "<gcp_project_id>"
+}
+
+# Validate the project ID and retrieve project metadata
+data "google_project" "current" {
+  project_id = "<gcp_project_id>"
+}
+
+# Register a new Clumio connection for the GCP project
+resource "clumio_gcp_connection" "gcp_connection" {
+  project_id  = data.google_project.current.project_id
+  description = "My Clumio GCP Connection"
+}
+
+# Install the Clumio GCP template onto the registered connection
+module "clumio_protect_gcp" {
+  providers = {
+    clumio = clumio
+  }
+  source = "clumio-code/gcp-template/clumio"
+
+  clumio_token              = clumio_gcp_connection.gcp_connection.token
+  project_id                = data.google_project.current.project_id
+  clumio_control_plane_id   = clumio_gcp_connection.gcp_connection.clumio_control_plane_id
+  clumio_control_plane_role = clumio_gcp_connection.gcp_connection.clumio_control_plane_role
+  is_gcs_enabled            = true
+}
+```
+
+Run `terraform init` to download the Clumio GCP module and then `terraform plan` to inspect what
+resources will be provisioned. When ready, run `terraform apply`. The Google provider must be
+configured with credentials whose principal can create Workload Identity Pools, service accounts, and
+IAM bindings in the target project. For other ways to configure the Google provider, see:
+https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+
 <a name="sample"></a>
 ## Sample Configuration
-The following is the configuration from this guide in its entirety:
+The following are the configurations from this guide in their entirety.
+
+### AWS
 
 {{ tffile "examples/guides/getting_started.tf" }}
+
+### GCP
+
+{{ tffile "examples/guides/getting_started_gcp.tf" }}

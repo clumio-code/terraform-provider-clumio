@@ -135,9 +135,10 @@ func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, p
 func (r *clumioGCPConnectionResource) deleteGcpConnection(ctx context.Context, state *clumioGCPConnectionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// Call Clumio API to delete a connection
+	// Call Clumio API to delete a connection. A 404 indicates the connection has already been
+	// removed (for example, deleted out-of-band), so it is treated as a successful delete.
 	_, apiErr := r.sdkConnections.DeleteGcpConnection(state.ProjectID.ValueString())
-	if apiErr != nil {
+	if apiErr != nil && apiErr.ResponseCode != http.StatusNotFound {
 		summary := fmt.Sprintf("Unable to delete %s (project id: %v)", r.name, state.ProjectID.ValueString())
 		detail := common.ParseMessageFromApiError(apiErr)
 		diags.AddError(summary, detail)

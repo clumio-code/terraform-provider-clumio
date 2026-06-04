@@ -10,6 +10,8 @@ const (
 	ClumioTestAwsAccountId          = "CLUMIO_TEST_AWS_ACCOUNT_ID"
 	ClumioTestAwsAccountId2         = "CLUMIO_TEST_AWS_ACCOUNT_ID2"
 	ClumioTestIsSSOConfigured       = "CLUMIO_TEST_IS_SSO_CONFIGURED"
+	ClumioTestGcpProjectId          = "CLUMIO_TEST_GCP_PROJECT_ID"
+	ClumioTestGcpProjectId2         = "CLUMIO_TEST_GCP_PROJECT_ID2"
 
 	TaskSuccess    = "completed"
 	TaskAborted    = "aborted"

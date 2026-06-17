@@ -136,6 +136,8 @@ jobs:
     name: Check Build and Test
     needs: build-and-test
     runs-on: ubuntu-latest
+    # Run even on matrix failure: a skipped required check counts as passing and would let merges through.
+    if: ${{ always() }}
     steps:
       - name: Check for failed jobs
         run: |

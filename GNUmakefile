@@ -44,14 +44,13 @@ testacc_bucket:
 testacc_general_settings:
 	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -v ./... $(TESTARGS) -tags="general_settings" -timeout 120m
 
-# testacc_gcp runs the acceptance tests for the beta GCP connection resources. It is an opt-in lane
-# (not part of `testacc`) and requires the CLUMIO_TEST_GCP_PROJECT_ID/CLUMIO_TEST_GCP_PROJECT_ID2
-# environment variables along with the Clumio API credentials. The packages are run serially
-# (-p 1) because they share the same GCP project and would otherwise collide when creating the
-# connection registration concurrently.
 .PHONY: testacc_gcp
 testacc_gcp:
 	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -p 1 -v ./... $(TESTARGS) -tags="gcp" -timeout 120m
+
+.PHONY: testacc_gcp_connection
+testacc_gcp_connection:
+	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -p 1 -v ./... $(TESTARGS) -tags="gcp_connection" -timeout 120m
 
 .PHONY: testunit
 testunit:

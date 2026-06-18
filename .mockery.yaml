@@ -31,6 +31,8 @@ packages:
       AutoUserProvisioningSettingClient: {}
       DynamoDBTableClient: {}
       GcpConnectionClient: {}
+      GcpGcsBucketClient: {}
+      GcpProtectionGroupClient: {}
       GeneralSettingsClient: {}
       OrganizationalUnitClient: {}
       PolicyAssignmentClient: {}

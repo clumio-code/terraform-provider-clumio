@@ -38,8 +38,8 @@ func (_m *MockS3BucketClient) EXPECT() *MockS3BucketClient_Expecter {
 }
 
 // ListAwsS3Buckets provides a mock function for the type MockS3BucketClient
-func (_mock *MockS3BucketClient) ListAwsS3Buckets(limit *int64, start *string, filter *string) (*models.ListBucketsResponse, *apiutils.APIError) {
-	ret := _mock.Called(limit, start, filter)
+func (_mock *MockS3BucketClient) ListAwsS3Buckets(limit *int64, start *string, filter *string, lookbackDays *int64) (*models.ListBucketsResponse, *apiutils.APIError) {
+	ret := _mock.Called(limit, start, filter, lookbackDays)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListAwsS3Buckets")
@@ -47,18 +47,18 @@ func (_mock *MockS3BucketClient) ListAwsS3Buckets(limit *int64, start *string, f
 
 	var r0 *models.ListBucketsResponse
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string) (*models.ListBucketsResponse, *apiutils.APIError)); ok {
-		return returnFunc(limit, start, filter)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *int64) (*models.ListBucketsResponse, *apiutils.APIError)); ok {
+		return returnFunc(limit, start, filter, lookbackDays)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string) *models.ListBucketsResponse); ok {
-		r0 = returnFunc(limit, start, filter)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *int64) *models.ListBucketsResponse); ok {
+		r0 = returnFunc(limit, start, filter, lookbackDays)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListBucketsResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string) *apiutils.APIError); ok {
-		r1 = returnFunc(limit, start, filter)
+	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string, *int64) *apiutils.APIError); ok {
+		r1 = returnFunc(limit, start, filter, lookbackDays)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -76,11 +76,12 @@ type MockS3BucketClient_ListAwsS3Buckets_Call struct {
 //   - limit *int64
 //   - start *string
 //   - filter *string
-func (_e *MockS3BucketClient_Expecter) ListAwsS3Buckets(limit interface{}, start interface{}, filter interface{}) *MockS3BucketClient_ListAwsS3Buckets_Call {
-	return &MockS3BucketClient_ListAwsS3Buckets_Call{Call: _e.mock.On("ListAwsS3Buckets", limit, start, filter)}
+//   - lookbackDays *int64
+func (_e *MockS3BucketClient_Expecter) ListAwsS3Buckets(limit interface{}, start interface{}, filter interface{}, lookbackDays interface{}) *MockS3BucketClient_ListAwsS3Buckets_Call {
+	return &MockS3BucketClient_ListAwsS3Buckets_Call{Call: _e.mock.On("ListAwsS3Buckets", limit, start, filter, lookbackDays)}
 }
 
-func (_c *MockS3BucketClient_ListAwsS3Buckets_Call) Run(run func(limit *int64, start *string, filter *string)) *MockS3BucketClient_ListAwsS3Buckets_Call {
+func (_c *MockS3BucketClient_ListAwsS3Buckets_Call) Run(run func(limit *int64, start *string, filter *string, lookbackDays *int64)) *MockS3BucketClient_ListAwsS3Buckets_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 *int64
 		if args[0] != nil {
@@ -94,10 +95,15 @@ func (_c *MockS3BucketClient_ListAwsS3Buckets_Call) Run(run func(limit *int64, s
 		if args[2] != nil {
 			arg2 = args[2].(*string)
 		}
+		var arg3 *int64
+		if args[3] != nil {
+			arg3 = args[3].(*int64)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -108,7 +114,7 @@ func (_c *MockS3BucketClient_ListAwsS3Buckets_Call) Return(listBucketsResponse *
 	return _c
 }
 
-func (_c *MockS3BucketClient_ListAwsS3Buckets_Call) RunAndReturn(run func(limit *int64, start *string, filter *string) (*models.ListBucketsResponse, *apiutils.APIError)) *MockS3BucketClient_ListAwsS3Buckets_Call {
+func (_c *MockS3BucketClient_ListAwsS3Buckets_Call) RunAndReturn(run func(limit *int64, start *string, filter *string, lookbackDays *int64) (*models.ListBucketsResponse, *apiutils.APIError)) *MockS3BucketClient_ListAwsS3Buckets_Call {
 	_c.Call.Return(run)
 	return _c
 }

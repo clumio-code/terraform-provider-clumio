@@ -38,23 +38,23 @@ func (_m *MockUserClient) EXPECT() *MockUserClient_Expecter {
 }
 
 // ChangePassword provides a mock function for the type MockUserClient
-func (_mock *MockUserClient) ChangePassword(body *models.ChangePasswordV2Request) (*models.ChangePasswordResponse, *apiutils.APIError) {
+func (_mock *MockUserClient) ChangePassword(body *models.ChangePasswordV2Request) (interface{}, *apiutils.APIError) {
 	ret := _mock.Called(body)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ChangePassword")
 	}
 
-	var r0 *models.ChangePasswordResponse
+	var r0 interface{}
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(*models.ChangePasswordV2Request) (*models.ChangePasswordResponse, *apiutils.APIError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(*models.ChangePasswordV2Request) (interface{}, *apiutils.APIError)); ok {
 		return returnFunc(body)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*models.ChangePasswordV2Request) *models.ChangePasswordResponse); ok {
+	if returnFunc, ok := ret.Get(0).(func(*models.ChangePasswordV2Request) interface{}); ok {
 		r0 = returnFunc(body)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*models.ChangePasswordResponse)
+			r0 = ret.Get(0).(interface{})
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(*models.ChangePasswordV2Request) *apiutils.APIError); ok {
@@ -91,12 +91,12 @@ func (_c *MockUserClient_ChangePassword_Call) Run(run func(body *models.ChangePa
 	return _c
 }
 
-func (_c *MockUserClient_ChangePassword_Call) Return(changePasswordResponse *models.ChangePasswordResponse, aPIError *apiutils.APIError) *MockUserClient_ChangePassword_Call {
-	_c.Call.Return(changePasswordResponse, aPIError)
+func (_c *MockUserClient_ChangePassword_Call) Return(ifaceVal interface{}, aPIError *apiutils.APIError) *MockUserClient_ChangePassword_Call {
+	_c.Call.Return(ifaceVal, aPIError)
 	return _c
 }
 
-func (_c *MockUserClient_ChangePassword_Call) RunAndReturn(run func(body *models.ChangePasswordV2Request) (*models.ChangePasswordResponse, *apiutils.APIError)) *MockUserClient_ChangePassword_Call {
+func (_c *MockUserClient_ChangePassword_Call) RunAndReturn(run func(body *models.ChangePasswordV2Request) (interface{}, *apiutils.APIError)) *MockUserClient_ChangePassword_Call {
 	_c.Call.Return(run)
 	return _c
 }

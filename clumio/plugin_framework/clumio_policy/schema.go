@@ -61,17 +61,18 @@ type ContinuousConfigModel struct {
 // advancedSettingsModel maps to the AdvancedSettings attribute in policyOperationModel which
 // contains additional operation-specific policy settings.
 type advancedSettingsModel struct {
-	EC2MssqlDatabaseBackup []*replicaModel          `tfsdk:"ec2_mssql_database_backup"`
-	EC2MssqlLogBackup      []*replicaModel          `tfsdk:"ec2_mssql_log_backup"`
-	MssqlDatabaseBackup    []*replicaModel          `tfsdk:"mssql_database_backup"`
-	MssqlLogBackup         []*replicaModel          `tfsdk:"mssql_log_backup"`
-	ProtectionGroupBackup  []*backupTierModel       `tfsdk:"protection_group_backup"`
-	S3ContinuousBackup     []*ContinuousConfigModel `tfsdk:"protection_group_continuous_backup"`
-	EBSVolumeBackup        []*backupTierModel       `tfsdk:"aws_ebs_volume_backup"`
-	EC2InstanceBackup      []*backupTierModel       `tfsdk:"aws_ec2_instance_backup"`
-	RDSPitrConfigSync      []*pitrConfigModel       `tfsdk:"aws_rds_config_sync"`
-	RDSLogicalBackup       []*backupTierModel       `tfsdk:"aws_rds_resource_granular_backup"`
-	IcebergTableBackup     []*backupTierModel       `tfsdk:"aws_iceberg_table_backup"`
+	EC2MssqlDatabaseBackup   []*replicaModel          `tfsdk:"ec2_mssql_database_backup"`
+	EC2MssqlLogBackup        []*replicaModel          `tfsdk:"ec2_mssql_log_backup"`
+	MssqlDatabaseBackup      []*replicaModel          `tfsdk:"mssql_database_backup"`
+	MssqlLogBackup           []*replicaModel          `tfsdk:"mssql_log_backup"`
+	ProtectionGroupBackup    []*backupTierModel       `tfsdk:"protection_group_backup"`
+	GcpProtectionGroupBackup []*backupTierModel       `tfsdk:"gcp_protection_group_backup"`
+	S3ContinuousBackup       []*ContinuousConfigModel `tfsdk:"protection_group_continuous_backup"`
+	EBSVolumeBackup          []*backupTierModel       `tfsdk:"aws_ebs_volume_backup"`
+	EC2InstanceBackup        []*backupTierModel       `tfsdk:"aws_ec2_instance_backup"`
+	RDSPitrConfigSync        []*pitrConfigModel       `tfsdk:"aws_rds_config_sync"`
+	RDSLogicalBackup         []*backupTierModel       `tfsdk:"aws_rds_resource_granular_backup"`
+	IcebergTableBackup       []*backupTierModel       `tfsdk:"aws_iceberg_table_backup"`
 }
 
 // policyOperationModel maps to the Operations attribute in policyResourceModel and contains
@@ -225,6 +226,24 @@ func (r *policyResource) Schema(
 						Description: "Backup tier to store the backup in. Valid values are:" +
 							" `cold` and `frozen`.\n\t- `cold` = Clumio SecureVault Standard\n\t" +
 							"- `frozen` = Clumio SecureVault Archive",
+					},
+				},
+			},
+			Validators: []validator.Set{
+				common.WrapSetValidator(setvalidator.SizeAtMost(1)),
+			},
+		},
+		schemaGcpProtectionGroupBackup: schema.SetNestedBlock{
+			Description: "Additional policy configuration settings for the" +
+				" gcp_protection_group_backup operation. If this operation is not of" +
+				" type gcp_protection_group_backup, then this field is omitted from" +
+				" the response.",
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					schemaBackupTier: schema.StringAttribute{
+						Optional: true,
+						Description: "Backup tier to store the backup in. Valid values are:" +
+							" `standard` and `archive`.",
 					},
 				},
 			},

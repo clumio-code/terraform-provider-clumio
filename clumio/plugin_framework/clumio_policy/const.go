@@ -32,6 +32,7 @@ const (
 	schemaMssqlDatabaseBackup            = "mssql_database_backup"
 	schemaMssqlLogBackup                 = "mssql_log_backup"
 	schemaProtectionGroupBackup          = "protection_group_backup"
+	schemaGcpProtectionGroupBackup       = "gcp_protection_group_backup"
 	schemaS3ContinuousBackup             = "protection_group_continuous_backup"
 	schemaDisableEventbridgeNotification = "disable_eventbridge_notification"
 	schemaBackupTier                     = "backup_tier"

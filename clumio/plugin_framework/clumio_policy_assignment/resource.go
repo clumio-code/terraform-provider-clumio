@@ -88,6 +88,7 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
+	sdkGcpProtectionGroups := r.sdkGcpProtectionGroups
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 	sdkDynamoDBTables := r.sdkDynamoDBTables
 
@@ -110,7 +111,8 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 		return remove, diags
 	}
 	entityType := state.EntityType.ValueString()
-	if entityType != entityTypeProtectionGroup && entityType != entityTypeAWSDynamoDBTable {
+	if entityType != entityTypeProtectionGroup && entityType != entityTypeGcpProtectionGroup &&
+		entityType != entityTypeAWSDynamoDBTable {
 		summary := "Invalid entityType"
 		detail := fmt.Sprintf("The entity type %v is not supported for policy assignment.",
 			entityType)
@@ -134,6 +136,8 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 	switch entityType {
 	case entityTypeProtectionGroup:
 		return r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
+	case entityTypeGcpProtectionGroup:
+		return r.readAndValidateGcpProtectionGroup(ctx, sdkGcpProtectionGroups, state, policyId)
 	case entityTypeAWSDynamoDBTable:
 		return r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
 	}

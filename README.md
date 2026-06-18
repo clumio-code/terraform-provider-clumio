@@ -113,6 +113,19 @@ variable should be set to true. For guidance on configuring SSO, please consult 
 
 In order to run the full suite of acceptance tests, run `make testacc`.
 
+### GCP acceptance tests
+
+The GCP acceptance tests are opt-in (they are not part of `make testacc`) and each lane runs serially
+(`-p 1`) since the tests share the same GCP project. They require `CLUMIO_API_TOKEN` and
+`CLUMIO_API_BASE_URL` along with the GCP project variables below:
+
+- `make testacc_gcp` — GCP resources and data sources that operate on top of an already-registered
+  GCP connection (e.g. `clumio_gcs_protection_group`, `clumio_gcs_bucket`). Assumes a GCP
+  connection already exists in the target environment. Requires `CLUMIO_TEST_GCP_PROJECT_ID`.
+- `make testacc_gcp_connection` — GCP connection lifecycle tests (`clumio_gcp_connection` and
+  `clumio_post_process_gcp_connection`), which register and de-register the connection themselves.
+  Requires `CLUMIO_TEST_GCP_PROJECT_ID` and `CLUMIO_TEST_GCP_PROJECT_ID2`.
+
 
 ## MCP Server
 A Model Context Protocol (MCP) server for the Clumio Terraform Provider that helps generate and manage Terraform configurations for the Clumio platform is available heere: [Clumio Terraform Provider MCP Server](https://github.com/clumio-code/clumio-terraform-mcp)

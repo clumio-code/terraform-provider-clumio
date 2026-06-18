@@ -3,12 +3,12 @@
 // This file holds acceptance tests for the clumio_gcp_connection Terraform resource.
 //
 // These tests cover the beta GCP connection resource and are gated behind the dedicated "gcp" build
-// tag (run via `make testacc_gcp`) so they stay out of the shared `basic`/`post_process` CI lanes
+// tag (run via `make testacc_gcp_connection`) so they stay out of the shared `basic`/`post_process` CI lanes
 // until the GCP APIs are part of a published clumio-go-sdk release. They require a beta-enabled
 // Clumio backend and the CLUMIO_TEST_GCP_PROJECT_ID/CLUMIO_TEST_GCP_PROJECT_ID2 environment
 // variables in addition to the Clumio API credentials.
 
-//go:build gcp
+//go:build gcp_connection
 
 package clumio_gcp_connection_test
 

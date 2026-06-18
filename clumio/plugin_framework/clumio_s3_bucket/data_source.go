@@ -28,7 +28,7 @@ func (r *clumioS3BucketDataSource) readS3Bucket(
 
 	// Call the Clumio API to list the s3 buckets.
 	limit := int64(10000)
-	res, apiErr := r.s3BucketClient.ListAwsS3Buckets(&limit, nil, &nameFilter)
+	res, apiErr := r.s3BucketClient.ListAwsS3Buckets(&limit, nil, &nameFilter, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

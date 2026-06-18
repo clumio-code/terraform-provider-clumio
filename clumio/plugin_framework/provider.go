@@ -17,6 +17,8 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection_resources"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcp_connection"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcs_bucket"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcs_protection_group"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_general_settings"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_organizational_unit"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy"
@@ -167,6 +169,8 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 		clumio_s3_bucket.NewClumioS3BucketDataSource,
 		clumio_dynamodb_tables.NewClumioDynamoDBTablesDataSource,
 		clumio_protection_group_asset.NewClumioProtectionGroupAssetDataSource,
+		clumio_gcs_bucket.NewClumioGCSBucketDataSource,
+		clumio_gcs_protection_group.NewClumioGCSProtectionGroupDataSource,
 	}
 }
 
@@ -191,6 +195,7 @@ func (p *clumioProvider) Resources(_ context.Context) []func() resource.Resource
 		clumio_report_configuration.NewReportConfigurationResource,
 		clumio_general_settings.NewGeneralSettingsResource,
 		clumio_gcp_connection.NewClumioGCPConnectionResource,
+		clumio_gcs_protection_group.NewClumioGCSProtectionGroupResource,
 		clumio_post_process_gcp_connection.NewClumioPostProcessGCPConnectionResource,
 	}
 }

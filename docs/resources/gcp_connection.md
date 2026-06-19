@@ -41,7 +41,8 @@ resource "clumio_gcp_connection" "example" {
 
 ### Read-Only
 
-- `clumio_control_plane_id` (String) Identifier for the Clumio Control Plan. This identifier is provided so that access to the service role for Clumio can be restricted to just this control plane.
-- `clumio_control_plane_role` (String) Identifier for the Clumio Control Role. This identifier will be federated into GCP
+- `clumio_control_plane_id` (String, Deprecated) Identifier for the Clumio Control Plan. This identifier is provided so that access to the service role for Clumio can be restricted to just this control plane.
+- `clumio_control_plane_role` (String, Deprecated) Identifier for the Clumio Control Role. This identifier will be federated into GCP
+- `clumio_service_account` (String) Identifier for the Clumio GCP service account
 - `id` (String) Unique identifier of the connection
 - `token` (String) The 36-character Clumio GCP integration token used to identify the installation of the Clumio GCP integration resources in the project.

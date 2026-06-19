@@ -17,7 +17,7 @@ var jsonMarshal = json.Marshal
 
 // createUpdatePostProcessGcpConnection invokes the API to create/update the connection and from the response populates the
 // computed attributes of the connection.
-func (r *clumioPostProcessGCPConnectionResource) createUpdatePostProcessGcpConnection(_ context.Context, model *clumioPostProcessGCPConnectionResourceModel, requestType string) diag.Diagnostics {
+func (r *clumioPostProcessGCPConnectionResource) createUpdatePostProcessGcpConnection(ctx context.Context, model *clumioPostProcessGCPConnectionResourceModel, requestType string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	schemaPropertiesElements := model.Properties.Elements()
@@ -44,6 +44,16 @@ func (r *clumioPostProcessGCPConnectionResource) createUpdatePostProcessGcpConne
 	}
 	configuration := string(configBytes)
 
+	// Convert regions from the model to a slice of string pointers for the API request.
+	var regions []*string
+	if !model.Regions.IsNull() && !model.Regions.IsUnknown() {
+		conversionDiags := model.Regions.ElementsAs(ctx, &regions, false)
+		diags.Append(conversionDiags...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
 	postprocessRequest := &models.PostProcessGcpConnectionV1Request{
 		Configuration:       &configuration,
 		ProjectId:           model.ProjectID.ValueStringPointer(),
@@ -55,6 +65,7 @@ func (r *clumioPostProcessGCPConnectionResource) createUpdatePostProcessGcpConne
 		Token:               model.Token.ValueStringPointer(),
 		WifPoolId:           model.WifPoolId.ValueStringPointer(),
 		WifProviderId:       model.WifProviderId.ValueStringPointer(),
+		Regions:             regions,
 	}
 
 	_, apiErr := r.sdkConnections.PostProcessGcpConnection(postprocessRequest)

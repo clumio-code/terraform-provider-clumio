@@ -8,9 +8,10 @@ package clumio_s3_bucket
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"strings"
 )
 
 // readS3Bucket invokes the API to read the s3BucketClient and from the response

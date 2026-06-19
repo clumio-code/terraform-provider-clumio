@@ -1,3 +1,10 @@
+## 0.21.0
+This update contains the following changes:
+* Added region support for clumio_gcp_connection resource.
+* Added clumio service account support in clumio_gcp_connection and clumio_post_process_gcp_connection resources.
+* Updated documentation.
+* Updated Clumio Go SDK to v0.31.2
+
 ## 0.20.0
 This update contains the following changes:
 * Added support AWS Connection OU Moves via Provider Context.

@@ -27,6 +27,7 @@ type clumioGCPConnectionResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	Regions                types.List   `tfsdk:"regions"`
 	Token                  types.String `tfsdk:"token"`
+	ClumioServiceAccount   types.String `tfsdk:"clumio_service_account"`
 }
 
 // Schema defines the structure and constraints of the clumio_gcp_connection Terraform resource.
@@ -50,7 +51,8 @@ func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.Schem
 				Description: "Identifier for the Clumio Control Plan. This " +
 					"identifier is provided so that access to the service role for Clumio can be " +
 					"restricted to just this control plane.",
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "This attribute will be removed in the next major version of the provider.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -58,7 +60,15 @@ func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.Schem
 			schemaClumioControlPlaneRole: schema.StringAttribute{
 				Description: "Identifier for the Clumio Control Role. This " +
 					"identifier will be federated into GCP",
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "This attribute will be removed in the next major version of the provider.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			schemaClumioServiceAccount: schema.StringAttribute{
+				Description: "Identifier for the Clumio GCP service account",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

@@ -13,4 +13,5 @@ const (
 	schemaDescription            = "description"
 	schemaRegions                = "regions"
 	schemaToken                  = "token"
+	schemaClumioServiceAccount   = "clumio_service_account"
 )

@@ -27,6 +27,7 @@ type clumioPostProcessGCPConnectionResourceModel struct {
 	ConfigVersion       types.String `tfsdk:"config_version"`
 	ProtectGcsVersion   types.String `tfsdk:"protect_gcs_version"`
 	Properties          types.Map    `tfsdk:"properties"`
+	Regions             types.List   `tfsdk:"regions"`
 }
 
 // Schema defines the structure and constraints of the clumio_post_process_gcp_connection Terraform
@@ -67,11 +68,11 @@ func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ res
 			},
 			schemaWifPoolId: schema.StringAttribute{
 				Description: "The Workload Identity Federation Pool ID created for this connection.",
-				Required:    true,
+				Optional:    true,
 			},
 			schemaWifProviderId: schema.StringAttribute{
 				Description: "The Workload Identity Federation Provider ID created for this connection.",
-				Required:    true,
+				Optional:    true,
 			},
 			schemaConfigVersion: schema.StringAttribute{
 				Description: "Clumio Config version. May be a single number or major.minor (e.g., 1, 1.0, 2.5, 10.11).",
@@ -79,6 +80,11 @@ func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ res
 			},
 			schemaProtectGcsVersion: schema.StringAttribute{
 				Description: "Clumio Config version for GCS. May be a single number or major.minor (e.g., 1, 1.0, 2.5, 10.11).",
+				Optional:    true,
+			},
+			schemaRegions: schema.ListAttribute{
+				Description: "The GCP regions to be used for inventory.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
 			schemaProperties: schema.MapAttribute{

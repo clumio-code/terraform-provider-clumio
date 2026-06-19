@@ -7,6 +7,7 @@ page_title: "Using Connections and the GCP Module"
 - [Preparation](#preparation)
 - [Basic, One Connection](#basic)
 - [Multi-Project, Two Connections](#multi-project)
+- [Bring Your Own Service Account](#byo-sa)
 - [Troubleshooting](#troubleshooting)
 
 The following are examples of various ways to instantiate Clumio connections and install the
@@ -45,6 +46,16 @@ Google provider aliases to scope each project's resources independently. The
 installed onto each project independently.
 
 {{ tffile "examples/guides/multi_project_gcp_connection.tf" }}
+
+<a name="byo-sa"></a>
+## Bring Your Own Service Account
+By default, the Clumio GCP module creates a customer-side service account in your project for the
+Clumio service account to impersonate. To use a service account you already manage instead, set the
+`customer_service_account_email` input to its email address — the module then skips creating one and
+wires your existing service account into the required IAM bindings. The rest of the configuration is
+identical to the [Basic](#basic) example.
+
+{{ tffile "examples/guides/byo_sa_gcp_connection.tf" }}
 
 <a name="troubleshooting"></a>
 ## Troubleshooting

@@ -1,9 +1,14 @@
 ## 0.21.0
 This update contains the following changes:
-* Added region support for clumio_gcp_connection resource.
-* Added clumio service account support in clumio_gcp_connection and clumio_post_process_gcp_connection resources.
-* Updated documentation.
-* Updated Clumio Go SDK to v0.31.2
+* Added region support for `clumio_gcp_connection` resource.
+* Added clumio service account support in `clumio_gcp_connection` and `clumio_post_process_gcp_connection` resources.
+* Added support for GCP (GCS) protection groups:
+    - New resource and data source `clumio_gcs_protection_group`, and data source `clumio_gcs_bucket`.
+    - Added `gcp_protection_group_backup` backup tier to `clumio_policy`.
+* Added support for name-based conditions in `clumio_policy_rule`.
+* Deprecated `clumio_control_plane_id` and `clumio_control_plane_role` in `clumio_gcp_connection`.
+* Updated documentation and dependencies.
+* Updated Clumio Go SDK to v0.31.2.
 
 ## 0.20.0
 This update contains the following changes:

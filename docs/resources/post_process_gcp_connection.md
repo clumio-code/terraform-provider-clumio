@@ -3,19 +3,12 @@
 page_title: "clumio_post_process_gcp_connection Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  ⚠️ **Beta Resource**This resource handles post-processing for connections between GCP projects and Clumio.
-  It is currently in **beta** and available only to select customers.
-  Behavior, schema, and APIs may change in future releases.
+  Resource for post processing connection between GCP projects and Clumio.
 ---
 
 # clumio_post_process_gcp_connection (Resource)
 
-> ⚠️ **Beta Resource**
->
-> This resource handles post-processing for connections between GCP projects and Clumio.
-> It is currently in **beta** and available only to select customers.
-> Behavior, schema, and APIs may change in future releases.
->
+Resource for post processing connection between GCP projects and Clumio.
 
 ## Example Usage
 

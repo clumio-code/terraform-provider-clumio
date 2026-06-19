@@ -2,7 +2,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      version = ">=0.21.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -39,16 +39,19 @@ data "google_project" "project_b" {
   project_id = "<gcp_project_b_id>"
 }
 
-# Register a Clumio connection for the first GCP project
+# Register a Clumio connection for the first GCP project. Clumio currently supports backup of GCP
+# resources in us-central1 and us-west1.
 resource "clumio_gcp_connection" "project_a" {
   project_id  = data.google_project.project_a.project_id
   description = "My Clumio GCP Connection (Project A)"
+  regions     = ["us-central1", "us-west1"]
 }
 
 # Register a Clumio connection for the second GCP project
 resource "clumio_gcp_connection" "project_b" {
   project_id  = data.google_project.project_b.project_id
   description = "My Clumio GCP Connection (Project B)"
+  regions     = ["us-central1", "us-west1"]
 }
 
 # Install the Clumio GCP template onto the first project
@@ -59,11 +62,14 @@ module "clumio_protect_project_a" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token              = clumio_gcp_connection.project_a.token
-  project_id                = data.google_project.project_a.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.project_a.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.project_a.clumio_control_plane_role
-  is_gcs_enabled            = true
+  clumio_token                          = clumio_gcp_connection.project_a.token
+  project_id                            = data.google_project.project_a.project_id
+  regions                               = clumio_gcp_connection.project_a.regions
+  clumio_service_account_email          = clumio_gcp_connection.project_a.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
 }
 
 # Install the Clumio GCP template onto the second project
@@ -74,9 +80,12 @@ module "clumio_protect_project_b" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token              = clumio_gcp_connection.project_b.token
-  project_id                = data.google_project.project_b.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.project_b.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.project_b.clumio_control_plane_role
-  is_gcs_enabled            = true
+  clumio_token                          = clumio_gcp_connection.project_b.token
+  project_id                            = data.google_project.project_b.project_id
+  regions                               = clumio_gcp_connection.project_b.regions
+  clumio_service_account_email          = clumio_gcp_connection.project_b.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
 }

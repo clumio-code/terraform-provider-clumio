@@ -57,7 +57,7 @@ data "aws_region" "current" {}
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
   account_native_id = data.aws_caller_identity.current.account_id
-  aws_region        = data.aws_region.current.name
+  aws_region        = data.aws_region.current.region
   description       = "My Clumio Connection"
 }
 

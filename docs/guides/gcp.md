@@ -4,27 +4,29 @@ page_title: "Using Connections and the GCP Module"
 
 # Using Connections and the GCP Module
 
-> ⚠️ **Beta Resource**
->
-> The Clumio GCP integration is currently in beta and available only to select customers.
-> Behavior, schema, and APIs may change in future releases.
-
 - [Preparation](#preparation)
 - [Basic, One Connection](#basic)
 - [Multi-Project, Two Connections](#multi-project)
-- [Custom WIF Names](#custom-wif)
 - [Troubleshooting](#troubleshooting)
 
 The following are examples of various ways to instantiate Clumio connections and install the
 [Clumio GCP module](https://registry.terraform.io/modules/clumio-code/gcp-template/clumio/latest) to
 one or more GCP projects to be protected.
 
+Clumio's GCP integration uses a dual-service-account Workload Identity Federation (WIF) model. The
+WIF pool and provider are hosted in a Clumio-managed project, so the only identity created in your
+project is a single customer-side service account that the Clumio service account is granted
+permission to impersonate. As a result, the configurations below do not create any Workload Identity
+Pool or Provider in your project.
+
 <a name="preparation"></a>
 ## Preparation
 Please see the "Getting Started" guide for notes about setting up a Clumio API key. In addition,
 ensure that the [Google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
-is configured with credentials whose principal can create Workload Identity Pools, service accounts,
-and IAM bindings in the target GCP project. For details on configuring the Google provider, see:
+is configured with credentials whose principal can create service accounts, manage service account
+IAM bindings, create custom IAM roles, set project-level IAM bindings, create Pub/Sub topics, and
+create Cloud Asset Inventory feeds in the target GCP project. For details on configuring the Google
+provider, see:
 https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
 <a name="basic"></a>
@@ -38,7 +40,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      version = ">=0.21.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -63,10 +65,12 @@ data "google_project" "current" {
   project_id = "<gcp_project_id>"
 }
 
-# Register a new Clumio connection for the GCP project
+# Register a new Clumio connection for the GCP project. Clumio currently supports backup of GCP
+# resources in us-central1 and us-west1.
 resource "clumio_gcp_connection" "connection" {
   project_id  = data.google_project.current.project_id
   description = "My Clumio GCP Connection"
+  regions     = ["us-central1", "us-west1"]
 }
 
 # Install the Clumio GCP template onto the registered connection
@@ -76,11 +80,14 @@ module "clumio_protect_gcp" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token              = clumio_gcp_connection.connection.token
-  project_id                = data.google_project.current.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.connection.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.connection.clumio_control_plane_role
-  is_gcs_enabled            = true
+  clumio_token                          = clumio_gcp_connection.connection.token
+  project_id                            = data.google_project.current.project_id
+  regions                               = clumio_gcp_connection.connection.regions
+  clumio_service_account_email          = clumio_gcp_connection.connection.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
 }
 ```
 
@@ -96,7 +103,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      version = ">=0.21.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -133,16 +140,19 @@ data "google_project" "project_b" {
   project_id = "<gcp_project_b_id>"
 }
 
-# Register a Clumio connection for the first GCP project
+# Register a Clumio connection for the first GCP project. Clumio currently supports backup of GCP
+# resources in us-central1 and us-west1.
 resource "clumio_gcp_connection" "project_a" {
   project_id  = data.google_project.project_a.project_id
   description = "My Clumio GCP Connection (Project A)"
+  regions     = ["us-central1", "us-west1"]
 }
 
 # Register a Clumio connection for the second GCP project
 resource "clumio_gcp_connection" "project_b" {
   project_id  = data.google_project.project_b.project_id
   description = "My Clumio GCP Connection (Project B)"
+  regions     = ["us-central1", "us-west1"]
 }
 
 # Install the Clumio GCP template onto the first project
@@ -153,11 +163,14 @@ module "clumio_protect_project_a" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token              = clumio_gcp_connection.project_a.token
-  project_id                = data.google_project.project_a.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.project_a.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.project_a.clumio_control_plane_role
-  is_gcs_enabled            = true
+  clumio_token                          = clumio_gcp_connection.project_a.token
+  project_id                            = data.google_project.project_a.project_id
+  regions                               = clumio_gcp_connection.project_a.regions
+  clumio_service_account_email          = clumio_gcp_connection.project_a.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
 }
 
 # Install the Clumio GCP template onto the second project
@@ -168,38 +181,13 @@ module "clumio_protect_project_b" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token              = clumio_gcp_connection.project_b.token
-  project_id                = data.google_project.project_b.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.project_b.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.project_b.clumio_control_plane_role
-  is_gcs_enabled            = true
-}
-```
+  clumio_token                          = clumio_gcp_connection.project_b.token
+  project_id                            = data.google_project.project_b.project_id
+  regions                               = clumio_gcp_connection.project_b.regions
+  clumio_service_account_email          = clumio_gcp_connection.project_b.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
 
-<a name="custom-wif"></a>
-## Custom WIF Names
-By default, the Clumio GCP module creates Workload Identity Pool and Provider resources with the IDs
-`clumio-aws-pool` and `clumio-aws-provider`. GCP **soft-deletes** Workload Identity Pools for 30 days
-after deletion, during which time the pool's ID remains reserved. If you re-onboard a project within
-that window, or the default IDs collide with existing resources in the project, override the pool and
-provider IDs via the module's optional inputs:
-
-```shell
-module "clumio_protect_gcp" {
-  providers = {
-    clumio = clumio
-  }
-  source = "clumio-code/gcp-template/clumio"
-
-  clumio_token              = clumio_gcp_connection.connection.token
-  project_id                = data.google_project.current.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.connection.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.connection.clumio_control_plane_role
-
-  # Override default WIF identifiers to avoid collisions with existing or soft-deleted pools
-  clumio_wif_pool_id     = "clumio-aws-pool-v2"
-  clumio_wif_provider_id = "clumio-aws-provider-v2"
-
+  # Enable protection of GCS buckets
   is_gcs_enabled = true
 }
 ```
@@ -207,21 +195,20 @@ module "clumio_protect_gcp" {
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-### Workload Identity Pool or Provider already exists
+### Arena onboarding in progress
 
-**Symptom:** `terraform apply` returns an error similar to:
+**Symptom:** `terraform apply` fails at the `clumio_gcp_connection` resource with a retryable error
+similar to:
 
 ```
-Error: Error creating WorkloadIdentityPool: googleapi: Error 409:
-Requested entity already exists, alreadyExists
+Error: Arena onboarding in progress. Please try again in some time
 ```
 
-**Cause:** Workload Identity Pool and Provider IDs must be unique within a GCP project. GCP
-soft-deletes Workload Identity Pools for 30 days after deletion, during which time the pool's ID is
-still reserved. A pool in a soft-deleted state will cause this conflict.
+**Cause:** The Clumio Arena that hosts the shared Workload Identity Federation infrastructure for the
+requested region(s) is still being provisioned.
 
-**Resolution:** Override the module's default WIF identifiers using the `clumio_wif_pool_id` and
-`clumio_wif_provider_id` inputs (see [Custom WIF Names](#custom-wif)).
+**Resolution:** Wait a minute or two and re-run `terraform apply`. If the error persists for more than
+10 minutes, contact Clumio support with the project ID and requested region(s).
 
 ### Insufficient GCP permissions
 
@@ -231,6 +218,18 @@ still reserved. A pool in a soft-deleted state will cause this conflict.
 Error: googleapi: Error 403: Permission denied on resource ...
 ```
 
-**Resolution:** Ensure the GCP identity running Terraform has permission to create Workload Identity
-Pools, service accounts, custom IAM roles, project-level IAM bindings, Pub/Sub topics, and Cloud
-Asset Inventory feeds in the target project.
+**Resolution:** Ensure the GCP identity running Terraform has permission to create service accounts,
+manage service account IAM bindings, create custom IAM roles, set project-level IAM bindings, create
+Pub/Sub topics, and create Cloud Asset Inventory feeds in the target project.
+
+### Invalid Clumio API token
+
+**Symptom:**
+
+```
+Error: 401 Unauthorized — Invalid or expired API token
+```
+
+**Resolution:** Confirm the token is active in the Clumio portal under Administration → Access
+Management → API Tokens, and that `clumio_api_base_url` matches the region where the token was
+generated. Regenerate the token if it has expired and re-run `terraform apply`.

@@ -3,19 +3,12 @@
 page_title: "clumio_gcp_connection Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  ⚠️ **Beta Resource**This resource establishes a connection between GCP projects and Clumio.
-  It is currently in **beta** and available only to select customers.
-  Behavior, schema, and APIs may change in future releases.
+  Resource for establishing a connection between GCP projects and Clumio.
 ---
 
 # clumio_gcp_connection (Resource)
 
-> ⚠️ **Beta Resource**
->
-> This resource establishes a connection between GCP projects and Clumio.
-> It is currently in **beta** and available only to select customers.
-> Behavior, schema, and APIs may change in future releases.
->
+Resource for establishing a connection between GCP projects and Clumio.
 
 ## Example Usage
 

@@ -81,7 +81,7 @@ data aws_region current {}
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
   account_native_id = data.aws_caller_identity.current.account_id
-  aws_region        = data.aws_region.current.name
+  aws_region        = data.aws_region.current.region
   description       = "My Clumio Connection"
 }
 
@@ -173,21 +173,20 @@ key-value clumio:example will start to seed and subsequently backup every 7 days
 <a name="connect-gcp"></a>
 ## Connect a GCP project
 
-> ⚠️ **Beta Resource**
->
-> The Clumio GCP integration is currently in beta and available only to select customers.
-> Behavior, schema, and APIs may change in future releases.
-
 To connect a GCP project to Clumio (in place of, or in addition to, an AWS account), augment the
 Terraform configuration with the [Google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
-and the [Clumio GCP module](https://registry.terraform.io/modules/clumio-code/gcp-template/clumio/latest):
+and the [Clumio GCP module](https://registry.terraform.io/modules/clumio-code/gcp-template/clumio/latest).
+Clumio's GCP integration uses a dual-service-account Workload Identity Federation model: the WIF pool
+and provider are hosted in a Clumio-managed project, so the only identity created in your project is a
+single customer-side service account that the Clumio service account is granted permission to
+impersonate.
 
 ```shell
 terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      version = ">=0.21.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -206,10 +205,12 @@ data "google_project" "current" {
   project_id = "<gcp_project_id>"
 }
 
-# Register a new Clumio connection for the GCP project
+# Register a new Clumio connection for the GCP project. Clumio currently supports backup of GCP
+# resources in us-central1 and us-west1.
 resource "clumio_gcp_connection" "gcp_connection" {
   project_id  = data.google_project.current.project_id
   description = "My Clumio GCP Connection"
+  regions     = ["us-central1", "us-west1"]
 }
 
 # Install the Clumio GCP template onto the registered connection
@@ -219,18 +220,23 @@ module "clumio_protect_gcp" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token              = clumio_gcp_connection.gcp_connection.token
-  project_id                = data.google_project.current.project_id
-  clumio_control_plane_id   = clumio_gcp_connection.gcp_connection.clumio_control_plane_id
-  clumio_control_plane_role = clumio_gcp_connection.gcp_connection.clumio_control_plane_role
-  is_gcs_enabled            = true
+  clumio_token                          = clumio_gcp_connection.gcp_connection.token
+  project_id                            = data.google_project.current.project_id
+  regions                               = clumio_gcp_connection.gcp_connection.regions
+  clumio_service_account_email          = clumio_gcp_connection.gcp_connection.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
 }
 ```
 
 Run `terraform init` to download the Clumio GCP module and then `terraform plan` to inspect what
 resources will be provisioned. When ready, run `terraform apply`. The Google provider must be
-configured with credentials whose principal can create Workload Identity Pools, service accounts, and
-IAM bindings in the target project. For other ways to configure the Google provider, see:
+configured with credentials whose principal can create service accounts, manage service account IAM
+bindings, create custom IAM roles, set project-level IAM bindings, create Pub/Sub topics, and create
+Cloud Asset Inventory feeds in the target project. For other ways to configure the Google provider,
+see:
 https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
 <a name="sample"></a>

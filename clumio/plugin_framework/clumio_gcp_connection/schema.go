@@ -37,8 +37,7 @@ type clumioGCPConnectionResourceModel struct {
 // runtime, while others are required or optional inputs from the user.
 func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Resource for establishing a connection between GCP projects and Clumio.",
-		MarkdownDescription: "> ⚠️ **Beta Resource**\n>\n> This resource establishes a connection between GCP projects and Clumio.\n> It is currently in **beta** and available only to select customers.\n> Behavior, schema, and APIs may change in future releases.\n>",
+		Description: "Resource for establishing a connection between GCP projects and Clumio.",
 		Attributes: map[string]schema.Attribute{
 			schemaID: schema.StringAttribute{
 				Description: "Unique identifier of the connection",

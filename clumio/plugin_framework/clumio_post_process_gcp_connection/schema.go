@@ -35,8 +35,7 @@ type clumioPostProcessGCPConnectionResourceModel struct {
 // for the clumio_post_process_gcp_connection Terraform resource.
 func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Resource for post processing connection between GCP projects and Clumio.",
-		MarkdownDescription: "> ⚠️ **Beta Resource**\n>\n> This resource handles post-processing for connections between GCP projects and Clumio.\n> It is currently in **beta** and available only to select customers.\n> Behavior, schema, and APIs may change in future releases.\n>",
+		Description: "Resource for post processing connection between GCP projects and Clumio.",
 		Attributes: map[string]schema.Attribute{
 			schemaID: schema.StringAttribute{
 				Description: "Unique identifier of the connection",

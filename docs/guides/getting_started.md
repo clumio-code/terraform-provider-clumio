@@ -7,6 +7,7 @@ page_title: "Getting Started with Data Protection"
 - [Connect an AWS account](#connect)
 - [Automate Data Protection](#automate)
 - [Connect a GCP project](#connect-gcp)
+- [Automate GCS Data Protection](#automate-gcs)
 - [Sample Configuration](#sample)
 
 The following is a quick overview of how to get started with the [Clumio provider](https://registry.terraform.io/providers/clumio-code/clumio/latest)
@@ -239,6 +240,59 @@ Cloud Asset Inventory feeds in the target project. For other ways to configure t
 see:
 https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
+<a name="automate-gcs"></a>
+## Automate GCS Data Protection
+To get started with backup, include the following in the Terraform configuration to create a
+Protection Group for GCS, define a policy for it, and associate the two together. As a result, any
+GCS bucket with the label key-value clumio:example will be protected:
+
+```shell
+# Create a Clumio GCS protection group that aggregates buckets with the label "clumio:example"
+resource "clumio_gcs_protection_group" "protection_group" {
+  name = "My Clumio GCS Protection Group"
+  bucket_rule {
+    gcp_label {
+      eq = { clumio = "example" }
+    }
+  }
+}
+
+# Create a Clumio policy for GCS protection groups with a 7-day RPO and 3-month retention
+resource "clumio_policy" "gcs_policy" {
+  name = "GCS Gold"
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 7
+      }
+    }
+    advanced_settings {
+      gcp_protection_group_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+
+# Assign the policy to the GCS protection group
+resource "clumio_policy_assignment" "gcs_assignment" {
+  entity_id   = clumio_gcs_protection_group.protection_group.id
+  entity_type = "gcp_protection_group"
+  policy_id   = clumio_policy.gcs_policy.id
+}
+```
+
+Again confirm your work with `terraform plan` (`terraform init` is not required) to inspect what
+resources will be provisioned. When ready run `terraform apply`. Any GCS bucket with the label
+key-value clumio:example will start to seed and subsequently backup every 7 days.
+
 <a name="sample"></a>
 ## Sample Configuration
 The following are the configurations from this guide in their entirety.
@@ -406,5 +460,46 @@ module "clumio_protect_gcp" {
 
   # Enable protection of GCS buckets
   is_gcs_enabled = true
+}
+
+# Create a Clumio GCS protection group that aggregates buckets with the label "clumio:example"
+resource "clumio_gcs_protection_group" "protection_group" {
+  name = "My Clumio GCS Protection Group"
+  bucket_rule {
+    gcp_label {
+      eq = { clumio = "example" }
+    }
+  }
+}
+
+# Create a Clumio policy for GCS protection groups with a 7-day RPO and 3-month retention
+resource "clumio_policy" "gcs_policy" {
+  name = "GCS Gold"
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 7
+      }
+    }
+    advanced_settings {
+      gcp_protection_group_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+
+# Assign the policy to the GCS protection group
+resource "clumio_policy_assignment" "gcs_assignment" {
+  entity_id   = clumio_gcs_protection_group.protection_group.id
+  entity_type = "gcp_protection_group"
+  policy_id   = clumio_policy.gcs_policy.id
 }
 ```

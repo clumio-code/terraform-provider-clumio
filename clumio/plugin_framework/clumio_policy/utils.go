@@ -241,6 +241,14 @@ func buildSchemaOperationAdvancedSettings(
 			},
 		}
 	}
+	if operation.AdvancedSettings.GcpProtectionGroupBackup != nil {
+		advSettings.GcpProtectionGroupBackup = []*backupTierModel{
+			{
+				BackupTier: types.StringPointerValue(
+					operation.AdvancedSettings.GcpProtectionGroupBackup.BackupTier),
+			},
+		}
+	}
 	if operation.AdvancedSettings.ProtectionGroupContinuousBackup != nil {
 		advSettings.S3ContinuousBackup = []*ContinuousConfigModel{
 			{
@@ -316,6 +324,13 @@ func getOperationAdvancedSettings(
 			advancedSettings.ProtectionGroupBackup =
 				&models.ProtectionGroupBackupAdvancedSetting{
 					BackupTier: operation.AdvancedSettings[0].ProtectionGroupBackup[0].
+						BackupTier.ValueStringPointer(),
+				}
+		}
+		if operation.AdvancedSettings[0].GcpProtectionGroupBackup != nil {
+			advancedSettings.GcpProtectionGroupBackup =
+				&models.GcpProtectionGroupBackupAdvancedSetting{
+					BackupTier: operation.AdvancedSettings[0].GcpProtectionGroupBackup[0].
 						BackupTier.ValueStringPointer(),
 				}
 		}

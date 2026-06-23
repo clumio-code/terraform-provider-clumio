@@ -34,6 +34,9 @@ resource "clumio_policy_rule" "example_1" {
     "aws_account_native_id" : {
       "$in" : ["123456789012", "234567890123"]
     },
+    "asset_name" : {
+      "$contains" : "prod"
+    },
     "aws_tag" : {
       "$eq" : {
         "key" : "Key1",

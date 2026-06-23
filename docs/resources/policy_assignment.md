@@ -160,7 +160,7 @@ Note: This limitation is only in the case where both the clumio_policy and clumi
 ### Required
 
 - `entity_id` (String) Identifier of the resource to which the policy will be assigned.
-- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group` and `aws_dynamodb_table` are currently supported.
+- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group`, `gcp_protection_group` and `aws_dynamodb_table` are currently supported.
 - `policy_id` (String) Identifier of the Clumio policy to be assigned.
 
 ### Read-Only

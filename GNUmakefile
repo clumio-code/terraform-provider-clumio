@@ -4,7 +4,7 @@
 
 # If the version is being changed here, it should also be changed for the variable
 # clumioTfProviderVersionHeaderValue in the file clumio/plugin_framework/const.go.
-VERSION=0.20.0
+VERSION=0.21.0
 ifndef OS_ARCH
 OS_ARCH=darwin_arm64
 endif
@@ -43,6 +43,14 @@ testacc_bucket:
 .PHONY: testacc_general_settings
 testacc_general_settings:
 	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -v ./... $(TESTARGS) -tags="general_settings" -timeout 120m
+
+.PHONY: testacc_gcp
+testacc_gcp:
+	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -p 1 -v ./... $(TESTARGS) -tags="gcp" -timeout 120m
+
+.PHONY: testacc_gcp_connection
+testacc_gcp_connection:
+	TF_ACC=1 gotestsum $(TESTSUM_ARGS) -- -vet=off -p 1 -v ./... $(TESTARGS) -tags="gcp_connection" -timeout 120m
 
 .PHONY: testunit
 testunit:

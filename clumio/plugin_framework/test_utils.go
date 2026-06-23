@@ -29,6 +29,17 @@ func UtilTestAccPreCheckClumio(t *testing.T) {
 	UtilTestFailIfEmpty(t, common.ClumioTestAwsAccountId2, common.ClumioTestAwsAccountId2+" cannot be empty")
 }
 
+// UtilTestGcpConnectionPreCheckClumio validates that the required environment variables are set
+// before the acceptance test is executed for GCP connection resources. It intentionally validates
+// only the Clumio credentials and the GCP project identifiers, not the AWS account variables that
+// the default precheck requires.
+func UtilTestGcpConnectionPreCheckClumio(t *testing.T) {
+	UtilTestFailIfEmpty(t, common.ClumioApiToken, common.ClumioApiToken+" cannot be empty.")
+	UtilTestFailIfEmpty(t, common.ClumioApiBaseUrl, common.ClumioApiBaseUrl+" cannot be empty.")
+	UtilTestFailIfEmpty(t, common.ClumioTestGcpProjectId, common.ClumioTestGcpProjectId+" cannot be empty")
+	UtilTestFailIfEmpty(t, common.ClumioTestGcpProjectId2, common.ClumioTestGcpProjectId2+" cannot be empty")
+}
+
 // UtilTestAwsManualConnectionPreCheckClumio validates that the required environment variables are set before
 // the acceptance test is executed for aws manual connections.
 func UtilTestAwsManualConnectionPreCheckClumio(t *testing.T) {

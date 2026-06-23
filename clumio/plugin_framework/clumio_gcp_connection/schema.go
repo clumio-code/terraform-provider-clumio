@@ -27,6 +27,7 @@ type clumioGCPConnectionResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	Regions                types.List   `tfsdk:"regions"`
 	Token                  types.String `tfsdk:"token"`
+	ClumioServiceAccount   types.String `tfsdk:"clumio_service_account"`
 }
 
 // Schema defines the structure and constraints of the clumio_gcp_connection Terraform resource.
@@ -36,8 +37,7 @@ type clumioGCPConnectionResourceModel struct {
 // runtime, while others are required or optional inputs from the user.
 func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Resource for establishing a connection between GCP projects and Clumio.",
-		MarkdownDescription: "> ⚠️ **Beta Resource**\n>\n> This resource establishes a connection between GCP projects and Clumio.\n> It is currently in **beta** and available only to select customers.\n> Behavior, schema, and APIs may change in future releases.\n>",
+		Description: "Resource for establishing a connection between GCP projects and Clumio.",
 		Attributes: map[string]schema.Attribute{
 			schemaID: schema.StringAttribute{
 				Description: "Unique identifier of the connection",
@@ -50,7 +50,8 @@ func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.Schem
 				Description: "Identifier for the Clumio Control Plan. This " +
 					"identifier is provided so that access to the service role for Clumio can be " +
 					"restricted to just this control plane.",
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "This attribute will be removed in the next major version of the provider.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -58,7 +59,15 @@ func (r *clumioGCPConnectionResource) Schema(_ context.Context, _ resource.Schem
 			schemaClumioControlPlaneRole: schema.StringAttribute{
 				Description: "Identifier for the Clumio Control Role. This " +
 					"identifier will be federated into GCP",
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "This attribute will be removed in the next major version of the provider.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			schemaClumioServiceAccount: schema.StringAttribute{
+				Description: "Identifier for the Clumio GCP service account",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

@@ -57,6 +57,8 @@ func (r *policyRuleResource) Schema(
 					"2) `aws_account_native_id` and `aws_region` are optional and both support " +
 					"`$eq` and `$in` filters.\n\t" +
 					"3) `aws_tag` is optional and supports `$eq`, `$in`, `$all`, and `$contains` " +
+					"filters.\n\t" +
+					"4) `asset_name` is optional and supports `$eq`, `$in`, and `$contains` " +
 					"filters.",
 				Required: true,
 			},

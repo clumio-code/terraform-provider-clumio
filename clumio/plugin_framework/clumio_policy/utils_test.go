@@ -299,6 +299,20 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 		assert.Equal(t, *modelOpAdvSettings.ProtectionGroupBackup.BackupTier,
 			schemaOpAdvSettings.ProtectionGroupBackup[0].BackupTier.ValueString())
 	})
+	t.Run("Test GCP Protection Group Advanced Setting", func(t *testing.T) {
+		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
+			GcpProtectionGroupBackup: &models.GcpProtectionGroupBackupAdvancedSetting{
+				BackupTier: &backupTier,
+			},
+		}
+		modelOperations[0].ClumioType = &operationType9
+		schemaOperations, diags := mapClumioOperationsToSchemaOperations(ctx, modelOperations)
+		assert.Nil(t, diags)
+		modelOpAdvSettings := modelOperations[0].AdvancedSettings
+		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
+		assert.Equal(t, *modelOpAdvSettings.GcpProtectionGroupBackup.BackupTier,
+			schemaOpAdvSettings.GcpProtectionGroupBackup[0].BackupTier.ValueString())
+	})
 	t.Run("Test S3 Continuous Backup Advanced Setting", func(t *testing.T) {
 		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
 			ProtectionGroupContinuousBackup: &models.ProtectionGroupContinuousBackupAdvancedSetting{
@@ -663,6 +677,25 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, schemaOpAdvSettings.ProtectionGroupBackup[0].BackupTier.ValueString(),
 			*modelOpAdvSettings.ProtectionGroupBackup.BackupTier)
+	})
+
+	t.Run("Test GCP Protection Group Backup Advanced Setting", func(t *testing.T) {
+		schemaOperations[0].AdvancedSettings = []*advancedSettingsModel{
+			{
+				GcpProtectionGroupBackup: []*backupTierModel{
+					{
+						BackupTier: basetypes.NewStringValue(backupTier),
+					},
+				},
+			},
+		}
+		schemaOperations[0].OperationType = basetypes.NewStringValue(operationType9)
+		modelOperations, diags := mapSchemaOperationsToClumioOperations(ctx, schemaOperations)
+		assert.Nil(t, diags)
+		modelOpAdvSettings := modelOperations[0].AdvancedSettings
+		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
+		assert.Equal(t, schemaOpAdvSettings.GcpProtectionGroupBackup[0].BackupTier.ValueString(),
+			*modelOpAdvSettings.GcpProtectionGroupBackup.BackupTier)
 	})
 
 	t.Run("Test S3 Continuous Backup Advanced Setting", func(t *testing.T) {

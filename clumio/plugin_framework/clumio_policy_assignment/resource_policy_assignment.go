@@ -21,15 +21,16 @@ var (
 // clumioPolicyAssignmentResource is the struct backing the clumio_policy_assignment Terraform resource.
 // It holds the Clumio API client and any other required state needed to do policy assignment.
 type clumioPolicyAssignmentResource struct {
-	name                 string
-	client               *common.ApiClient
-	sdkPolicyDefinitions sdkclients.PolicyDefinitionClient
-	sdkProtectionGroups  sdkclients.ProtectionGroupClient
-	sdkPolicyAssignments sdkclients.PolicyAssignmentClient
-	sdkDynamoDBTables    sdkclients.DynamoDBTableClient
-	sdkTasks             sdkclients.TaskClient
-	pollTimeout          time.Duration
-	pollInterval         time.Duration
+	name                   string
+	client                 *common.ApiClient
+	sdkPolicyDefinitions   sdkclients.PolicyDefinitionClient
+	sdkProtectionGroups    sdkclients.ProtectionGroupClient
+	sdkGcpProtectionGroups sdkclients.GcpProtectionGroupClient
+	sdkPolicyAssignments   sdkclients.PolicyAssignmentClient
+	sdkDynamoDBTables      sdkclients.DynamoDBTableClient
+	sdkTasks               sdkclients.TaskClient
+	pollTimeout            time.Duration
+	pollInterval           time.Duration
 }
 
 // NewPolicyAssignmentResource creates a new instance of clumioPolicyAssignmentResource. Its
@@ -59,6 +60,7 @@ func (r *clumioPolicyAssignmentResource) Configure(
 	r.client = req.ProviderData.(*common.ApiClient)
 	r.sdkPolicyDefinitions = sdkclients.NewPolicyDefinitionClient(r.client.ClumioConfig)
 	r.sdkProtectionGroups = sdkclients.NewProtectionGroupClient(r.client.ClumioConfig)
+	r.sdkGcpProtectionGroups = sdkclients.NewGcpProtectionGroupClient(r.client.ClumioConfig)
 	r.sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(r.client.ClumioConfig)
 	r.sdkDynamoDBTables = sdkclients.NewDynamoDBTableClient(r.client.ClumioConfig)
 	r.sdkTasks = sdkclients.NewTaskClient(r.client.ClumioConfig)

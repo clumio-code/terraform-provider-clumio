@@ -27,6 +27,7 @@ type clumioPostProcessGCPConnectionResourceModel struct {
 	ConfigVersion       types.String `tfsdk:"config_version"`
 	ProtectGcsVersion   types.String `tfsdk:"protect_gcs_version"`
 	Properties          types.Map    `tfsdk:"properties"`
+	Regions             types.List   `tfsdk:"regions"`
 }
 
 // Schema defines the structure and constraints of the clumio_post_process_gcp_connection Terraform
@@ -34,8 +35,7 @@ type clumioPostProcessGCPConnectionResourceModel struct {
 // for the clumio_post_process_gcp_connection Terraform resource.
 func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Resource for post processing connection between GCP projects and Clumio.",
-		MarkdownDescription: "> ⚠️ **Beta Resource**\n>\n> This resource handles post-processing for connections between GCP projects and Clumio.\n> It is currently in **beta** and available only to select customers.\n> Behavior, schema, and APIs may change in future releases.\n>",
+		Description: "Resource for post processing connection between GCP projects and Clumio.",
 		Attributes: map[string]schema.Attribute{
 			schemaID: schema.StringAttribute{
 				Description: "Unique identifier of the connection",
@@ -67,11 +67,11 @@ func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ res
 			},
 			schemaWifPoolId: schema.StringAttribute{
 				Description: "The Workload Identity Federation Pool ID created for this connection.",
-				Required:    true,
+				Optional:    true,
 			},
 			schemaWifProviderId: schema.StringAttribute{
 				Description: "The Workload Identity Federation Provider ID created for this connection.",
-				Required:    true,
+				Optional:    true,
 			},
 			schemaConfigVersion: schema.StringAttribute{
 				Description: "Clumio Config version. May be a single number or major.minor (e.g., 1, 1.0, 2.5, 10.11).",
@@ -79,6 +79,11 @@ func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ res
 			},
 			schemaProtectGcsVersion: schema.StringAttribute{
 				Description: "Clumio Config version for GCS. May be a single number or major.minor (e.g., 1, 1.0, 2.5, 10.11).",
+				Optional:    true,
+			},
+			schemaRegions: schema.ListAttribute{
+				Description: "The GCP regions to be used for inventory.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
 			schemaProperties: schema.MapAttribute{

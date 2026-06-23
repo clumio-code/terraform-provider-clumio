@@ -3,8 +3,10 @@ page_title: "Sample Configuration"
 ---
 
 # Sample Configuration
-The following sample Terraform configuration highlights several resources in the provider. This
-includes:
+The following sample Terraform configurations highlight several resources in the provider.
+
+## AWS
+This configuration includes:
 * `clumio_aws_connection` (as well as installation of the [Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest))
 * `clumio_protection_group`
 * `clumio_policy`
@@ -14,3 +16,12 @@ includes:
 * `clumio_user`
 
 {{ tffile "examples/guides/complete_config.tf" }}
+
+## GCP
+This configuration includes:
+* `clumio_gcp_connection` (as well as installation of the [Clumio GCP module](https://registry.terraform.io/modules/clumio-code/gcp-template/clumio/latest))
+* `clumio_gcs_protection_group`
+* `clumio_policy`
+* `clumio_policy_assignment`
+
+{{ tffile "examples/guides/complete_config_gcp.tf" }}

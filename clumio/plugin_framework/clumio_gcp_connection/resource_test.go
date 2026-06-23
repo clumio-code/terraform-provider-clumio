@@ -32,9 +32,9 @@ var (
 	controlPlaneId   = "controlPlaneId"
 	controlPlaneRole = "controlPlaneRole"
 	token            = "token"
-	region1        = "us-east1"
-	region2        = "us-west1"
-	deploymentType = "direct_terraform"
+	region1          = "us-central1"
+	region2          = "us-west1"
+	deploymentType   = "direct_terraform"
 )
 
 // Unit test for the following cases:
@@ -303,6 +303,14 @@ func TestDeleteGcpConnection(t *testing.T) {
 
 		diags := r.deleteGcpConnection(ctx, model)
 		assert.NotNil(t, diags)
+	})
+
+	t.Run("SDK API not found error is treated as a successful delete", func(t *testing.T) {
+		mockSdkConnection.EXPECT().DeleteGcpConnection(mock.Anything).Times(1).
+			Return(nil, apiErrorStatusNotFound)
+
+		diags := r.deleteGcpConnection(ctx, model)
+		assert.False(t, diags.HasError())
 	})
 }
 

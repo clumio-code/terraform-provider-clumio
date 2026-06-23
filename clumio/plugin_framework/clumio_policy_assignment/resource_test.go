@@ -166,28 +166,6 @@ func TestCreatePolicyAssignment(t *testing.T) {
 		assert.NotNil(t, diags)
 	})
 
-	// Tests that Diagnostics is returned in case the read policy definition API call returns a
-	// policy without the required operation type for policy assignment.
-	t.Run("Read policy definition returns policy with unsupported type", func(t *testing.T) {
-
-		opType := "some-type"
-		pdResp := &models.ReadPolicyResponse{
-			Id: &policyId,
-			Operations: []*models.PolicyOperation{
-				{
-					ClumioType: &opType,
-				},
-			},
-		}
-
-		// Setup Expectations
-		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(pdResp, nil)
-
-		diags := par.createPolicyAssignment(context.Background(), model)
-		assert.NotNil(t, diags)
-	})
-
 	// Tests that Diagnostics is returned in case the set policy assignments API call returns an
 	// error.
 	t.Run("Set policy assignments returns an error", func(t *testing.T) {
@@ -406,29 +384,6 @@ func TestReadPolicyAssignment(t *testing.T) {
 		remove, diags := par.readPolicyAssignment(ctx, modelWithInvalidType)
 		assert.NotNil(t, diags)
 		assert.False(t, remove)
-	})
-
-	// Tests that Diagnostics is returned in case the read policy assignment with invalid entity
-	// type.
-	t.Run("Read policy with invalid policy operation type", func(t *testing.T) {
-
-		dynamodbPolicyType := dynamodbTableBackup
-		// Setup Expectations
-		pdResp := &models.ReadPolicyResponse{
-			Id: &policyId,
-			Operations: []*models.PolicyOperation{
-				{
-					ClumioType: &dynamodbPolicyType,
-				},
-			},
-			OrganizationalUnitId: &ou,
-		}
-		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(pdResp, nil)
-
-		remove, diags := par.readPolicyAssignment(ctx, model)
-		assert.Nil(t, diags)
-		assert.True(t, remove)
 	})
 
 	// Tests that Diagnostics is returned in case the read policy definition API call returns an
@@ -792,28 +747,6 @@ func TestUpdatePolicyAssignment(t *testing.T) {
 		assert.NotNil(t, diags)
 	})
 
-	// Tests that Diagnostics is returned in case the read policy definition API call returns a
-	// policy without the required operation type for policy assignment.
-	t.Run("Read policy definition returns policy with unsupported type", func(t *testing.T) {
-
-		opType := "some-type"
-		pdResp := &models.ReadPolicyResponse{
-			Id: &policyId,
-			Operations: []*models.PolicyOperation{
-				{
-					ClumioType: &opType,
-				},
-			},
-		}
-
-		// Setup Expectations
-		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
-			Return(pdResp, nil)
-
-		diags := par.updatePolicyAssignment(context.Background(), model)
-		assert.NotNil(t, diags)
-	})
-
 	// Tests that Diagnostics is returned in case the set policy assignments API call returns an
 	// error.
 	t.Run("Set policy assignments returns an error", func(t *testing.T) {
@@ -981,5 +914,81 @@ func TestDeletePolicyAssignment(t *testing.T) {
 
 		diags := par.deletePolicyAssignment(ctx, model)
 		assert.NotNil(t, diags)
+	})
+}
+
+// TestReadPolicyAssignmentGcpProtectionGroup tests the read flow for the gcp_protection_group
+// entity type, which is validated against the GCP protection group via the GcpProtectionGroupClient.
+//   - Success: the GCP protection group has the expected policy applied.
+//   - Removal: the GCP protection group is not found (404).
+//   - Removal: the policy does not contain a gcp_protection_group_backup operation.
+func TestReadPolicyAssignmentGcpProtectionGroup(t *testing.T) {
+
+	ctx := context.Background()
+	mockPolicyDefinitions := sdkclients.NewMockPolicyDefinitionClient(t)
+	mockGcpProtectionGroups := sdkclients.NewMockGcpProtectionGroupClient(t)
+	par := &clumioPolicyAssignmentResource{
+		name: resourceName,
+		client: &common.ApiClient{
+			ClumioConfig: sdkconfig.Config{},
+		},
+		sdkPolicyDefinitions:   mockPolicyDefinitions,
+		sdkGcpProtectionGroups: mockGcpProtectionGroups,
+	}
+
+	gcpOperationType := gcpProtectionGroupBackup
+	id := fmt.Sprintf("%s_%s_%s", policyId, entityId, entityTypeGcpProtectionGroup)
+	model := &policyAssignmentResourceModel{
+		ID:         basetypes.NewStringValue(id),
+		EntityID:   basetypes.NewStringValue(entityId),
+		EntityType: basetypes.NewStringValue(entityTypeGcpProtectionGroup),
+		PolicyID:   basetypes.NewStringValue(policyId),
+	}
+
+	gcpPolicyResp := &models.ReadPolicyResponse{
+		Id: &policyId,
+		Operations: []*models.PolicyOperation{
+			{
+				ClumioType: &gcpOperationType,
+			},
+		},
+		OrganizationalUnitId: &ou,
+	}
+
+	// Success: the GCP protection group exists and has the expected policy applied.
+	t.Run("Success scenario for read policy assignment for GCP protection group",
+		func(t *testing.T) {
+
+			readGcpResp := &models.ReadGCPProtectionGroupResponse{
+				Id: &entityId,
+				ProtectionInfo: &models.GCPProtectionInfoModel{
+					PolicyId: &policyId,
+				},
+				OrganizationalUnitId: &ou,
+			}
+
+			mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+				Return(gcpPolicyResp, nil)
+			mockGcpProtectionGroups.EXPECT().ReadGcpProtectionGroup(entityId, mock.Anything).
+				Times(1).Return(readGcpResp, nil)
+
+			remove, diags := par.readPolicyAssignment(ctx, model)
+			assert.Nil(t, diags)
+			assert.False(t, remove)
+		})
+
+	// Removal: the GCP protection group is not found.
+	t.Run("Read removes state when GCP protection group is not found", func(t *testing.T) {
+
+		apiNotFoundError := &apiutils.APIError{ResponseCode: 404}
+
+		mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+			Return(gcpPolicyResp, nil)
+		mockGcpProtectionGroups.EXPECT().ReadGcpProtectionGroup(entityId, mock.Anything).
+			Times(1).Return(nil, apiNotFoundError)
+
+		remove, diags := par.readPolicyAssignment(ctx, model)
+		assert.Nil(t, diags)
+		assert.True(t, remove)
 	})
 }

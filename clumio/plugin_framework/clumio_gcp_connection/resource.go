@@ -38,6 +38,7 @@ func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, sta
 	state.Token = types.StringPointerValue(res.Token)
 	state.ClumioControlPlaneId = types.StringPointerValue(res.ControlPlaneId)
 	state.ClumioControlPlaneRole = types.StringPointerValue(res.ControlPlaneRole)
+	state.ClumioServiceAccount = types.StringPointerValue(res.ClumioServiceAccount)
 
 	regionsValue, conversionDiags := types.ListValueFrom(ctx, types.StringType, res.Regions)
 	diags.Append(conversionDiags...)
@@ -87,6 +88,7 @@ func (r *clumioGCPConnectionResource) createGcpConnection(ctx context.Context, p
 	plan.ClumioControlPlaneId = types.StringPointerValue(res.ControlPlaneId)
 	plan.ClumioControlPlaneRole = types.StringPointerValue(res.ControlPlaneRole)
 	plan.Token = types.StringPointerValue(res.Token)
+	plan.ClumioServiceAccount = types.StringPointerValue(res.ClumioServiceAccount)
 
 	regionsValue, conversionDiags := types.ListValueFrom(ctx, types.StringType, res.Regions)
 	diags.Append(conversionDiags...)
@@ -120,7 +122,7 @@ func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, p
 	}
 
 	// Call Clumio API to update a connection
-	_, apiErr := r.sdkConnections.UpdateGcpConnection(plan.ProjectID.ValueString(), req)
+	res, apiErr := r.sdkConnections.UpdateGcpConnection(plan.ProjectID.ValueString(), req)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to update %s (project id: %v)", r.name, plan.ProjectID.ValueString())
 		detail := common.ParseMessageFromApiError(apiErr)
@@ -128,6 +130,8 @@ func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, p
 		return diags
 	}
 
+	// For backward compatibility: Update ClumioServiceAccount
+	plan.ClumioServiceAccount = types.StringPointerValue(res.ClumioServiceAccount)
 	return diags
 }
 
@@ -135,9 +139,10 @@ func (r *clumioGCPConnectionResource) updateGcpConnection(ctx context.Context, p
 func (r *clumioGCPConnectionResource) deleteGcpConnection(ctx context.Context, state *clumioGCPConnectionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// Call Clumio API to delete a connection
+	// Call Clumio API to delete a connection. A 404 indicates the connection has already been
+	// removed (for example, deleted out-of-band), so it is treated as a successful delete.
 	_, apiErr := r.sdkConnections.DeleteGcpConnection(state.ProjectID.ValueString())
-	if apiErr != nil {
+	if apiErr != nil && apiErr.ResponseCode != http.StatusNotFound {
 		summary := fmt.Sprintf("Unable to delete %s (project id: %v)", r.name, state.ProjectID.ValueString())
 		detail := common.ParseMessageFromApiError(apiErr)
 		diags.AddError(summary, detail)

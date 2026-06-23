@@ -25,17 +25,15 @@ func (r *clumioPolicyAssignmentResource) createPolicyAssignment(
 	sdkPolicyAssignments := r.sdkPolicyAssignments
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 	entityType := plan.EntityType.ValueString()
-	// Validation to check if the policy id mentioned supports protection_group_backup operation.
 	policyId := plan.PolicyID.ValueString()
-	policy, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
+
+	// Verify that the policy exists before attempting the assignment. The API validates whether
+	// the policy's operations are compatible with the entity type.
+	_, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read policy with id: %v ", policyId)
 		detail := common.ParseMessageFromApiError(apiErr)
 		diags.AddError(summary, detail)
-		return diags
-	}
-	diags = isOperationsSupported(entityType, policyId, policy.Operations)
-	if diags.HasError() {
 		return diags
 	}
 
@@ -88,12 +86,14 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 
 	var diags diag.Diagnostics
 	sdkProtectionGroups := r.sdkProtectionGroups
+	sdkGcpProtectionGroups := r.sdkGcpProtectionGroups
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 	sdkDynamoDBTables := r.sdkDynamoDBTables
 
-	// Call the Clumio API to read the policy definition.
+	// Call the Clumio API to read the policy definition. If the policy no longer exists, the
+	// assignment is stale and is removed from state.
 	policyId := state.PolicyID.ValueString()
-	policy, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
+	_, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
 	if apiErr != nil {
 		remove := false
 		if apiErr.ResponseCode == http.StatusNotFound {
@@ -110,30 +110,20 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 		return remove, diags
 	}
 	entityType := state.EntityType.ValueString()
-	if entityType != entityTypeProtectionGroup && entityType != entityTypeAWSDynamoDBTable {
+	if entityType != entityTypeProtectionGroup && entityType != entityTypeGcpProtectionGroup &&
+		entityType != entityTypeAWSDynamoDBTable {
 		summary := "Invalid entityType"
 		detail := fmt.Sprintf("The entity type %v is not supported for policy assignment.",
 			entityType)
 		diags.AddError(summary, detail)
 		return false, diags
 	}
-	correctPolicyType := false
-	for _, operation := range policy.Operations {
-		if isOperationAllowed(entityType, *operation.ClumioType) {
-			correctPolicyType = true
-			break
-		}
-	}
-	if !correctPolicyType {
-		msgStr := fmt.Sprintf("Policy id %s does not support required policy operation: %v",
-			policyId, allowedOperation[entityType])
-		tflog.Warn(ctx, msgStr)
-		return true, diags
-	}
 
 	switch entityType {
 	case entityTypeProtectionGroup:
 		return r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
+	case entityTypeGcpProtectionGroup:
+		return r.readAndValidateGcpProtectionGroup(ctx, sdkGcpProtectionGroups, state, policyId)
 	case entityTypeAWSDynamoDBTable:
 		return r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
 	}
@@ -150,19 +140,15 @@ func (r *clumioPolicyAssignmentResource) updatePolicyAssignment(
 	sdkPolicyAssignments := r.sdkPolicyAssignments
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
 
-	// Validation to check if the policy id mentioned supports protection_group_backup operation.
 	policyId := plan.PolicyID.ValueString()
-	policy, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
+
+	// Verify that the policy exists before attempting the assignment. The API validates whether
+	// the policy's operations are compatible with the entity type.
+	_, apiErr := sdkPolicyDefinitions.ReadPolicyDefinition(policyId, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read the policy with id : %v", policyId)
 		detail := common.ParseMessageFromApiError(apiErr)
 		diags.AddError(summary, detail)
-		return diags
-	}
-
-	entityType := plan.EntityType.ValueString()
-	diags = isOperationsSupported(entityType, policyId, policy.Operations)
-	if diags.HasError() {
 		return diags
 	}
 

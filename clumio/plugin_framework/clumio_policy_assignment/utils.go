@@ -83,9 +83,53 @@ func (r *clumioPolicyAssignmentResource) readAndValidateProtectionGroup(ctx cont
 		diags.AddError(summary, detail)
 		return false, diags
 	}
-	if readResponse.ProtectionInfo == nil ||
+	if readResponse.ProtectionInfo == nil || readResponse.ProtectionInfo.PolicyId == nil ||
 		*readResponse.ProtectionInfo.PolicyId != policyId {
 		msgStr := fmt.Sprintf("Protection group with id: %s does not have policy %s applied."+
+			" Removing from state.", entityId, policyId)
+		tflog.Warn(ctx, msgStr)
+		return true, diags
+	}
+	return false, diags
+}
+
+// readAndValidateGcpProtectionGroup reads the GCP Protection Group and validates that the given
+// policy is assigned to the GCP Protection Group.
+func (r *clumioPolicyAssignmentResource) readAndValidateGcpProtectionGroup(ctx context.Context,
+	sdkGcpProtectionGroups sdkclients.GcpProtectionGroupClient,
+	state *policyAssignmentResourceModel, policyId string) (bool, diag.Diagnostics) {
+
+	var diags diag.Diagnostics
+	// Call the Clumio API to read the GCP protection group. Barring any errors, if the protection
+	// group is not found or if the protection group no longer has the desired policy attached,
+	// the function returns "true" to indicate to the caller that the expected resource no
+	// longer exists.
+	entityId := state.EntityID.ValueString()
+	readResponse, apiErr := sdkGcpProtectionGroups.ReadGcpProtectionGroup(entityId, nil)
+	if apiErr != nil {
+		remove := false
+		if apiErr.ResponseCode == http.StatusNotFound {
+			msgStr := fmt.Sprintf(
+				"Clumio GCP Protection Group with ID %s not found. Removing from state.",
+				entityId)
+			tflog.Warn(ctx, msgStr)
+			remove = true
+		} else {
+			summary := fmt.Sprintf(readGcpProtectionGroupErrFmt, entityId)
+			detail := common.ParseMessageFromApiError(apiErr)
+			diags.AddError(summary, detail)
+		}
+		return remove, diags
+	}
+	if readResponse == nil {
+		summary := common.NilErrorMessageSummary
+		detail := common.NilErrorMessageDetail
+		diags.AddError(summary, detail)
+		return false, diags
+	}
+	if readResponse.ProtectionInfo == nil || readResponse.ProtectionInfo.PolicyId == nil ||
+		*readResponse.ProtectionInfo.PolicyId != policyId {
+		msgStr := fmt.Sprintf("GCP protection group with id: %s does not have policy %s applied."+
 			" Removing from state.", entityId, policyId)
 		tflog.Warn(ctx, msgStr)
 		return true, diags
@@ -135,33 +179,4 @@ func (r *clumioPolicyAssignmentResource) readAndValidateDynamoDBTable(ctx contex
 		return true, diags
 	}
 	return false, diags
-}
-
-func isOperationAllowed(entityType, operation string) bool {
-	for _, allowedOp := range allowedOperation[entityType] {
-		if operation == allowedOp {
-			return true
-		}
-	}
-	return false
-}
-
-func isOperationsSupported(entityType, policyId string,
-	operations []*models.PolicyOperation) diag.Diagnostics {
-	var diags diag.Diagnostics
-	correctPolicyType := false
-	for _, operation := range operations {
-		if isOperationAllowed(entityType, *operation.ClumioType) {
-			correctPolicyType = true
-			break
-		}
-	}
-	if !correctPolicyType {
-		summary := "Invalid Policy operation."
-		detail := fmt.Sprintf("Policy id %s does not contain support %v operation", policyId,
-			allowedOperation[entityType])
-		diags.AddError(summary, detail)
-		return diags
-	}
-	return diags
 }

@@ -6,6 +6,8 @@ page_title: "Getting Started with Data Protection"
 - [Preparation](#preparation)
 - [Connect an AWS account](#connect)
 - [Automate Data Protection](#automate)
+- [Connect a GCP project](#connect-gcp)
+- [Automate GCS Data Protection](#automate-gcs)
 - [Sample Configuration](#sample)
 
 The following is a quick overview of how to get started with the [Clumio provider](https://registry.terraform.io/providers/clumio-code/clumio/latest)
@@ -29,7 +31,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.11.0"
+      version = "~>0.20.0"
     }
     aws = {}
   }
@@ -80,7 +82,7 @@ data aws_region current {}
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
   account_native_id = data.aws_caller_identity.current.account_id
-  aws_region        = data.aws_region.current.name
+  aws_region        = data.aws_region.current.region
   description       = "My Clumio Connection"
 }
 
@@ -169,16 +171,140 @@ Again confirm your work with `terraform plan` (`terraform init` is not required)
 resources will be provisioned. When ready run `terraform apply`. Any S3 bucket with the tag
 key-value clumio:example will start to seed and subsequently backup every 7 days.
 
+<a name="connect-gcp"></a>
+## Connect a GCP project
+
+To connect a GCP project to Clumio (in place of, or in addition to, an AWS account), augment the
+Terraform configuration with the [Google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+and the [Clumio GCP module](https://registry.terraform.io/modules/clumio-code/gcp-template/clumio/latest).
+Clumio's GCP integration uses a dual-service-account Workload Identity Federation model: the WIF pool
+and provider are hosted in a Clumio-managed project, so the only identity created in your project is a
+single customer-side service account that the Clumio service account is granted permission to
+impersonate.
+
+```shell
+terraform {
+  required_providers {
+    clumio = {
+      source  = "clumio-code/clumio"
+      version = ">=0.21.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~>5.0"
+    }
+  }
+}
+
+# Instantiate the Google provider for the GCP project to be protected
+provider "google" {
+  project = "<gcp_project_id>"
+}
+
+# Validate the project ID and retrieve project metadata
+data "google_project" "current" {
+  project_id = "<gcp_project_id>"
+}
+
+# Register a new Clumio connection for the GCP project. Clumio currently supports backup of GCP
+# resources in us-central1 and us-west1.
+resource "clumio_gcp_connection" "gcp_connection" {
+  project_id  = data.google_project.current.project_id
+  description = "My Clumio GCP Connection"
+  regions     = ["us-central1", "us-west1"]
+}
+
+# Install the Clumio GCP template onto the registered connection
+module "clumio_protect_gcp" {
+  providers = {
+    clumio = clumio
+  }
+  source = "clumio-code/gcp-template/clumio"
+
+  clumio_token                          = clumio_gcp_connection.gcp_connection.token
+  project_id                            = data.google_project.current.project_id
+  regions                               = clumio_gcp_connection.gcp_connection.regions
+  clumio_service_account_email          = clumio_gcp_connection.gcp_connection.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
+}
+```
+
+Run `terraform init` to download the Clumio GCP module and then `terraform plan` to inspect what
+resources will be provisioned. When ready, run `terraform apply`. The Google provider must be
+configured with credentials whose principal can create service accounts, manage service account IAM
+bindings, create custom IAM roles, set project-level IAM bindings, create Pub/Sub topics, and create
+Cloud Asset Inventory feeds in the target project. For other ways to configure the Google provider,
+see:
+https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+
+<a name="automate-gcs"></a>
+## Automate GCS Data Protection
+To get started with backup, include the following in the Terraform configuration to create a
+Protection Group for GCS, define a policy for it, and associate the two together. As a result, any
+GCS bucket with the label key-value clumio:example will be protected:
+
+```shell
+# Create a Clumio GCS protection group that aggregates buckets with the label "clumio:example"
+resource "clumio_gcs_protection_group" "protection_group" {
+  name = "My Clumio GCS Protection Group"
+  bucket_rule {
+    gcp_label {
+      eq = { clumio = "example" }
+    }
+  }
+}
+
+# Create a Clumio policy for GCS protection groups with a 7-day RPO and 3-month retention
+resource "clumio_policy" "gcs_policy" {
+  name = "GCS Gold"
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 7
+      }
+    }
+    advanced_settings {
+      gcp_protection_group_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+
+# Assign the policy to the GCS protection group
+resource "clumio_policy_assignment" "gcs_assignment" {
+  entity_id   = clumio_gcs_protection_group.protection_group.id
+  entity_type = "gcp_protection_group"
+  policy_id   = clumio_policy.gcs_policy.id
+}
+```
+
+Again confirm your work with `terraform plan` (`terraform init` is not required) to inspect what
+resources will be provisioned. When ready run `terraform apply`. Any GCS bucket with the label
+key-value clumio:example will start to seed and subsequently backup every 7 days.
+
 <a name="sample"></a>
 ## Sample Configuration
-The following is the configuration from this guide in its entirety:
+The following are the configurations from this guide in their entirety.
+
+### AWS
 
 ```terraform
 terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.11.0"
+      version = "~>0.20.0"
     }
     aws = {}
   }
@@ -207,7 +333,7 @@ data "aws_region" "current" {}
 # Register a new Clumio connection for the effective AWS account ID and region
 resource "clumio_aws_connection" "connection" {
   account_native_id = data.aws_caller_identity.current.account_id
-  aws_region        = data.aws_region.current.name
+  aws_region        = data.aws_region.current.region
   description       = "My Clumio Connection"
 }
 
@@ -276,5 +402,104 @@ resource "clumio_policy_assignment" "assignment" {
   entity_id   = clumio_protection_group.protection_group.id
   entity_type = "protection_group"
   policy_id   = clumio_policy.policy.id
+}
+```
+
+### GCP
+
+```terraform
+terraform {
+  required_providers {
+    clumio = {
+      source  = "clumio-code/clumio"
+      version = ">=0.21.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~>5.0"
+    }
+  }
+}
+
+# Instantiate the Clumio provider
+provider "clumio" {
+  clumio_api_token    = "<clumio_api_token>"
+  clumio_api_base_url = "<clumio_api_base_url>"
+}
+
+# Instantiate the Google provider for the GCP project to be protected
+provider "google" {
+  project = "<gcp_project_id>"
+}
+
+# Validate the project ID and retrieve project metadata
+data "google_project" "current" {
+  project_id = "<gcp_project_id>"
+}
+
+# Register a new Clumio connection for the GCP project. Clumio currently supports backup of GCP
+# resources in us-central1 and us-west1.
+resource "clumio_gcp_connection" "connection" {
+  project_id  = data.google_project.current.project_id
+  description = "My Clumio GCP Connection"
+  regions     = ["us-central1", "us-west1"]
+}
+
+# Install the Clumio GCP template onto the registered connection
+module "clumio_protect_gcp" {
+  providers = {
+    clumio = clumio
+  }
+  source = "clumio-code/gcp-template/clumio"
+
+  clumio_token                          = clumio_gcp_connection.connection.token
+  project_id                            = data.google_project.current.project_id
+  regions                               = clumio_gcp_connection.connection.regions
+  clumio_service_account_email          = clumio_gcp_connection.connection.clumio_service_account
+  create_clumio_inventory_bridge_bucket = true
+
+  # Enable protection of GCS buckets
+  is_gcs_enabled = true
+}
+
+# Create a Clumio GCS protection group that aggregates buckets with the label "clumio:example"
+resource "clumio_gcs_protection_group" "protection_group" {
+  name = "My Clumio GCS Protection Group"
+  bucket_rule {
+    gcp_label {
+      eq = { clumio = "example" }
+    }
+  }
+}
+
+# Create a Clumio policy for GCS protection groups with a 7-day RPO and 3-month retention
+resource "clumio_policy" "gcs_policy" {
+  name = "GCS Gold"
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 7
+      }
+    }
+    advanced_settings {
+      gcp_protection_group_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+
+# Assign the policy to the GCS protection group
+resource "clumio_policy_assignment" "gcs_assignment" {
+  entity_id   = clumio_gcs_protection_group.protection_group.id
+  entity_type = "gcp_protection_group"
+  policy_id   = clumio_policy.gcs_policy.id
 }
 ```

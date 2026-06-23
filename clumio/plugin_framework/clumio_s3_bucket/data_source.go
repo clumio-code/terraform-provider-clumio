@@ -8,9 +8,10 @@ package clumio_s3_bucket
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"strings"
 )
 
 // readS3Bucket invokes the API to read the s3BucketClient and from the response
@@ -28,7 +29,7 @@ func (r *clumioS3BucketDataSource) readS3Bucket(
 
 	// Call the Clumio API to list the s3 buckets.
 	limit := int64(10000)
-	res, apiErr := r.s3BucketClient.ListAwsS3Buckets(&limit, nil, &nameFilter)
+	res, apiErr := r.s3BucketClient.ListAwsS3Buckets(&limit, nil, &nameFilter, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

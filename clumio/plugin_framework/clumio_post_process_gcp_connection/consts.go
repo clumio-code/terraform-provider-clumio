@@ -16,6 +16,7 @@ const (
 	schemaConfigVersion       = "config_version"
 	schemaProtectGcsVersion   = "protect_gcs_version"
 	schemaProperties          = "properties"
+	schemaRegions             = "regions"
 )
 
 // RequestType used by GCP post process API

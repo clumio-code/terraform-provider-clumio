@@ -3,19 +3,12 @@
 page_title: "clumio_gcp_connection Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  ⚠️ **Beta Resource**This resource establishes a connection between GCP projects and Clumio.
-  It is currently in **beta** and available only to select customers.
-  Behavior, schema, and APIs may change in future releases.
+  Resource for establishing a connection between GCP projects and Clumio.
 ---
 
 # clumio_gcp_connection (Resource)
 
-> ⚠️ **Beta Resource**
->
-> This resource establishes a connection between GCP projects and Clumio.
-> It is currently in **beta** and available only to select customers.
-> Behavior, schema, and APIs may change in future releases.
->
+Resource for establishing a connection between GCP projects and Clumio.
 
 ## Example Usage
 
@@ -41,7 +34,8 @@ resource "clumio_gcp_connection" "example" {
 
 ### Read-Only
 
-- `clumio_control_plane_id` (String) Identifier for the Clumio Control Plan. This identifier is provided so that access to the service role for Clumio can be restricted to just this control plane.
-- `clumio_control_plane_role` (String) Identifier for the Clumio Control Role. This identifier will be federated into GCP
+- `clumio_control_plane_id` (String, Deprecated) Identifier for the Clumio Control Plan. This identifier is provided so that access to the service role for Clumio can be restricted to just this control plane.
+- `clumio_control_plane_role` (String, Deprecated) Identifier for the Clumio Control Role. This identifier will be federated into GCP
+- `clumio_service_account` (String) Identifier for the Clumio GCP service account
 - `id` (String) Unique identifier of the connection
 - `token` (String) The 36-character Clumio GCP integration token used to identify the installation of the Clumio GCP integration resources in the project.

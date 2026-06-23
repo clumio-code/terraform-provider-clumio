@@ -39,6 +39,77 @@ resource "clumio_policy" "example_s3_protection_group" {
 }
 ```
 
+### GCP Protection Group Example
+
+```terraform
+resource "clumio_policy" "example_gcp_protection_group" {
+  name              = "example-policy-GCP-Protection-Group"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      gcp_protection_group_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+}
+```
+
+### GCP Continuous Backup Example
+
+```terraform
+resource "clumio_policy" "gcp_continuous" {
+  name = "GCS Continuous"
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_protection_group_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 1
+      }
+    }
+    advanced_settings {
+      gcp_protection_group_backup {
+        backup_tier = "standard"
+      }
+    }
+  }
+  operations {
+    action_setting = "immediate"
+    type           = "gcp_continuous_backup"
+    slas {
+      # Use the same retention as protection group backup.
+      retention_duration {
+        unit  = "months"
+        value = 3
+      }
+      # RPO can be set to minutely or hourly intervals.
+      rpo_frequency {
+        unit  = "minutes"
+        value = 15
+      }
+    }
+  }
+}
+```
+
 ### S3 Backtrack Example
 
 ```terraform
@@ -339,6 +410,7 @@ Optional:
 - `aws_rds_resource_granular_backup` (Block Set) Optional configuration settings for the aws_rds_resource_granular_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_rds_resource_granular_backup))
 - `ec2_mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
 - `ec2_mssql_log_backup` (Block Set) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_log_backup))
+- `gcp_protection_group_backup` (Block Set) Additional policy configuration settings for the gcp_protection_group_backup operation. If this operation is not of type gcp_protection_group_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--gcp_protection_group_backup))
 - `mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_database_backup))
 - `mssql_log_backup` (Block Set) Additional policy configuration settings for the mssql_log_backup operation. If this operation is not of type mssql_log_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--mssql_log_backup))
 - `protection_group_backup` (Block Set) Additional policy configuration settings for the protection_group_backup operation. If this operation is not of type protection_group_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--protection_group_backup))
@@ -406,6 +478,14 @@ Optional:
 
 - `alternative_replica` (String) The alternative replica for MSSQL log backups. This setting only applies to Availability Group databases. Possible values include "primary", "sync_secondary", and "stop". If "stop" is provided, then backups will not attempt to switch to a different replica when the preferred replica is unavailable. Otherwise, recurring backups will attempt to use either the primary replica or the secondary replica accordingly.
 - `preferred_replica` (String) The primary preferred replica for MSSQL log backups. This setting only applies to Availability Group databases. Possible values include "primary" and "sync_secondary". Recurring backup will first attempt to use either the primary replica or the secondary replica accordingly.
+
+
+<a id="nestedblock--operations--advanced_settings--gcp_protection_group_backup"></a>
+### Nested Schema for `operations.advanced_settings.gcp_protection_group_backup`
+
+Optional:
+
+- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard` and `archive`.
 
 
 <a id="nestedblock--operations--advanced_settings--mssql_database_backup"></a>

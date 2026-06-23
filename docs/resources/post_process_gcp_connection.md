@@ -3,19 +3,12 @@
 page_title: "clumio_post_process_gcp_connection Resource - terraform-provider-clumio"
 subcategory: ""
 description: |-
-  ⚠️ **Beta Resource**This resource handles post-processing for connections between GCP projects and Clumio.
-  It is currently in **beta** and available only to select customers.
-  Behavior, schema, and APIs may change in future releases.
+  Resource for post processing connection between GCP projects and Clumio.
 ---
 
 # clumio_post_process_gcp_connection (Resource)
 
-> ⚠️ **Beta Resource**
->
-> This resource handles post-processing for connections between GCP projects and Clumio.
-> It is currently in **beta** and available only to select customers.
-> Behavior, schema, and APIs may change in future releases.
->
+Resource for post processing connection between GCP projects and Clumio.
 
 ## Example Usage
 
@@ -48,13 +41,14 @@ resource "clumio_post_process_gcp_connection" "test" {
 - `project_number` (String) The GCP-assigned numeric INT64 project number associated with the connection.
 - `service_account_email` (String) The email address of the GCP service account created for this connection.
 - `token` (String) The 36-character Clumio GCP integration token used to identify the installation of the Clumio GCP integration resources in the project.
-- `wif_pool_id` (String) The Workload Identity Federation Pool ID created for this connection.
-- `wif_provider_id` (String) The Workload Identity Federation Provider ID created for this connection.
 
 ### Optional
 
 - `properties` (Map of String) A map to pass in additional information to be consumed by Clumio Post Processing
 - `protect_gcs_version` (String) Clumio Config version for GCS. May be a single number or major.minor (e.g., 1, 1.0, 2.5, 10.11).
+- `regions` (List of String) The GCP regions to be used for inventory.
+- `wif_pool_id` (String) The Workload Identity Federation Pool ID created for this connection.
+- `wif_provider_id` (String) The Workload Identity Federation Provider ID created for this connection.
 
 ### Read-Only
 

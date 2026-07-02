@@ -1,3 +1,7 @@
+## 0.21.1
+This update contains the following changes:
+* Improved the GCP getting started guide documentation.
+
 ## 0.21.0
 This update contains the following changes:
 * Added region support for `clumio_gcp_connection` resource.

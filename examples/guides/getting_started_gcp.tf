@@ -2,7 +2,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = ">=0.21.0"
+      version = "~>0.21.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -22,10 +22,8 @@ provider "google" {
   project = "<gcp_project_id>"
 }
 
-# Validate the project ID and retrieve project metadata
-data "google_project" "current" {
-  project_id = "<gcp_project_id>"
-}
+# Retrieve the effective GCP project ID and metadata
+data "google_project" "current" {}
 
 # Register a new Clumio connection for the GCP project. Clumio currently supports backup of GCP
 # resources in us-central1 and us-west1.

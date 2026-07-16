@@ -29,31 +29,31 @@ func (r *clumioDynamoDBTablesDataSource) readDynamoDBTables(
 
 	tableNativeId := model.TableNativeID.ValueString()
 	if tableNativeId != "" {
-		tableNativeIdFilter = fmt.Sprintf(`"table_native_id": {"$eq":"%s"}`, tableNativeId)
+		tableNativeIdFilter = fmt.Sprintf(`"table_native_id": {"$eq":%s}`, common.JSONEscapeFilterValue(tableNativeId))
 		filters = append(filters, tableNativeIdFilter)
 	}
 	name := model.Name.ValueString()
 	if tableNativeId == "" && name != "" {
-		nameFilter = fmt.Sprintf(`"name": {"$contains":"%s"}`, name)
+		nameFilter = fmt.Sprintf(`"name": {"$contains":%s}`, common.JSONEscapeFilterValue(name))
 		filters = append(filters, nameFilter)
 	}
 
 	accountNativeId := model.AccountNativeID.ValueString()
 	if accountNativeId != "" {
-		accountNativeIdFilter = fmt.Sprintf(`"account_native_id": {"$eq":"%s"}`, accountNativeId)
+		accountNativeIdFilter = fmt.Sprintf(`"account_native_id": {"$eq":%s}`, common.JSONEscapeFilterValue(accountNativeId))
 		filters = append(filters, accountNativeIdFilter)
 	}
 
 	region := model.Region.ValueString()
 	if region != "" {
-		regionFilter = fmt.Sprintf(`"aws_region": {"$eq":"%s"}`, region)
+		regionFilter = fmt.Sprintf(`"aws_region": {"$eq":%s}`, common.JSONEscapeFilterValue(region))
 		filters = append(filters, regionFilter)
 	}
 
 	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))
 	// Call the Clumio API to list the DynamoDB tables.
 	limit := int64(10000)
-	res, apiErr := r.dynamoDBTableClient.ListAwsDynamodbTables(&limit, nil, &filter, nil, nil)
+	res, apiErr := r.dynamoDBTableClient.ListAwsDynamodbTables(&limit, nil, nil, &filter, nil, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

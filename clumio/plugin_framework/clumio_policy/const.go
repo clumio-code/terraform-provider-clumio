@@ -42,6 +42,8 @@ const (
 	schemaApply                          = "apply"
 	schemaRdsLogicalBackup               = "aws_rds_resource_granular_backup"
 	schemaIcebergTableBackup             = "aws_iceberg_table_backup"
+	schemaBackupLastSnapshotOnly         = "backup_last_snapshot_only"
+	schemaBackupCompactedSnapshotOnly    = "backup_compacted_snapshot_only"
 	schemaNameBeginsWith                 = "name_begins_with"
 	schemaOperationTypes                 = "operation_types"
 	schemaPolicies                       = "policies"
@@ -100,6 +102,20 @@ const (
 		"the given bucket, when continuous backup no longer conducts. It may override the " +
 		"existing bucket notification configuration in the customer's account. This takes effect " +
 		"only when event_bridge_enabled is set to false."
+
+	icebergTableBackupDesc = "The advanced settings for Iceberg backup operations." +
+		" `backup_last_snapshot_only` and `backup_compacted_snapshot_only` control which" +
+		" snapshots are backed up. Their combinations produce the following results:" +
+		" (false, false) all new snapshots since the last backup (default behavior);" +
+		" (false, true) all compaction snapshots since the last backup;" +
+		" (true, false) only the latest snapshot since the last backup;" +
+		" (true, true) only the latest compaction snapshot since the last backup."
+
+	backupLastSnapshotOnlyDesc = "If `true`, only the latest snapshot since the last backup" +
+		" is backed up instead of all new snapshots. If not provided, the default is `false`."
+
+	backupCompactedSnapshotOnlyDesc = "If `true`, only compaction snapshots since the last" +
+		" backup are backed up. If not provided, the default is `false`."
 
 	errorPolicyReadMsg = "Unable to read %s (ID: %v)"
 

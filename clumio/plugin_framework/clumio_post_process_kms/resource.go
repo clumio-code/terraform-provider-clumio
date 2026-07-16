@@ -21,7 +21,11 @@ func (r *clumioPostProcessKmsResource) clumioPostProcessKmsCommon(
 
 	var diags diag.Diagnostics
 
-	templateVersion := uint64(*state.TemplateVersion.ValueInt64Pointer())
+	var templateVersion *uint64
+	if version := state.TemplateVersion.ValueInt64Pointer(); version != nil {
+		tv := uint64(*version)
+		templateVersion = &tv
+	}
 
 	// Call the Clumio API to post process kms.
 	_, apiErr := r.sdkPostProcessKMS.PostProcessKms(
@@ -35,7 +39,7 @@ func (r *clumioPostProcessKmsResource) clumioPostProcessKmsCommon(
 			RoleArn:               state.RoleArn.ValueStringPointer(),
 			RoleExternalId:        state.RoleExternalId.ValueStringPointer(),
 			CreatedMultiRegionCmk: state.CreatedMultiRegionCMK.ValueBoolPointer(),
-			Version:               &templateVersion,
+			Version:               templateVersion,
 			IntermediateRoleArn:   state.ClumioIAMRolePrincipal.ValueStringPointer(),
 		})
 	if apiErr != nil {

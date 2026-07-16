@@ -44,7 +44,7 @@ resource "clumio_user" "example" {
 - `inviter` (String) Identifier of the user who sent the email invitation.
 - `is_confirmed` (Boolean) Determines whether the user has activated their Clumio account. If true, the user has activated the account.
 - `is_enabled` (Boolean) Determines whether the user is enabled (in Activated or Invited status) in Clumio. If true, the user is in Activated or Invited status in Clumio. Users inActivated status can log in to Clumio. Users in Invited status have been invited to login to Clumio via an email invitation and the invitation is pending acceptance from the user. If false, the user has been manually suspended and cannot log in to Clumio untilanother Clumio user reactivates the account.
-- `last_activity_timestamp` (String) The timestamp of when when the user was last active in the Clumio system. Represented in RFC-3339 format.
+- `last_activity_timestamp` (String) The timestamp of when the user was last active in the Clumio system. Represented in RFC-3339 format.
 - `organizational_unit_count` (Number) The number of organizational units accessible to the user.
 
 <a id="nestedatt--access_control_configuration"></a>

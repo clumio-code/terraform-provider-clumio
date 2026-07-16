@@ -23,7 +23,7 @@ func (r *clumioProtectionGroupDataSource) readProtectionGroup(
 
 	// Prepare the query filter.
 	name := model.Name.ValueString()
-	filter := fmt.Sprintf(`{"name": {"$eq":"%s"}}`, name)
+	filter := fmt.Sprintf(`{"name": {"$eq":%s}}`, common.JSONEscapeFilterValue(name))
 
 	// Call the Clumio API to list the protection groups.
 	res, apiErr := r.protectionGroupClient.ListProtectionGroups(nil, nil, &filter, nil)

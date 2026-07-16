@@ -32,7 +32,7 @@ func (r *clumioPolicyDataSource) readPolicy(
 	// Prepare the query filter.
 	name := model.Name.ValueString()
 	if name != "" {
-		nameFilter = fmt.Sprintf(`"name": {"$begins_with":"%s"}`, name)
+		nameFilter = fmt.Sprintf(`"name": {"$begins_with":%s}`, common.JSONEscapeFilterValue(name))
 		filters = append(filters, nameFilter)
 	}
 	if !model.OperationTypes.IsUnknown() && !model.OperationTypes.IsNull() {
@@ -40,12 +40,12 @@ func (r *clumioPolicyDataSource) readPolicy(
 		conversionDiags := model.OperationTypes.ElementsAs(ctx, &operationTypes, false)
 		diags.Append(conversionDiags...)
 		operationTypesFilter = fmt.Sprintf(
-			`"operations.type": {"$in":["%s"]}`, strings.Join(operationTypes, `","`))
+			`"operations.type": {"$in":%s}`, common.JSONEscapeFilterValue(operationTypes))
 		filters = append(filters, operationTypesFilter)
 	}
 	activationStatus := model.ActivationStatus.ValueString()
 	if activationStatus != "" {
-		activationStatusFilter = fmt.Sprintf(`"activation_status": {"$eq":"%s"}`, activationStatus)
+		activationStatusFilter = fmt.Sprintf(`"activation_status": {"$eq":%s}`, common.JSONEscapeFilterValue(activationStatus))
 		filters = append(filters, activationStatusFilter)
 	}
 	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))

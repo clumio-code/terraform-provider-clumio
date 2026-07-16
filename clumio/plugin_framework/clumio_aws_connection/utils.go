@@ -93,21 +93,21 @@ func updateOrgUnitForConnection(
 	res, apiErr := orgUnitClient.PatchOrganizationalUnit(orgUnitID, nil, ouUpdateRequest)
 	if apiErr != nil {
 		return fmt.Errorf(
-			"Unable to update the Organizational Unit for the connection (%v)",
+			"unable to update the Organizational Unit for the connection (%v)",
 			common.ParseMessageFromApiError(apiErr))
 	}
 	if res.StatusCode != http.StatusAccepted {
 		return fmt.Errorf(
-			"Unable to update the Organizational Unit for the connection (HTTP status code: %v)",
+			"unable to update the Organizational Unit for the connection (HTTP status code: %v)",
 			res.StatusCode)
 	}
 	if res.Http202 == nil || res.Http202.TaskId == nil {
-		return fmt.Errorf("Unable to update the Organizational Unit for the connection (no task ID)")
+		return fmt.Errorf("unable to update the Organizational Unit for the connection (no task ID)")
 	}
 
 	err = common.PollTask(ctx, taskClient, *res.Http202.TaskId, r.pollTimeout, r.pollInterval)
 	if err != nil {
-		return fmt.Errorf("Unable to update the Organizational Unit for the connection (%v)", err)
+		return fmt.Errorf("unable to update the Organizational Unit for the connection (%w)", err)
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func getOrgUnitForConnection(
 	orgUnit, apiErr := client.ReadOrganizationalUnit(organizationalUnitID, nil)
 	if apiErr != nil {
 		return nil, fmt.Errorf(
-			"Unable to retrieve Organizational Unit %v (%v)",
+			"unable to retrieve Organizational Unit %v (%v)",
 			organizationalUnitID, common.ParseMessageFromApiError(apiErr))
 	}
 	return orgUnit, nil
@@ -159,24 +159,24 @@ func getEnvironmentForConnection(_ context.Context, r *clumioAWSConnectionResour
 func lookupEnvironmentForConnection(client sdkclients.AWSEnvironmentClient,
 	accountNativeId string, awsRegion string) (*models.AWSEnvironment, error) {
 	filterStr := fmt.Sprintf(
-		"{\"account_native_id\":{\"$eq\":\"%v\"}, \"aws_region\":{\"$eq\":\"%v\"}}",
-		accountNativeId, awsRegion)
+		"{\"account_native_id\":{\"$eq\":%v}, \"aws_region\":{\"$eq\":%v}}",
+		common.JSONEscapeFilterValue(accountNativeId), common.JSONEscapeFilterValue(awsRegion))
 
 	limit := int64(1)
 	envs, apiErr := client.ListAwsEnvironments(&limit, nil, &filterStr, nil, nil)
 	if apiErr != nil {
 		return nil, fmt.Errorf(
-			"Unable to retrieve environment corresponding to %v, %v (%v)",
+			"unable to retrieve environment corresponding to %v, %v (%v)",
 			accountNativeId, awsRegion, common.ParseMessageFromApiError(apiErr))
 	}
 	if envs == nil {
 		return nil, fmt.Errorf(
-			"Unable to retrieve environment corresponding to %v, %v, but received nil response",
+			"unable to retrieve environment corresponding to %v, %v, but received nil response",
 			accountNativeId, awsRegion)
 	}
 	if envs.Embedded == nil || len(envs.Embedded.Items) == 0 {
 		return nil, fmt.Errorf(
-			"Unable to retrieve environment corresponding to %v, %v, but no API error was returned",
+			"unable to retrieve environment corresponding to %v, %v, but no API error was returned",
 			accountNativeId, awsRegion)
 	}
 	if len(envs.Embedded.Items) > 1 {
@@ -185,12 +185,12 @@ func lookupEnvironmentForConnection(client sdkclients.AWSEnvironmentClient,
 			count = *envs.CurrentCount
 		}
 		return nil, fmt.Errorf(
-			"Expected only one environment corresponding to %v, %v, but found %v",
+			"expected only one environment corresponding to %v, %v, but found %v",
 			accountNativeId, awsRegion, count)
 	}
 	if envs.Embedded.Items[0].Id == nil || *envs.Embedded.Items[0].Id == "" {
 		return nil, fmt.Errorf(
-			"Environment corresponding to %v, %v has no ID",
+			"environment corresponding to %v, %v has no ID",
 			accountNativeId, awsRegion)
 	}
 

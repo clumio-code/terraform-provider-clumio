@@ -449,6 +449,58 @@ func TestRdsPitrClumioPolicy(t *testing.T) {
 	})
 }
 
+// Iceberg test of the clumio_policy resource. It tests the following scenarios:
+//   - Creates a policy for Iceberg table backup with the selective snapshot backup flags and
+//     verifies that the plan was applied properly.
+//   - Updates the selective snapshot backup flags and verifies that the resource will be updated.
+func TestIcebergClumioPolicy(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyIceberg(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.test_policy",
+							plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("clumio_policy.test_policy",
+						"operations.0.advanced_settings.0.aws_iceberg_table_backup.0.backup_tier",
+						"standard"),
+					resource.TestCheckResourceAttr("clumio_policy.test_policy",
+						"operations.0.advanced_settings.0.aws_iceberg_table_backup.0."+
+							"backup_last_snapshot_only", "true"),
+					resource.TestCheckResourceAttr("clumio_policy.test_policy",
+						"operations.0.advanced_settings.0.aws_iceberg_table_backup.0."+
+							"backup_compacted_snapshot_only", "false"),
+				),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyIceberg(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction("clumio_policy.test_policy",
+							plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("clumio_policy.test_policy",
+						"operations.0.advanced_settings.0.aws_iceberg_table_backup.0."+
+							"backup_last_snapshot_only", "false"),
+					resource.TestCheckResourceAttr("clumio_policy.test_policy",
+						"operations.0.advanced_settings.0.aws_iceberg_table_backup.0."+
+							"backup_compacted_snapshot_only", "true"),
+				),
+			},
+		},
+	})
+}
+
 // Tests that an external deletion of a clumio_policy resource leads to the resource needing to be
 // re-created during the next plan. NOTE the Check function below as it is utilized to delete
 // the resource using the Clumio API after the plan is applied.
@@ -950,6 +1002,24 @@ func getTestAccResourceClumioPolicyRDSCompliance(update bool) string {
 	return fmt.Sprintf(testAccResourceClumioRdsPolicy, baseUrl, name, slas)
 }
 
+// getTestAccResourceClumioPolicyIceberg returns the Terraform configuration for a clumio_policy
+// resource to support Iceberg table backup with the selective snapshot backup flags.
+func getTestAccResourceClumioPolicyIceberg(update bool) string {
+
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	name := "Iceberg Policy Create"
+	advancedSettings := `
+	backup_last_snapshot_only      = true
+	backup_compacted_snapshot_only = false`
+	if update {
+		name = "Iceberg Policy Update"
+		advancedSettings = `
+	backup_last_snapshot_only      = false
+	backup_compacted_snapshot_only = true`
+	}
+	return fmt.Sprintf(testAccResourceClumioIcebergPolicy, baseUrl, name, advancedSettings)
+}
+
 // getTestClumioPolicyRds returns the Terraform configuration for a clumio_policy resource to
 // support RDS backup.
 func getTestClumioPolicyRds(pitr bool, airgap bool) string {
@@ -1357,6 +1427,38 @@ resource "clumio_policy" "test_policy" {
 		action_setting = "immediate"
 		type           = "aws_rds_resource_granular_backup"
 		%s
+	}
+}
+`
+
+// testAccResourceClumioIcebergPolicy is the Terraform configuration for a clumio_policy resource
+// to support Iceberg table backup.
+const testAccResourceClumioIcebergPolicy = `
+provider clumio{
+	clumio_api_base_url = "%s"
+}
+
+resource "clumio_policy" "test_policy" {
+	name = "%s"
+	operations {
+		action_setting = "immediate"
+		type           = "aws_iceberg_table_backup"
+		slas {
+			retention_duration {
+				unit  = "days"
+				value = 31
+			}
+			rpo_frequency {
+				unit  = "days"
+				value = 7
+			}
+		}
+		advanced_settings {
+			aws_iceberg_table_backup {
+				backup_tier = "standard"
+				%s
+			}
+		}
 	}
 }
 `

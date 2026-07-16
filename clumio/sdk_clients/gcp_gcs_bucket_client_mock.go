@@ -38,8 +38,8 @@ func (_m *MockGcpGcsBucketClient) EXPECT() *MockGcpGcsBucketClient_Expecter {
 }
 
 // ListGcpGcsBuckets provides a mock function for the type MockGcpGcsBucketClient
-func (_mock *MockGcpGcsBucketClient) ListGcpGcsBuckets(limit *int64, start *string, filter *string, bucketMatcher *string) (*models.ListGCSBucketsResponse, *apiutils.APIError) {
-	ret := _mock.Called(limit, start, filter, bucketMatcher)
+func (_mock *MockGcpGcsBucketClient) ListGcpGcsBuckets(limit *int64, start *string, filter *string, bucketMatcher *string, sort *string) (*models.ListGCSBucketsResponse, *apiutils.APIError) {
+	ret := _mock.Called(limit, start, filter, bucketMatcher, sort)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListGcpGcsBuckets")
@@ -47,18 +47,18 @@ func (_mock *MockGcpGcsBucketClient) ListGcpGcsBuckets(limit *int64, start *stri
 
 	var r0 *models.ListGCSBucketsResponse
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string) (*models.ListGCSBucketsResponse, *apiutils.APIError)); ok {
-		return returnFunc(limit, start, filter, bucketMatcher)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string, *string) (*models.ListGCSBucketsResponse, *apiutils.APIError)); ok {
+		return returnFunc(limit, start, filter, bucketMatcher, sort)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string) *models.ListGCSBucketsResponse); ok {
-		r0 = returnFunc(limit, start, filter, bucketMatcher)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string, *string) *models.ListGCSBucketsResponse); ok {
+		r0 = returnFunc(limit, start, filter, bucketMatcher, sort)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListGCSBucketsResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string, *string) *apiutils.APIError); ok {
-		r1 = returnFunc(limit, start, filter, bucketMatcher)
+	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string, *string, *string) *apiutils.APIError); ok {
+		r1 = returnFunc(limit, start, filter, bucketMatcher, sort)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -77,11 +77,12 @@ type MockGcpGcsBucketClient_ListGcpGcsBuckets_Call struct {
 //   - start *string
 //   - filter *string
 //   - bucketMatcher *string
-func (_e *MockGcpGcsBucketClient_Expecter) ListGcpGcsBuckets(limit interface{}, start interface{}, filter interface{}, bucketMatcher interface{}) *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call {
-	return &MockGcpGcsBucketClient_ListGcpGcsBuckets_Call{Call: _e.mock.On("ListGcpGcsBuckets", limit, start, filter, bucketMatcher)}
+//   - sort *string
+func (_e *MockGcpGcsBucketClient_Expecter) ListGcpGcsBuckets(limit interface{}, start interface{}, filter interface{}, bucketMatcher interface{}, sort interface{}) *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call {
+	return &MockGcpGcsBucketClient_ListGcpGcsBuckets_Call{Call: _e.mock.On("ListGcpGcsBuckets", limit, start, filter, bucketMatcher, sort)}
 }
 
-func (_c *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call) Run(run func(limit *int64, start *string, filter *string, bucketMatcher *string)) *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call {
+func (_c *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call) Run(run func(limit *int64, start *string, filter *string, bucketMatcher *string, sort *string)) *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 *int64
 		if args[0] != nil {
@@ -99,11 +100,16 @@ func (_c *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call) Run(run func(limit *int
 		if args[3] != nil {
 			arg3 = args[3].(*string)
 		}
+		var arg4 *string
+		if args[4] != nil {
+			arg4 = args[4].(*string)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
 			arg3,
+			arg4,
 		)
 	})
 	return _c
@@ -114,7 +120,7 @@ func (_c *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call) Return(listGCSBucketsRe
 	return _c
 }
 
-func (_c *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call) RunAndReturn(run func(limit *int64, start *string, filter *string, bucketMatcher *string) (*models.ListGCSBucketsResponse, *apiutils.APIError)) *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call {
+func (_c *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call) RunAndReturn(run func(limit *int64, start *string, filter *string, bucketMatcher *string, sort *string) (*models.ListGCSBucketsResponse, *apiutils.APIError)) *MockGcpGcsBucketClient_ListGcpGcsBuckets_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -21,7 +21,7 @@ func (r *clumioOrganizationalUnitDataSource) readOrganizationalUnit(
 
 	// Prepare the query nameFilter.
 	name := model.Name.ValueString()
-	nameFilter := fmt.Sprintf(`{"name": {"$contains":"%s"}}`, name)
+	nameFilter := fmt.Sprintf(`{"name": {"$contains":%s}}`, common.JSONEscapeFilterValue(name))
 
 	// Call the Clumio API to list the organizational units.
 	limit := int64(10000)

@@ -16,14 +16,15 @@ env:
   ENABLE_TEST_REPORTS: false
   # This should be the latest 2 major releases of Go, older versions are
   # not maintained and lack security updates.
-  GO_LATEST: 1.25
-  GO_PREVIOUS: 1.24
+  GO_LATEST: 1.26
+  GO_PREVIOUS: 1.25
 
 jobs:
   # This prepare stage allows us to export and re-use information
   # under the matrix strategy where `env.` resolution does not work.
   prepare:
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       go_versions: ${{ steps.go_versions.outputs.go_versions }}
       go_latest: ${{ env.GO_LATEST }}
@@ -49,18 +50,23 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
       with:
         go-version: ${{ matrix.go }}
+        cache: false
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
     - name: Extend environment for test reports
       # When updating the Go versions in the excluded matrix, update the condition below.
-      if: github.repository_owner == 'clumio' && matrix.os == 'ubuntu-latest' && matrix.go == env.GO_PREVIOUS
+      # Dependabot-triggered runs don't receive repo secrets (SONAR_TOKEN is empty), so skip the
+      # SonarCloud reporting path for them; they still run the normal build and unit tests.
+      if: github.repository_owner == 'clumio' && matrix.os == 'ubuntu-latest' && matrix.go == env.GO_PREVIOUS && github.actor != 'dependabot[bot]'
       run: |
         echo "ENABLE_TEST_REPORTS=true" >> $GITHUB_ENV
         echo "REPOSITORY_NAME=$(cut -d/ -f2 <<< ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
@@ -92,7 +98,7 @@ jobs:
 
     - name: Setup gotestsum
       # Note that `v2.0.0` is required, there is no `v2` tag for this action.
-      uses: autero1/action-gotestsum@v2.0.0
+      uses: autero1/action-gotestsum@7263b9d73912eec65f46337689e59fac865c425f # v2.0.0
       with:
         gotestsum_version: 1.12.3
         # https://github.com/gotestyourself/gotestsum/releases
@@ -117,7 +123,7 @@ jobs:
 
     - name: SonarCloud Scan
       if: ${{ env.ENABLE_TEST_REPORTS == 'true' }}
-      uses: SonarSource/sonarcloud-github-action@v5
+      uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
       timeout-minutes: 5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -130,6 +136,24 @@ jobs:
       if: ${{ env.TEST_FAILURE == 'true' }}
       run: echo "Tests failed during the Unit Test step."; exit 1
 
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      with:
+        go-version: ${{ env.GO_LATEST }}
+        cache: false
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+    - name: golangci-lint
+      run: make lint
+
   check-build-and-test:
     # This job checks if any of the jobs in the matrix failed.
     # This allows us to have a single check target for the branch protection rules.
@@ -138,6 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run even on matrix failure: a skipped required check counts as passing and would let merges through.
     if: ${{ always() }}
+    permissions: {}
     steps:
       - name: Check for failed jobs
         run: |

@@ -337,6 +337,36 @@ resource "clumio_policy" "example_dynamodb" {
 }
 ```
 
+### Iceberg Table Example
+
+```terraform
+resource "clumio_policy" "example_iceberg" {
+  name              = "example-policy-Iceberg"
+  activation_status = "activated"
+  operations {
+    action_setting = "immediate"
+    type           = "aws_iceberg_table_backup"
+    slas {
+      retention_duration {
+        unit  = "months"
+        value = 12
+      }
+      rpo_frequency {
+        unit  = "days"
+        value = 7
+      }
+    }
+    advanced_settings {
+      aws_iceberg_table_backup {
+        backup_tier                    = "standard"
+        backup_last_snapshot_only      = true
+        backup_compacted_snapshot_only = false
+      }
+    }
+  }
+}
+```
+
 ### Fixed Start Time and Timezone Example
 
 ```terraform
@@ -405,7 +435,7 @@ Optional:
 
 - `aws_ebs_volume_backup` (Block Set) Optional configuration settings for the aws_ebs_volume_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ebs_volume_backup))
 - `aws_ec2_instance_backup` (Block Set) Optional configuration settings for the aws_ec2_instance_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_ec2_instance_backup))
-- `aws_iceberg_table_backup` (Block Set) The advanced settings for Iceberg backup operations. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_iceberg_table_backup))
+- `aws_iceberg_table_backup` (Block Set) The advanced settings for Iceberg backup operations. `backup_last_snapshot_only` and `backup_compacted_snapshot_only` control which snapshots are backed up. Their combinations produce the following results: (false, false) all new snapshots since the last backup (default behavior); (false, true) all compaction snapshots since the last backup; (true, false) only the latest snapshot since the last backup; (true, true) only the latest compaction snapshot since the last backup. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_iceberg_table_backup))
 - `aws_rds_config_sync` (Block Set) Optional configuration settings for the aws_rds_config_sync operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_rds_config_sync))
 - `aws_rds_resource_granular_backup` (Block Set) Optional configuration settings for the aws_rds_resource_granular_backup operation. (see [below for nested schema](#nestedblock--operations--advanced_settings--aws_rds_resource_granular_backup))
 - `ec2_mssql_database_backup` (Block Set) Additional policy configuration settings for the mssql_database_backup operation. If this operation is not of type mssql_database_backup, then this field is omitted from the response. (see [below for nested schema](#nestedblock--operations--advanced_settings--ec2_mssql_database_backup))
@@ -441,6 +471,8 @@ Optional:
 
 Optional:
 
+- `backup_compacted_snapshot_only` (Boolean) If `true`, only compaction snapshots since the last backup are backed up. If not provided, the default is `false`.
+- `backup_last_snapshot_only` (Boolean) If `true`, only the latest snapshot since the last backup is backed up instead of all new snapshots. If not provided, the default is `false`.
 - `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard`.
 
 

@@ -135,6 +135,15 @@ func (p *clumioProvider) Configure(
 	// Ensure that the base URL does not end with a slash.
 	clumioApiBaseUrl = strings.TrimRight(clumioApiBaseUrl, "/")
 
+	// Require HTTPS so the API token is never transmitted in cleartext.
+	if !strings.HasPrefix(clumioApiBaseUrl, "https://") {
+		attribute := path.Root("clumio_api_base_url")
+		summary := "Insecure Clumio API base URL"
+		detail := "clumio_api_base_url must use https:// so the API token is not sent in cleartext."
+		resp.Diagnostics.AddAttributeError(attribute, summary, detail)
+		return
+	}
+
 	// Create the Clumio API client and make it available to instances of DataSource and Resource
 	// types in their Configure methods.
 	tflog.Debug(ctx, "Creating Clumio client")

@@ -17,11 +17,8 @@ import (
 func (r *clumioAWSManualConnectionResource) createAWSManualConnection(
 	ctx context.Context, plan *clumioAWSManualConnectionResourceModel) diag.Diagnostics {
 
-	var diags diag.Diagnostics
-
 	// Call the common util to deploy the manually configured resources for the connection.
-	diags = r.clumioSetManualResourcesCommon(ctx, *plan)
-	diags.Append(diags...)
+	diags := r.clumioSetManualResourcesCommon(ctx, *plan)
 	if diags.HasError() {
 		return diags
 	}
@@ -46,11 +43,14 @@ func (r *clumioAWSManualConnectionResource) updateAWSManualConnection(
 		summary := fmt.Sprintf("Unable to update %s ", r.name)
 		detail := "Downgrading assets is not allowed."
 		diags.AddError(summary, detail)
+		return diags
 	}
 
 	// Call the Clumio API to update the manual connection.
 	diags = r.clumioSetManualResourcesCommon(ctx, *plan)
-	diags.Append(diags...)
+	if diags.HasError() {
+		return diags
+	}
 
 	accountId := plan.AccountId.ValueString()
 	awsRegion := plan.AwsRegion.ValueString()

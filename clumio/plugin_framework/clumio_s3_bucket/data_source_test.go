@@ -83,7 +83,7 @@ func TestDatasourceReadS3Bucket(t *testing.T) {
 		}
 
 		// Setup expectations.
-		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(readResponse, nil)
 
 		diags := rds.readS3Bucket(ctx, rdsm)
@@ -95,7 +95,7 @@ func TestDatasourceReadS3Bucket(t *testing.T) {
 	t.Run("list s3 buckets returns an error", func(t *testing.T) {
 
 		// Setup expectations.
-		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(nil, apiError)
 
 		diags := rds.readS3Bucket(ctx, rdsm)
@@ -107,7 +107,7 @@ func TestDatasourceReadS3Bucket(t *testing.T) {
 	t.Run("list s3 buckets returns an empty response", func(t *testing.T) {
 
 		// Setup expectations.
-		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(nil, nil)
 
 		diags := rds.readS3Bucket(ctx, rdsm)
@@ -125,7 +125,7 @@ func TestDatasourceReadS3Bucket(t *testing.T) {
 		}
 
 		// Setup expectations.
-		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		ouClient.EXPECT().ListAwsS3Buckets(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(readResponse, nil)
 
 		diags := rds.readS3Bucket(ctx, rdsm)

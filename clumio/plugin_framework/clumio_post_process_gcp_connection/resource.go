@@ -54,6 +54,24 @@ func (r *clumioPostProcessGCPConnectionResource) createUpdatePostProcessGcpConne
 		}
 	}
 
+	// Convert the region configuration from the model to a slice of JSON-encoded strings, one
+	// per region, as expected by the API request.
+	var regionConfiguration []*string
+	for _, regionConfig := range model.RegionConfiguration {
+		regionConfigBytes, err := jsonMarshal(&models.RegionConfigurationModel{
+			InventoryBridgeBucketName: regionConfig.InventoryBridgeBucketName.ValueStringPointer(),
+			Region:                    regionConfig.Region.ValueStringPointer(),
+		})
+		if err != nil {
+			summary := "Unable to marshal region configuration"
+			detail := err.Error()
+			diags.AddError(summary, detail)
+			return diags
+		}
+		regionConfigStr := string(regionConfigBytes)
+		regionConfiguration = append(regionConfiguration, &regionConfigStr)
+	}
+
 	postprocessRequest := &models.PostProcessGcpConnectionV1Request{
 		Configuration:       &configuration,
 		ProjectId:           model.ProjectID.ValueStringPointer(),
@@ -66,6 +84,7 @@ func (r *clumioPostProcessGCPConnectionResource) createUpdatePostProcessGcpConne
 		WifPoolId:           model.WifPoolId.ValueStringPointer(),
 		WifProviderId:       model.WifProviderId.ValueStringPointer(),
 		Regions:             regions,
+		RegionConfiguration: regionConfiguration,
 	}
 
 	_, apiErr := r.sdkConnections.PostProcessGcpConnection(postprocessRequest)

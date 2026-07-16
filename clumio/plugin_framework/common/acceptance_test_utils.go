@@ -30,11 +30,11 @@ func DeletePolicy(idOrResourceName string, isResourceName bool) resource.TestChe
 			// retrieve the resource by name from state
 			rs, ok := s.RootModule().Resources[idOrResourceName]
 			if !ok {
-				return fmt.Errorf("Not found: %s", idOrResourceName)
+				return fmt.Errorf("not found: %s", idOrResourceName)
 			}
 
 			if rs.Primary.ID == "" {
-				return fmt.Errorf("Widget ID is not set")
+				return fmt.Errorf("widget ID is not set")
 			}
 			id = rs.Primary.ID
 		}
@@ -79,11 +79,11 @@ func DeleteProtectionGroup(idOrResourceName string, isResourceName bool) resourc
 			// retrieve the resource by name from state
 			rs, ok := s.RootModule().Resources[idOrResourceName]
 			if !ok {
-				return fmt.Errorf("Not found: %s", idOrResourceName)
+				return fmt.Errorf("not found: %s", idOrResourceName)
 			}
 
 			if rs.Primary.ID == "" {
-				return fmt.Errorf("Widget ID is not set")
+				return fmt.Errorf("widget ID is not set")
 			}
 			id = rs.Primary.ID
 		}

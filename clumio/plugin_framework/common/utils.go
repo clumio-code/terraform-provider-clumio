@@ -6,6 +6,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -29,10 +30,23 @@ func SnakeCaseToCamelCase(key string) string {
 		parts := strings.Split(key, "_")
 		newKey = parts[0]
 		for _, part := range parts[1:] {
-			newKey = newKey + strings.Title(part)
+			if len(part) > 0 {
+				newKey = newKey + strings.ToUpper(part[:1]) + part[1:]
+			}
 		}
 	}
 	return newKey
+}
+
+// JSONEscapeFilterValue returns v JSON-encoded for safe embedding in an API filter expression,
+// preventing user-supplied strings from breaking out of the filter's JSON string literal. Filter
+// values are strings or string slices, which never fail to marshal.
+func JSONEscapeFilterValue(v any) string {
+	encoded, err := json.Marshal(v)
+	if err != nil {
+		return "null"
+	}
+	return string(encoded)
 }
 
 // PollTask polls created tasks till it completes either with success, aborted, failed
@@ -50,13 +64,13 @@ func PollTask(ctx context.Context, taskClient tasks.TasksV1Client,
 		case <-ticker.C:
 			resp, apiErr := taskClient.ReadTask(taskId)
 			if apiErr != nil {
-				return errors.New(fmt.Sprintf("Error for Task %s: ", ParseMessageFromApiError(apiErr)))
+				return fmt.Errorf("error for task %s: %s", taskId, ParseMessageFromApiError(apiErr))
 			} else if *resp.Status == TaskSuccess {
 				return nil
 			} else if *resp.Status == TaskAborted {
-				return errors.New(fmt.Sprintf("Task %s aborted", taskId))
+				return fmt.Errorf("task %s aborted", taskId)
 			} else if *resp.Status == TaskFailed {
-				return errors.New(fmt.Sprintf("Task %s failed", taskId))
+				return fmt.Errorf("task %s failed", taskId)
 			}
 		case <-tickerTimeout:
 			return errors.New("polling task timeout")

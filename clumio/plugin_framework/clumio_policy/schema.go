@@ -46,6 +46,14 @@ type backupTierModel struct {
 	BackupTier types.String `tfsdk:"backup_tier"`
 }
 
+// icebergBackupModel maps to the IcebergTableBackup attribute in advancedSettingsModel and
+// contains the advanced settings for Iceberg backup operations.
+type icebergBackupModel struct {
+	BackupTier                  types.String `tfsdk:"backup_tier"`
+	BackupLastSnapshotOnly      types.Bool   `tfsdk:"backup_last_snapshot_only"`
+	BackupCompactedSnapshotOnly types.Bool   `tfsdk:"backup_compacted_snapshot_only"`
+}
+
 // pitrConfigModel maps to the RDSPitrConfigSync attribute in advancedSettingsModel which
 // determines when the configuration will be applied.
 type pitrConfigModel struct {
@@ -72,7 +80,7 @@ type advancedSettingsModel struct {
 	EC2InstanceBackup        []*backupTierModel       `tfsdk:"aws_ec2_instance_backup"`
 	RDSPitrConfigSync        []*pitrConfigModel       `tfsdk:"aws_rds_config_sync"`
 	RDSLogicalBackup         []*backupTierModel       `tfsdk:"aws_rds_resource_granular_backup"`
-	IcebergTableBackup       []*backupTierModel       `tfsdk:"aws_iceberg_table_backup"`
+	IcebergTableBackup       []*icebergBackupModel    `tfsdk:"aws_iceberg_table_backup"`
 }
 
 // policyOperationModel maps to the Operations attribute in policyResourceModel and contains
@@ -88,14 +96,14 @@ type policyOperationModel struct {
 	Timezone         types.String             `tfsdk:"timezone"`
 }
 
-// unitValueModel maps tho the RetentionDuration attribute in slaModel and and it provides the unit
+// unitValueModel maps tho the RetentionDuration attribute in slaModel and it provides the unit
 // and value for the retention duration.
 type unitValueModel struct {
 	Unit  types.String `tfsdk:"unit"`
 	Value types.Int64  `tfsdk:"value"`
 }
 
-// unitValueModel maps tho the RPOFrequency attribute in slaModel and and it provides the unit,
+// unitValueModel maps tho the RPOFrequency attribute in slaModel and it provides the unit,
 // value and offsets for the RPO Fequency.
 type rpoModel struct {
 	Unit    types.String `tfsdk:"unit"`
@@ -322,12 +330,20 @@ func (r *policyResource) Schema(
 			},
 		},
 		schemaIcebergTableBackup: schema.SetNestedBlock{
-			Description: "The advanced settings for Iceberg backup operations.",
+			Description: icebergTableBackupDesc,
 			NestedObject: schema.NestedBlockObject{
 				Attributes: map[string]schema.Attribute{
 					schemaBackupTier: schema.StringAttribute{
 						Optional:    true,
 						Description: "Backup tier to store the backup in. Valid values are: `standard`.",
+					},
+					schemaBackupLastSnapshotOnly: schema.BoolAttribute{
+						Optional:    true,
+						Description: backupLastSnapshotOnlyDesc,
+					},
+					schemaBackupCompactedSnapshotOnly: schema.BoolAttribute{
+						Optional:    true,
+						Description: backupCompactedSnapshotOnlyDesc,
 					},
 				},
 			},

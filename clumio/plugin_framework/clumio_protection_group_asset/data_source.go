@@ -22,10 +22,10 @@ func (r *clumioProtectionGroupAssetDataSource) readProtectionGroupAsset(
 	var diags diag.Diagnostics
 	filters := make([]string, 0)
 	pgId := model.ProtectionGroupID.ValueString()
-	pgFilter := fmt.Sprintf(`"protection_group_id": {"$eq":"%s"}`, pgId)
+	pgFilter := fmt.Sprintf(`"protection_group_id": {"$eq":%s}`, common.JSONEscapeFilterValue(pgId))
 	filters = append(filters, pgFilter)
 	bucketId := model.BucketID.ValueString()
-	bucketFilter := fmt.Sprintf(`"bucket_id": {"$eq":"%s"}`, bucketId)
+	bucketFilter := fmt.Sprintf(`"bucket_id": {"$eq":%s}`, common.JSONEscapeFilterValue(bucketId))
 	filters = append(filters, bucketFilter)
 	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))
 
@@ -55,7 +55,10 @@ func (r *clumioProtectionGroupAssetDataSource) readProtectionGroupAsset(
 		return diags
 	}
 
-	model.Id = basetypes.NewStringPointerValue(readResponse.Embedded.Items[0].Id)
+	if readResponse.Embedded != nil && readResponse.Embedded.Items != nil &&
+		len(readResponse.Embedded.Items) > 0 {
+		model.Id = basetypes.NewStringPointerValue(readResponse.Embedded.Items[0].Id)
+	}
 
 	return diags
 }

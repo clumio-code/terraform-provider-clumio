@@ -14,7 +14,7 @@ case ${arch} in
   i386|i686)
     ARCH="386"
     ;;
-  armv8l|aarch64)
+  arm64|armv8l|aarch64)
     ARCH="arm64"
     ;;
   armv7l|arm)
@@ -24,6 +24,19 @@ case ${arch} in
     echo "Not supported architecture. Exiting..."
     exit 1
 esac
+
+# download fetches the URL in $1 and writes it to the file path in $2 using
+# whichever of curl or wget is available.
+download() {
+  if command -v curl &> /dev/null; then
+    curl -sSL "$1" -o "$2"
+  elif command -v wget &> /dev/null; then
+    wget -q "$1" -O "$2"
+  else
+    echo "wget or curl is required to download files. Exiting..."
+    exit 1
+  fi
+}
 
 VERSION_NUMBER=${VERSION:1}
 TF_PLUGIN_DIR="${HOME}/.terraform.d/plugins/clumio.com/providers/clumio/${VERSION_NUMBER}/${OS}_${ARCH}"
@@ -45,20 +58,43 @@ if ! cd "${PROVIDER_NAME}"; then
   exit 1
 fi
 
-if command -v curl &> /dev/null; then
-  if ! curl -sSL "${BINARY}" -o "${PROVIDER_NAME}.zip"; then
-    echo "Error downloading ${BINARY}. Exiting..."
-    exit 1
-  fi
-elif command -v wget &> /dev/null; then
-  if ! wget -q "${BINARY}"; then
-    echo "Error downloading ${BINARY}. Exiting..."
-    exit 1
-  fi
-else
-  echo "wget or curl is required to download the binary. Exiting..."
+if ! download "${BINARY}" "${PROVIDER_NAME}.zip"; then
+  echo "Error downloading ${BINARY}. Exiting..."
   exit 1
 fi
+
+# Verify the downloaded archive against the SHA256SUMS published with the
+# release before unzipping/installing it, to detect tampered or corrupted
+# downloads.
+SHA256SUMS_NAME="terraform-provider-clumio_${VERSION_NUMBER}_SHA256SUMS"
+SHA256SUMS_URL="https://github.com/clumio-code/terraform-provider-clumio/releases/download/${VERSION}/${SHA256SUMS_NAME}"
+if ! download "${SHA256SUMS_URL}" "${SHA256SUMS_NAME}"; then
+  echo "Error downloading ${SHA256SUMS_URL}. Exiting..."
+  exit 1
+fi
+
+if command -v sha256sum &> /dev/null; then
+  SHA256_CMD="sha256sum"
+elif command -v shasum &> /dev/null; then
+  SHA256_CMD="shasum -a 256"
+else
+  echo "sha256sum or shasum is required to verify the download. Exiting..."
+  exit 1
+fi
+
+EXPECTED_SHA=$(awk -v file="${PROVIDER_NAME}.zip" '$2 == file {print $1}' "${SHA256SUMS_NAME}")
+if [ -z "${EXPECTED_SHA}" ]; then
+  echo "Could not find a checksum for ${PROVIDER_NAME}.zip in ${SHA256SUMS_NAME}. Exiting..."
+  exit 1
+fi
+ACTUAL_SHA=$(${SHA256_CMD} "${PROVIDER_NAME}.zip" | awk '{print $1}')
+if [ "${EXPECTED_SHA}" != "${ACTUAL_SHA}" ]; then
+  echo "Checksum verification failed for ${PROVIDER_NAME}.zip. Exiting..."
+  echo "  expected: ${EXPECTED_SHA}"
+  echo "  actual:   ${ACTUAL_SHA}"
+  exit 1
+fi
+echo "Checksum verified for ${PROVIDER_NAME}.zip."
 
 if ! unzip -q "${PROVIDER_NAME}.zip"; then
   echo "Error unzipping ${PROVIDER_NAME}.zip. Exiting..."

@@ -36,7 +36,7 @@ func (r *clumioGCSBucketDataSource) readGCSBucket(
 
 	// Call the Clumio API to list the GCS buckets.
 	limit := int64(10000)
-	res, apiErr := r.gcsBucketClient.ListGcpGcsBuckets(&limit, nil, &nameFilter, nil)
+	res, apiErr := r.gcsBucketClient.ListGcpGcsBuckets(&limit, nil, &nameFilter, nil, nil)
 	if apiErr != nil {
 		summary := fmt.Sprintf("Unable to read %s", r.name)
 		detail := common.ParseMessageFromApiError(apiErr)

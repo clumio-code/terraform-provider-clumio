@@ -7,6 +7,7 @@ package clumio_aws_connection
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
@@ -81,8 +82,25 @@ func (r *clumioAWSConnectionResource) ModifyPlan(
 		return
 	}
 
-	diags := resp.Plan.SetAttribute(
-		ctx, path.Root(schemaOrganizationalUnitId), getDesiredOrganizationalUnitID(r.client))
+	desiredOrgUnitID := getDesiredOrganizationalUnitID(r.client)
+
+	// An empty OU context resolves to the global OU, so a context change can move an existing
+	// connection across OUs. Surface that move as a plan-time warning instead of doing it silently.
+	if !req.State.Raw.IsNull() {
+		var state clumioAWSConnectionResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		currentOrgUnitID := state.OrganizationalUnitID.ValueString()
+		if currentOrgUnitID != "" && currentOrgUnitID != desiredOrgUnitID {
+			resp.Diagnostics.AddWarning(
+				"AWS connection will be moved to a different organizational unit",
+				fmt.Sprintf("On apply this connection will move from organizational unit %q to %q "+
+					"per the provider's organizational_unit_context (empty resolves to the global "+
+					"OU). Set the context to the intended organizational unit to avoid this.",
+					currentOrgUnitID, desiredOrgUnitID))
+		}
+	}
+
+	diags := resp.Plan.SetAttribute(ctx, path.Root(schemaOrganizationalUnitId), desiredOrgUnitID)
 	resp.Diagnostics.Append(diags...)
 }
 

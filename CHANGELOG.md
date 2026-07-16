@@ -1,3 +1,14 @@
+## 0.22.0
+This update contains the following changes:
+* Added `region_configuration` attribute to `clumio_post_process_gcp_connection` resource to specify per-region configuration such as the inventory bridge bucket name.
+* Added Selective Iceberg Snapshot Backup Flags to `clumio_policy`.
+* `clumio_aws_connection` now surfaces a context-driven cross-organizational-unit move as a plan-time warning instead of moving the connection silently.
+* Fixed several bugs, including a nil-pointer panic in `clumio_post_process_kms`, a panic in the `clumio_protection_group_asset` data source when the API returned no matching items, an asset-downgrade guard bypass in `clumio_aws_manual_connection`, and a case where policy backup SLA diagnostics were discarded.
+* Fixed security bugs.
+* Updated Clumio Go SDK.
+* Updated dependencies.
+* Updated documentation and examples for the GCP connection resources.
+
 ## 0.21.1
 This update contains the following changes:
 * Improved the GCP getting started guide documentation.

@@ -23,7 +23,7 @@ type clumioProviderModel struct {
 }
 
 // Schema defines the structure and constraints of the provider block for the Clumio Provider for
-// Terraform. The atributes of the schema are mainly used to initialize an API client to the Clumio
+// Terraform. The attributes of the schema are mainly used to initialize an API client to the Clumio
 // backend. However, all such attributes are marked "Optional" as the attributes can also be
 // initialized using environment variables.
 func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
@@ -34,7 +34,8 @@ func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 				MarkdownDescription: "The API token required to invoke Clumio APIs. " +
 					"Informations for generating this token are available here: " +
 					"https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens",
-				Optional: true,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"clumio_api_base_url": schema.StringAttribute{
 				MarkdownDescription: "The base URL for Clumio APIs. The following are the valid " +

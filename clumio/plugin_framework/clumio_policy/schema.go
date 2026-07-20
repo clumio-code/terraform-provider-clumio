@@ -96,15 +96,15 @@ type policyOperationModel struct {
 	Timezone         types.String             `tfsdk:"timezone"`
 }
 
-// unitValueModel maps tho the RetentionDuration attribute in slaModel and it provides the unit
+// unitValueModel maps to the RetentionDuration attribute in slaModel and it provides the unit
 // and value for the retention duration.
 type unitValueModel struct {
 	Unit  types.String `tfsdk:"unit"`
 	Value types.Int64  `tfsdk:"value"`
 }
 
-// unitValueModel maps tho the RPOFrequency attribute in slaModel and it provides the unit,
-// value and offsets for the RPO Fequency.
+// rpoModel maps to the RPOFrequency attribute in slaModel and it provides the unit,
+// value and offsets for the RPO Frequency.
 type rpoModel struct {
 	Unit    types.String `tfsdk:"unit"`
 	Value   types.Int64  `tfsdk:"value"`

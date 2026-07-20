@@ -32,7 +32,7 @@ func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 		Attributes: map[string]schema.Attribute{
 			"clumio_api_token": schema.StringAttribute{
 				MarkdownDescription: "The API token required to invoke Clumio APIs. " +
-					"Informations for generating this token are available here: " +
+					"Information for generating this token is available here: " +
 					"https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens",
 				Optional:  true,
 				Sensitive: true,

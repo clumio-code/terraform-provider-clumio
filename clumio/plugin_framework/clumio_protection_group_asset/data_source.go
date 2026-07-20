@@ -55,10 +55,15 @@ func (r *clumioProtectionGroupAssetDataSource) readProtectionGroupAsset(
 		return diags
 	}
 
-	if readResponse.Embedded != nil && readResponse.Embedded.Items != nil &&
-		len(readResponse.Embedded.Items) > 0 {
-		model.Id = basetypes.NewStringPointerValue(readResponse.Embedded.Items[0].Id)
+	if readResponse.Embedded == nil || len(readResponse.Embedded.Items) == 0 {
+		summary := "Protection group asset not found."
+		detail := fmt.Sprintf(
+			"Expected one asset with Bucket ID %s and Protection Group ID %s.",
+			bucketId, pgId)
+		diags.AddError(summary, detail)
+		return diags
 	}
+	model.Id = basetypes.NewStringPointerValue(readResponse.Embedded.Items[0].Id)
 
 	return diags
 }

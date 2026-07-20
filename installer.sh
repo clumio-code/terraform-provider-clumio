@@ -29,7 +29,7 @@ esac
 # whichever of curl or wget is available.
 download() {
   if command -v curl &> /dev/null; then
-    curl -sSL "$1" -o "$2"
+    curl -fsSL "$1" -o "$2"
   elif command -v wget &> /dev/null; then
     wget -q "$1" -O "$2"
   else

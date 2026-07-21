@@ -12,7 +12,7 @@ page_title: "Getting Started with Data Protection"
 
 The following is a quick overview of how to get started with the [Clumio provider](https://registry.terraform.io/providers/clumio-code/clumio/latest)
 and the [Clumio AWS module](https://registry.terraform.io/modules/clumio-code/aws-template/clumio/latest).
-As the provider uses APIs to abstract the use of the Clumio cloud, you should create an API key from
+As the provider uses [Clumio REST APIs](https://api.commvault.com/docs/latest/api/cv/ClumioAPIs/clumio-rest-api/) to abstract the use of the Clumio cloud, you should create an API key from
 the Clumio UI or retrieve an existing one. For help with creating an API key, please refer to:
 [Creating an API Token](https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens). The subsequent
 steps assume that such an API key is available to you. In addition, any use of keys in the following

@@ -100,7 +100,7 @@ func TestDatasourceReadGCSBucket(t *testing.T) {
 
 		// Setup expectations.
 		mockClient.EXPECT().ListGcpGcsBuckets(
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(readResponse, nil)
 
 		diags := rds.readGCSBucket(ctx, rdsm)
@@ -114,7 +114,7 @@ func TestDatasourceReadGCSBucket(t *testing.T) {
 
 		// Setup expectations.
 		mockClient.EXPECT().ListGcpGcsBuckets(
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(nil, apiError)
 
 		diags := rds.readGCSBucket(ctx, rdsm)
@@ -127,7 +127,7 @@ func TestDatasourceReadGCSBucket(t *testing.T) {
 
 		// Setup expectations.
 		mockClient.EXPECT().ListGcpGcsBuckets(
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(nil, nil)
 
 		diags := rds.readGCSBucket(ctx, rdsm)
@@ -146,7 +146,7 @@ func TestDatasourceReadGCSBucket(t *testing.T) {
 
 		// Setup expectations.
 		mockClient.EXPECT().ListGcpGcsBuckets(
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Times(1).Return(readResponse, nil)
 
 		diags := rds.readGCSBucket(ctx, rdsm)

@@ -117,6 +117,13 @@ resource "clumio_post_process_gcp_connection" "test" {
   wif_provider_id       = "clumio-test-provider"
   config_version        = "%s"
   protect_gcs_version   = "1.0"
+  regions               = ["us-west1"]
+  region_configuration = [
+    {
+      region                       = "us-west1"
+      inventory_bridge_bucket_name = "clumio-inventory-bridge-us-west1-test-project"
+    }
+  ]
   properties = {
     key1 = "val1"
     key2 = "val2"

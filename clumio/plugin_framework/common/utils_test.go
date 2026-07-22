@@ -6,6 +6,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -68,6 +69,23 @@ func TestUtils(t *testing.T) {
 		camelCase := "testCaseExample"
 
 		assert.Equal(t, camelCase, SnakeCaseToCamelCase(snakeCase))
+	})
+
+	t.Run("JSONEscapeFilterValue - Encodes plain values unchanged", func(t *testing.T) {
+		assert.Equal(t, `"my-bucket"`, JSONEscapeFilterValue("my-bucket"))
+		assert.Equal(t, `["a","b"]`, JSONEscapeFilterValue([]string{"a", "b"}))
+	})
+
+	t.Run("JSONEscapeFilterValue - Escapes injection attempts into valid JSON", func(t *testing.T) {
+		// A value with a double-quote must be escaped so it cannot break out of the filter's JSON
+		// string literal, and the result must still be valid JSON.
+		malicious := `x"}}, "role_id": {"$eq":"admin`
+		escaped := JSONEscapeFilterValue(malicious)
+		filter := fmt.Sprintf(`{"name": {"$eq":%s}}`, escaped)
+		var parsed map[string]any
+		assert.NoError(t, json.Unmarshal([]byte(filter), &parsed))
+		assert.Len(t, parsed, 1)
+		assert.Contains(t, parsed, "name")
 	})
 
 	t.Run("GetStringPtrSliceFromStringSlice - Convert String slice into StringPtr slice", func(t *testing.T) {

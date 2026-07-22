@@ -1,0 +1,30 @@
+# golangci-lint configuration for terraform-provider-clumio.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - copyloopvar
+    - dupword
+    - errcheck
+    - errorlint
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unconvert
+    - unused
+  settings:
+    gosec:
+      excludes:
+        # int64->uint64 style conversions on trusted, non-negative values.
+        - G115
+  exclusions:
+    rules:
+      # These constants are environment-variable names, not credentials.
+      - path: clumio/plugin_framework/common/const.go
+        linters:
+          - gosec
+        text: G101

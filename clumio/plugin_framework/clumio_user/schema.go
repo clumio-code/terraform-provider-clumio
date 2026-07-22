@@ -110,7 +110,7 @@ func (r *clumioUserResource) Schema(
 				Computed: true,
 			},
 			schemaLastActivityTimestamp: schema.StringAttribute{
-				Description: "The timestamp of when when the user was last active in the Clumio system." +
+				Description: "The timestamp of when the user was last active in the Clumio system." +
 					" Represented in RFC-3339 format.",
 				Computed: true,
 			},

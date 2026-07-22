@@ -39,6 +39,10 @@ func setupTestModel(t *testing.T) *clumioPostProcessGCPConnectionResourceModel {
 	})
 	assert.Nil(t, diags)
 
+	regions, diags := basetypes.NewListValueFrom(
+		context.Background(), types.StringType, []string{"us-west1"})
+	assert.Nil(t, diags)
+
 	return &clumioPostProcessGCPConnectionResourceModel{
 		ProjectID:           basetypes.NewStringValue("ProjectId"),
 		ProjectName:         basetypes.NewStringValue("ProjectName"),
@@ -50,6 +54,13 @@ func setupTestModel(t *testing.T) *clumioPostProcessGCPConnectionResourceModel {
 		ConfigVersion:       basetypes.NewStringValue("1.1"),
 		ProtectGcsVersion:   basetypes.NewStringValue("1.1"),
 		Properties:          props,
+		Regions:             regions,
+		RegionConfiguration: []*regionConfigurationModel{
+			{
+				Region:                    basetypes.NewStringValue("us-west1"),
+				InventoryBridgeBucketName: basetypes.NewStringValue("clumio-inventory-bridge-us-west1-ProjectId"),
+			},
+		},
 	}
 }
 
@@ -77,6 +88,14 @@ func TestCreateUpdatePostProcessGcpConnection(t *testing.T) {
 	assert.Nil(t, err)
 	configuration := string(configBytes)
 
+	regionConfigBytes, err := json.Marshal(&models.RegionConfigurationModel{
+		InventoryBridgeBucketName: model.RegionConfiguration[0].InventoryBridgeBucketName.ValueStringPointer(),
+		Region:                    model.RegionConfiguration[0].Region.ValueStringPointer(),
+	})
+	assert.Nil(t, err)
+	regionConfiguration := string(regionConfigBytes)
+	region := "us-west1"
+
 	req := &models.PostProcessGcpConnectionV1Request{
 		Configuration: &configuration,
 		ProjectId:     model.ProjectID.ValueStringPointer(),
@@ -90,6 +109,8 @@ func TestCreateUpdatePostProcessGcpConnection(t *testing.T) {
 		Token:               model.Token.ValueStringPointer(),
 		WifPoolId:           model.WifPoolId.ValueStringPointer(),
 		WifProviderId:       model.WifProviderId.ValueStringPointer(),
+		Regions:             []*string{&region},
+		RegionConfiguration: []*string{&regionConfiguration},
 	}
 
 	t.Run("Success scenario for post-process create", func(t *testing.T) {

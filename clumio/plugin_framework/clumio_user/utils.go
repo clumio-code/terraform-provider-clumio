@@ -23,7 +23,6 @@ func getAccessControlCfgFromHTTPRes(
 	diag *diag.Diagnostics) basetypes.SetValue {
 
 	accessControl := make([]roleForOrganizationalUnitModel, len(accessControlCfg))
-	organizationalUnitIds := make([]*string, 0)
 
 	var assignedRole string
 	for idx, element := range accessControlCfg {
@@ -32,7 +31,6 @@ func getAccessControlCfgFromHTTPRes(
 		} else {
 			assignedRole = ""
 		}
-		organizationalUnitIds = append(organizationalUnitIds, element.OrganizationalUnitIds...)
 		ouIds, conversionDiags := types.SetValueFrom(
 			ctx, types.StringType, element.OrganizationalUnitIds)
 		diag.Append(conversionDiags...)

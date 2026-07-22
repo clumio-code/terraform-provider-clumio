@@ -16,6 +16,7 @@ import (
 
 	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -92,6 +93,23 @@ func TestClumioPostProcessAWSConnectionCommon(t *testing.T) {
 
 		diags := pr.clumioPostProcessKmsCommon(ctx, prm, eventType)
 		assert.NotNil(t, diags)
+	})
+
+	// Tests that an omitted (null) template_version does not panic and results in a nil Version
+	// in the request, since the attribute is Optional.
+	t.Run("Nil template_version does not panic", func(t *testing.T) {
+
+		prmNoVersion := prm
+		prmNoVersion.TemplateVersion = basetypes.NewInt64Null()
+
+		// Setup expectations, capturing the request to assert Version is left unset.
+		mockPostProcessKms.EXPECT().PostProcessKms(mock.MatchedBy(
+			func(req *models.PostProcessKmsV1Request) bool {
+				return req.Version == nil
+			})).Times(1).Return(nil, nil)
+
+		diags := pr.clumioPostProcessKmsCommon(ctx, prmNoVersion, eventType)
+		assert.Nil(t, diags)
 	})
 
 }

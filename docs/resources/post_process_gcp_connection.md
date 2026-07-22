@@ -21,9 +21,15 @@ resource "clumio_post_process_gcp_connection" "test" {
   service_account_email = "service_account_email_changed"
   wif_pool_id           = "wif_pool_id"
   wif_provider_id       = "wif_provider_id"
-  clumio_aws_iam_role   = "clumio_aws_iam_role"
   config_version        = "1.2"
   protect_gcs_version   = "1.1"
+  regions               = ["us-west1"]
+  region_configuration = [
+    {
+      region                       = "us-west1"
+      inventory_bridge_bucket_name = "clumio-inventory-bridge-us-west1-project_id"
+    }
+  ]
   properties = {
     key = "value"
   }
@@ -46,6 +52,7 @@ resource "clumio_post_process_gcp_connection" "test" {
 
 - `properties` (Map of String) A map to pass in additional information to be consumed by Clumio Post Processing
 - `protect_gcs_version` (String) Clumio Config version for GCS. May be a single number or major.minor (e.g., 1, 1.0, 2.5, 10.11).
+- `region_configuration` (Attributes List) The configuration of each GCP region to be used for inventory. (see [below for nested schema](#nestedatt--region_configuration))
 - `regions` (List of String) The GCP regions to be used for inventory.
 - `wif_pool_id` (String) The Workload Identity Federation Pool ID created for this connection.
 - `wif_provider_id` (String) The Workload Identity Federation Provider ID created for this connection.
@@ -53,3 +60,11 @@ resource "clumio_post_process_gcp_connection" "test" {
 ### Read-Only
 
 - `id` (String) Unique identifier of the connection
+
+<a id="nestedatt--region_configuration"></a>
+### Nested Schema for `region_configuration`
+
+Required:
+
+- `inventory_bridge_bucket_name` (String) The inventory bridge bucket for the region.
+- `region` (String) The GCP region the configuration applies to.

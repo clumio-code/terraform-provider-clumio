@@ -38,8 +38,8 @@ func (_m *MockDynamoDBTableClient) EXPECT() *MockDynamoDBTableClient_Expecter {
 }
 
 // ListAwsDynamodbTables provides a mock function for the type MockDynamoDBTableClient
-func (_mock *MockDynamoDBTableClient) ListAwsDynamodbTables(limit *int64, start *string, filter *string, embed *string, lookbackDays *int64) (*models.ListDynamoDBTableResponse, *apiutils.APIError) {
-	ret := _mock.Called(limit, start, filter, embed, lookbackDays)
+func (_mock *MockDynamoDBTableClient) ListAwsDynamodbTables(limit *int64, start *string, sort *string, filter *string, embed *string, lookbackDays *int64) (*models.ListDynamoDBTableResponse, *apiutils.APIError) {
+	ret := _mock.Called(limit, start, sort, filter, embed, lookbackDays)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListAwsDynamodbTables")
@@ -47,18 +47,18 @@ func (_mock *MockDynamoDBTableClient) ListAwsDynamodbTables(limit *int64, start 
 
 	var r0 *models.ListDynamoDBTableResponse
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string, *int64) (*models.ListDynamoDBTableResponse, *apiutils.APIError)); ok {
-		return returnFunc(limit, start, filter, embed, lookbackDays)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string, *string, *int64) (*models.ListDynamoDBTableResponse, *apiutils.APIError)); ok {
+		return returnFunc(limit, start, sort, filter, embed, lookbackDays)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string, *int64) *models.ListDynamoDBTableResponse); ok {
-		r0 = returnFunc(limit, start, filter, embed, lookbackDays)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string, *string, *int64) *models.ListDynamoDBTableResponse); ok {
+		r0 = returnFunc(limit, start, sort, filter, embed, lookbackDays)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListDynamoDBTableResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string, *string, *int64) *apiutils.APIError); ok {
-		r1 = returnFunc(limit, start, filter, embed, lookbackDays)
+	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string, *string, *string, *int64) *apiutils.APIError); ok {
+		r1 = returnFunc(limit, start, sort, filter, embed, lookbackDays)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -75,14 +75,15 @@ type MockDynamoDBTableClient_ListAwsDynamodbTables_Call struct {
 // ListAwsDynamodbTables is a helper method to define mock.On call
 //   - limit *int64
 //   - start *string
+//   - sort *string
 //   - filter *string
 //   - embed *string
 //   - lookbackDays *int64
-func (_e *MockDynamoDBTableClient_Expecter) ListAwsDynamodbTables(limit interface{}, start interface{}, filter interface{}, embed interface{}, lookbackDays interface{}) *MockDynamoDBTableClient_ListAwsDynamodbTables_Call {
-	return &MockDynamoDBTableClient_ListAwsDynamodbTables_Call{Call: _e.mock.On("ListAwsDynamodbTables", limit, start, filter, embed, lookbackDays)}
+func (_e *MockDynamoDBTableClient_Expecter) ListAwsDynamodbTables(limit interface{}, start interface{}, sort interface{}, filter interface{}, embed interface{}, lookbackDays interface{}) *MockDynamoDBTableClient_ListAwsDynamodbTables_Call {
+	return &MockDynamoDBTableClient_ListAwsDynamodbTables_Call{Call: _e.mock.On("ListAwsDynamodbTables", limit, start, sort, filter, embed, lookbackDays)}
 }
 
-func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) Run(run func(limit *int64, start *string, filter *string, embed *string, lookbackDays *int64)) *MockDynamoDBTableClient_ListAwsDynamodbTables_Call {
+func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) Run(run func(limit *int64, start *string, sort *string, filter *string, embed *string, lookbackDays *int64)) *MockDynamoDBTableClient_ListAwsDynamodbTables_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 *int64
 		if args[0] != nil {
@@ -100,9 +101,13 @@ func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) Run(run func(limit
 		if args[3] != nil {
 			arg3 = args[3].(*string)
 		}
-		var arg4 *int64
+		var arg4 *string
 		if args[4] != nil {
-			arg4 = args[4].(*int64)
+			arg4 = args[4].(*string)
+		}
+		var arg5 *int64
+		if args[5] != nil {
+			arg5 = args[5].(*int64)
 		}
 		run(
 			arg0,
@@ -110,6 +115,7 @@ func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) Run(run func(limit
 			arg2,
 			arg3,
 			arg4,
+			arg5,
 		)
 	})
 	return _c
@@ -120,7 +126,7 @@ func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) Return(listDynamoD
 	return _c
 }
 
-func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) RunAndReturn(run func(limit *int64, start *string, filter *string, embed *string, lookbackDays *int64) (*models.ListDynamoDBTableResponse, *apiutils.APIError)) *MockDynamoDBTableClient_ListAwsDynamodbTables_Call {
+func (_c *MockDynamoDBTableClient_ListAwsDynamodbTables_Call) RunAndReturn(run func(limit *int64, start *string, sort *string, filter *string, embed *string, lookbackDays *int64) (*models.ListDynamoDBTableResponse, *apiutils.APIError)) *MockDynamoDBTableClient_ListAwsDynamodbTables_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -24,8 +24,8 @@ func (r *clumioAWSConnectionDataSource) readAWSConnection(
 	// Prepare the query filter.
 	accountNativeId := model.AccountNativeID.ValueString()
 	region := model.AWSRegion.ValueString()
-	filter := fmt.Sprintf(`{"account_native_id": {"$in":["%s"]}, "aws_region": {"$in":["%s"]}}`,
-		accountNativeId, region)
+	filter := fmt.Sprintf(`{"account_native_id": {"$in":[%s]}, "aws_region": {"$in":[%s]}}`,
+		common.JSONEscapeFilterValue(accountNativeId), common.JSONEscapeFilterValue(region))
 
 	// Call the Clumio API to list the aws connections.
 	res, apiErr := r.awsConnectionClient.ListAwsConnections(nil, nil, &filter)

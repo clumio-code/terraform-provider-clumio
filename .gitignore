@@ -6,6 +6,7 @@
 *.swo
 *.go-e
 debug.test
+.DS_Store
 /vendor
 /.vendor-new
 /dist

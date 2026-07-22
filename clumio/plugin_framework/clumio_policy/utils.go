@@ -173,7 +173,7 @@ func buildSchemaOperationBackupSlas(
 		if sla.RpoFrequency != nil {
 			offsets, rpoDiags := types.ListValueFrom(ctx,
 				types.Int64Type, sla.RpoFrequency.Offsets)
-			diags = &rpoDiags
+			diags.Append(rpoDiags...)
 			backupSla.RPOFrequency = []*rpoModel{
 				{
 					Unit:    types.StringPointerValue(sla.RpoFrequency.Unit),
@@ -291,10 +291,14 @@ func buildSchemaOperationAdvancedSettings(
 		}
 	}
 	if operation.AdvancedSettings.AwsIcebergTableBackup != nil {
-		advSettings.IcebergTableBackup = []*backupTierModel{
+		advSettings.IcebergTableBackup = []*icebergBackupModel{
 			{
 				BackupTier: types.StringPointerValue(
 					operation.AdvancedSettings.AwsIcebergTableBackup.BackupTier),
+				BackupLastSnapshotOnly: types.BoolPointerValue(
+					operation.AdvancedSettings.AwsIcebergTableBackup.BackupLastSnapshotOnly),
+				BackupCompactedSnapshotOnly: types.BoolPointerValue(
+					operation.AdvancedSettings.AwsIcebergTableBackup.BackupCompactedSnapshotOnly),
 			},
 		}
 	}
@@ -396,6 +400,10 @@ func getOperationAdvancedSettings(
 				&models.IcebergBackupAdvancedSetting{
 					BackupTier: operation.AdvancedSettings[0].IcebergTableBackup[0].
 						BackupTier.ValueStringPointer(),
+					BackupLastSnapshotOnly: operation.AdvancedSettings[0].IcebergTableBackup[0].
+						BackupLastSnapshotOnly.ValueBoolPointer(),
+					BackupCompactedSnapshotOnly: operation.AdvancedSettings[0].IcebergTableBackup[0].
+						BackupCompactedSnapshotOnly.ValueBoolPointer(),
 				}
 		}
 	}

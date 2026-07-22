@@ -41,7 +41,7 @@ func TestProviderConfigure(t *testing.T) {
 	ctx := context.Background()
 	clumioProvider := New()
 	token := "test-token"
-	baseUrl := "test-base-url"
+	baseUrl := "https://test-base-url"
 	ou := "test-ou"
 	apiTokenKey := "clumio_api_token"
 	apiBaseUrlKey := "clumio_api_base_url"
@@ -116,6 +116,25 @@ func TestProviderConfigure(t *testing.T) {
 		}, configResp)
 
 		assert.True(t, configResp.Diagnostics.HasError())
+	})
+
+	// Tests that diagnostics is returned when clumio_api_base_url is not https.
+	t.Run("Error when clumio_api_base_url is not https", func(t *testing.T) {
+		configResp := &provider.ConfigureResponse{}
+		resp := &provider.SchemaResponse{}
+		clumioProvider.Schema(context.Background(), provider.SchemaRequest{}, resp)
+
+		vals[apiBaseUrlKey] = tftypes.NewValue(tftypes.String, "http://test-base-url")
+		vals[apiTokenKey] = tftypes.NewValue(tftypes.String, token)
+		clumioProvider.Configure(ctx, provider.ConfigureRequest{
+			Config: tfsdk.Config{
+				Raw:    tftypes.NewValue(mapType, vals),
+				Schema: resp.Schema,
+			},
+		}, configResp)
+
+		assert.True(t, configResp.Diagnostics.HasError())
+		assert.Nil(t, configResp.ResourceData)
 	})
 
 }

@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 )
 
+// TestModifyPlanSetsOrganizationalUnitID verifies that ModifyPlan pins organizational_unit_id to
+// the provider's OU context when one is set.
 func TestModifyPlanSetsOrganizationalUnitID(t *testing.T) {
 	ctx := context.Background()
 	res := NewClumioAWSConnectionResource().(*clumioAWSConnectionResource)
@@ -31,52 +32,57 @@ func TestModifyPlanSetsOrganizationalUnitID(t *testing.T) {
 	schemaResp := &resource.SchemaResponse{}
 	res.Schema(ctx, resource.SchemaRequest{}, schemaResp)
 
-	objectType := tftypes.Object{
-		AttributeTypes: map[string]tftypes.Type{
-			schemaId:                   tftypes.String,
-			schemaAccountNativeId:      tftypes.String,
-			schemaAwsRegion:            tftypes.String,
-			schemaDescription:          tftypes.String,
-			schemaOrganizationalUnitId: tftypes.String,
-			schemaConnectionStatus:     tftypes.String,
-			schemaToken:                tftypes.String,
-			schemaNamespace:            tftypes.String,
-			schemaClumioAwsAccountId:   tftypes.String,
-			schemaClumioAwsRegion:      tftypes.String,
-			schemaExternalId:           tftypes.String,
-			schemaDataPlaneAccountId:   tftypes.String,
-		},
+	// organizational_unit_id is left unset; ModifyPlan should populate it from the context.
+	model := clumioAWSConnectionResourceModel{
+		AccountNativeID: basetypes.NewStringValue(accountId),
+		AWSRegion:       basetypes.NewStringValue(region),
+		Description:     basetypes.NewStringValue(description),
 	}
+	plan := tfsdk.Plan{Schema: schemaResp.Schema}
+	assert.False(t, plan.Set(ctx, &model).HasError())
+	resp := &resource.ModifyPlanResponse{Plan: plan}
 
-	values := map[string]tftypes.Value{
-		schemaId:                   tftypes.NewValue(tftypes.String, nil),
-		schemaAccountNativeId:      tftypes.NewValue(tftypes.String, accountId),
-		schemaAwsRegion:            tftypes.NewValue(tftypes.String, region),
-		schemaDescription:          tftypes.NewValue(tftypes.String, description),
-		schemaOrganizationalUnitId: tftypes.NewValue(tftypes.String, nil),
-		schemaConnectionStatus:     tftypes.NewValue(tftypes.String, nil),
-		schemaToken:                tftypes.NewValue(tftypes.String, nil),
-		schemaNamespace:            tftypes.NewValue(tftypes.String, nil),
-		schemaClumioAwsAccountId:   tftypes.NewValue(tftypes.String, nil),
-		schemaClumioAwsRegion:      tftypes.NewValue(tftypes.String, nil),
-		schemaExternalId:           tftypes.NewValue(tftypes.String, nil),
-		schemaDataPlaneAccountId:   tftypes.NewValue(tftypes.String, nil),
-	}
-
-	plan := tfsdk.Plan{
-		Raw:    tftypes.NewValue(objectType, values),
-		Schema: schemaResp.Schema,
-	}
-	resp := &resource.ModifyPlanResponse{
-		Plan: plan,
-	}
-
-	res.ModifyPlan(ctx, resource.ModifyPlanRequest{
-		Plan: plan,
-	}, resp)
+	res.ModifyPlan(ctx, resource.ModifyPlanRequest{Plan: plan}, resp)
 
 	var got clumioAWSConnectionResourceModel
 	diags := resp.Plan.Get(ctx, &got)
 	assert.False(t, diags.HasError())
 	assert.Equal(t, basetypes.NewStringValue(ouId), got.OrganizationalUnitID)
+}
+
+// TestModifyPlanEmptyContextWarnsOnOrganizationalUnitMove verifies that a context-driven OU move
+// is applied but surfaced as a plan-time warning rather than done silently.
+func TestModifyPlanEmptyContextWarnsOnOrganizationalUnitMove(t *testing.T) {
+	ctx := context.Background()
+	res := NewClumioAWSConnectionResource().(*clumioAWSConnectionResource)
+	// Provider configured with an EMPTY OU context.
+	res.Configure(ctx, resource.ConfigureRequest{
+		ProviderData: &common.ApiClient{ClumioConfig: sdkconfig.Config{}},
+	}, &resource.ConfigureResponse{})
+
+	schemaResp := &resource.SchemaResponse{}
+	res.Schema(ctx, resource.SchemaRequest{}, schemaResp)
+
+	// The connection already lives in tenant OU `ouId`; both prior state and the carried-forward
+	// plan hold that value.
+	model := clumioAWSConnectionResourceModel{
+		ID:                   basetypes.NewStringValue("connection-id"),
+		AccountNativeID:      basetypes.NewStringValue(accountId),
+		AWSRegion:            basetypes.NewStringValue(region),
+		Description:          basetypes.NewStringValue(description),
+		OrganizationalUnitID: basetypes.NewStringValue(ouId),
+	}
+	plan := tfsdk.Plan{Schema: schemaResp.Schema}
+	assert.False(t, plan.Set(ctx, &model).HasError())
+	state := tfsdk.State{Schema: schemaResp.Schema}
+	assert.False(t, state.Set(ctx, &model).HasError())
+	resp := &resource.ModifyPlanResponse{Plan: plan}
+
+	res.ModifyPlan(ctx, resource.ModifyPlanRequest{Plan: plan, State: state}, resp)
+
+	var got clumioAWSConnectionResourceModel
+	diags := resp.Plan.Get(ctx, &got)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, basetypes.NewStringValue(defaultOrgUnitId), got.OrganizationalUnitID)
+	assert.Len(t, resp.Diagnostics.Warnings(), 1)
 }

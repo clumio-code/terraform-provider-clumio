@@ -57,7 +57,7 @@ var (
 			isConfig:  false,
 		},
 	}
-	// warmtierInfoMap is the mapping of the the warm tier datasource to the resource
+	// warmtierInfoMap is the mapping of the warm tier datasource to the resource
 	// parameter and if a config section is required, then isConfig will be true.
 	warmtierInfoMap = map[string]sourceConfigInfo{
 		"dynamodb": {
@@ -168,7 +168,7 @@ func parseVersion(version string) (string, string, error) {
 	case 2:
 		return splits[0], splits[1], nil
 	default:
-		return "", "", errors.New(fmt.Sprintf("Invalid version: %v", version))
+		return "", "", fmt.Errorf("invalid version: %v", version)
 	}
 }
 
@@ -213,20 +213,18 @@ func performValidation(res *models.ReadAWSConnectionResponse,
 	if res == nil {
 		return false, false, nil
 	}
-	ingestionComplete, targetSetupComplete := true, true
-	ingestionErr, targetSetupErr := false, false
-	ingestionComplete, ingestionErr = isIngestionComplete(
+	ingestionComplete, ingestionErr := isIngestionComplete(
 		model.WaitForIngestion.ValueBool(), *res.IngestionStatus)
-	targetSetupComplete, targetSetupErr = isTargetSetupComplete(
+	targetSetupComplete, targetSetupErr := isTargetSetupComplete(
 		model.WaitForDataPlaneResources.ValueBool(), *res.TargetSetupStatus)
 	if ingestionErr && targetSetupErr {
-		return true, true, errors.New("Ingestion task failed for the connection as well as" +
-			" one or more of the data plane resources setup tasks failed.")
+		return true, true, errors.New("ingestion task failed for the connection as well as" +
+			" one or more of the data plane resources setup tasks failed")
 	} else if ingestionErr {
-		return true, false, errors.New("Ingestion task failed for the connection.")
+		return true, false, errors.New("ingestion task failed for the connection")
 	} else if targetSetupErr {
 		return true, true, errors.New(
-			"One or more of the data plane resources setup tasks failed.")
+			"one or more of the data plane resources setup tasks failed")
 	}
 	if ingestionComplete && targetSetupComplete {
 		return true, false, nil
@@ -239,9 +237,10 @@ func performValidation(res *models.ReadAWSConnectionResponse,
 func isIngestionComplete(waitForIngestion bool, ingestionStatus string) (bool, bool) {
 
 	if waitForIngestion {
-		if ingestionStatus == inProgress {
+		switch ingestionStatus {
+		case inProgress:
 			return false, false
-		} else if ingestionStatus == failed {
+		case failed:
 			return true, true
 		}
 	}
@@ -253,9 +252,10 @@ func isIngestionComplete(waitForIngestion bool, ingestionStatus string) (bool, b
 func isTargetSetupComplete(waitForTargetSetup bool, targetSetupStatus string) (bool, bool) {
 
 	if waitForTargetSetup {
-		if targetSetupStatus == inProgress {
+		switch targetSetupStatus {
+		case inProgress:
 			return false, false
-		} else if targetSetupStatus == failed {
+		case failed:
 			return true, true
 		}
 	}

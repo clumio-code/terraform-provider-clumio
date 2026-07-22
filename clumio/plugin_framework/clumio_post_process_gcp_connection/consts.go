@@ -17,6 +17,11 @@ const (
 	schemaProtectGcsVersion   = "protect_gcs_version"
 	schemaProperties          = "properties"
 	schemaRegions             = "regions"
+	schemaRegionConfiguration = "region_configuration"
+
+	// Constants used by the nested attributes of the region_configuration attribute.
+	schemaRegion                    = "region"
+	schemaInventoryBridgeBucketName = "inventory_bridge_bucket_name"
 )
 
 // RequestType used by GCP post process API

@@ -196,15 +196,12 @@ func TestUpdateAWSManualConnection(t *testing.T) {
 		assert.NotNil(t, diags)
 	})
 
-	// Tests that Diagnostics is returned in case some enabled asset is removed while updating.
+	// Tests that an attempted asset downgrade is blocked by the guard and the update API is never
+	// called. No UpdateAwsConnection expectation is set, so any call would fail this strict mock.
 	t.Run("Downgrading assets enabled returns an error", func(t *testing.T) {
-
-		// Setup Expectations
-		mockAwsConnClient.EXPECT().UpdateAwsConnection(id, mock.Anything).Times(1).
-			Return(nil, apiError)
 
 		plan.AssetsEnabled.EBS = basetypes.NewBoolValue(false)
 		diags := cr.updateAWSManualConnection(ctx, &plan, &state)
-		assert.NotNil(t, diags)
+		assert.True(t, diags.HasError())
 	})
 }

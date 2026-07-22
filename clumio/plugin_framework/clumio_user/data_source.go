@@ -25,13 +25,13 @@ func (r *clumioUserDataSource) readUser(
 	// Prepare the query nameFilter.
 	name := model.Name.ValueString()
 	if name != "" {
-		nameFilter := fmt.Sprintf(`"name": {"$contains":"%s"}`, name)
+		nameFilter := fmt.Sprintf(`"name": {"$contains":%s}`, common.JSONEscapeFilterValue(name))
 		filters = append(filters, nameFilter)
 	}
 
 	roleId := model.RoleId.ValueString()
 	if roleId != "" {
-		roleFilter := fmt.Sprintf(`"role_id": {"$eq":"%s"}`, roleId)
+		roleFilter := fmt.Sprintf(`"role_id": {"$eq":%s}`, common.JSONEscapeFilterValue(roleId))
 		filters = append(filters, roleFilter)
 	}
 	filter := fmt.Sprintf("{%s}", strings.Join(filters, ","))

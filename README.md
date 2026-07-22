@@ -16,7 +16,7 @@ regions, establishing data protection policies and rules, to managing users and 
 organizational units. The Clumio provider offers an easy to define, reproducible approach to
 creating a data protection environment.
 
-This provider makes use of the [Clumio REST API](https://help.clumio.com/reference) along with the
+This provider makes use of the [Clumio REST API](https://api.commvault.com/docs/latest/api/cv/ClumioAPIs/clumio-rest-api/) along with the
 functionalities of the [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework).
 The most current version of the Clumio provider is available in the
 [Terraform Registry](https://registry.terraform.io/providers/clumio-code/clumio/latest).
@@ -25,7 +25,7 @@ The most current version of the Clumio provider is available in the
 
 Initiating the use of the Clumio provider requires a valid API token from Clumio. Detailed
 instructions for generating this token are available here:
-[Creating an API Token](https://help.clumio.com/docs/api-tokens#managing-tokens)
+[Creating an API Token](https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens)
 
 Below is a basic Terraform configuration aimed at configuring the Clumio provider. Substitute
 `<clumio_api_token>` with your specific API token and `<clumio_api_base_url>` with the corresponding

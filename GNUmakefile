@@ -4,7 +4,7 @@
 
 # If the version is being changed here, it should also be changed for the variable
 # clumioTfProviderVersionHeaderValue in the file clumio/plugin_framework/const.go.
-VERSION=0.21.1
+VERSION=0.22.0
 ifndef OS_ARCH
 OS_ARCH=darwin_arm64
 endif
@@ -64,6 +64,16 @@ testcover:
 # The full coverage report is only available for the main branch, while the PRs
 # will only report on the modified files.
 # The test results are only reported in main and never in PRs by SonarCloud.
+
+GOLANGCI_LINT_VERSION=v2.11.4
+
+.PHONY: lint
+lint:
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run ./...
+
+.PHONY: vulncheck
+vulncheck:
+	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
 .PHONY: install
 install:

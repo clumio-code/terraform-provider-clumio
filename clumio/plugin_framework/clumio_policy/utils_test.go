@@ -329,9 +329,13 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 	})
 
 	t.Run("Test Iceberg Advanced Setting", func(t *testing.T) {
+		backupLastSnapshotOnly := true
+		backupCompactedSnapshotOnly := true
 		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
 			AwsIcebergTableBackup: &models.IcebergBackupAdvancedSetting{
-				BackupTier: &backupTier,
+				BackupTier:                  &backupTier,
+				BackupLastSnapshotOnly:      &backupLastSnapshotOnly,
+				BackupCompactedSnapshotOnly: &backupCompactedSnapshotOnly,
 			},
 		}
 		modelOperations[0].ClumioType = &operationType11
@@ -341,6 +345,10 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, *modelOpAdvSettings.AwsIcebergTableBackup.BackupTier,
 			schemaOpAdvSettings.IcebergTableBackup[0].BackupTier.ValueString())
+		assert.Equal(t, *modelOpAdvSettings.AwsIcebergTableBackup.BackupLastSnapshotOnly,
+			schemaOpAdvSettings.IcebergTableBackup[0].BackupLastSnapshotOnly.ValueBool())
+		assert.Equal(t, *modelOpAdvSettings.AwsIcebergTableBackup.BackupCompactedSnapshotOnly,
+			schemaOpAdvSettings.IcebergTableBackup[0].BackupCompactedSnapshotOnly.ValueBool())
 	})
 }
 
@@ -721,9 +729,11 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 	t.Run("Test Iceberg Backup Advanced Setting", func(t *testing.T) {
 		schemaOperations[0].AdvancedSettings = []*advancedSettingsModel{
 			{
-				IcebergTableBackup: []*backupTierModel{
+				IcebergTableBackup: []*icebergBackupModel{
 					{
-						BackupTier: basetypes.NewStringValue(backupTier),
+						BackupTier:                  basetypes.NewStringValue(backupTier),
+						BackupLastSnapshotOnly:      basetypes.NewBoolValue(true),
+						BackupCompactedSnapshotOnly: basetypes.NewBoolValue(true),
 					},
 				},
 			},
@@ -735,5 +745,9 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, schemaOpAdvSettings.IcebergTableBackup[0].BackupTier.ValueString(),
 			*modelOpAdvSettings.AwsIcebergTableBackup.BackupTier)
+		assert.Equal(t, schemaOpAdvSettings.IcebergTableBackup[0].BackupLastSnapshotOnly.ValueBool(),
+			*modelOpAdvSettings.AwsIcebergTableBackup.BackupLastSnapshotOnly)
+		assert.Equal(t, schemaOpAdvSettings.IcebergTableBackup[0].BackupCompactedSnapshotOnly.ValueBool(),
+			*modelOpAdvSettings.AwsIcebergTableBackup.BackupCompactedSnapshotOnly)
 	})
 }

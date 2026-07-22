@@ -16,18 +16,26 @@ import (
 // resource. It represents the schema of the resource and the data it holds. This schema is used by
 // customers to configure the resource and by the Clumio provider to read and write the resource.
 type clumioPostProcessGCPConnectionResourceModel struct {
-	ID                  types.String `tfsdk:"id"`
-	ProjectID           types.String `tfsdk:"project_id"`
-	ProjectName         types.String `tfsdk:"project_name"`
-	ProjectNumber       types.String `tfsdk:"project_number"`
-	Token               types.String `tfsdk:"token"`
-	ServiceAccountEmail types.String `tfsdk:"service_account_email"`
-	WifPoolId           types.String `tfsdk:"wif_pool_id"`
-	WifProviderId       types.String `tfsdk:"wif_provider_id"`
-	ConfigVersion       types.String `tfsdk:"config_version"`
-	ProtectGcsVersion   types.String `tfsdk:"protect_gcs_version"`
-	Properties          types.Map    `tfsdk:"properties"`
-	Regions             types.List   `tfsdk:"regions"`
+	ID                  types.String                `tfsdk:"id"`
+	ProjectID           types.String                `tfsdk:"project_id"`
+	ProjectName         types.String                `tfsdk:"project_name"`
+	ProjectNumber       types.String                `tfsdk:"project_number"`
+	Token               types.String                `tfsdk:"token"`
+	ServiceAccountEmail types.String                `tfsdk:"service_account_email"`
+	WifPoolId           types.String                `tfsdk:"wif_pool_id"`
+	WifProviderId       types.String                `tfsdk:"wif_provider_id"`
+	ConfigVersion       types.String                `tfsdk:"config_version"`
+	ProtectGcsVersion   types.String                `tfsdk:"protect_gcs_version"`
+	Properties          types.Map                   `tfsdk:"properties"`
+	Regions             types.List                  `tfsdk:"regions"`
+	RegionConfiguration []*regionConfigurationModel `tfsdk:"region_configuration"`
+}
+
+// regionConfigurationModel maps to a single element of the region_configuration attribute. It
+// holds the configuration of a single GCP region of the connection.
+type regionConfigurationModel struct {
+	Region                    types.String `tfsdk:"region"`
+	InventoryBridgeBucketName types.String `tfsdk:"inventory_bridge_bucket_name"`
 }
 
 // Schema defines the structure and constraints of the clumio_post_process_gcp_connection Terraform
@@ -85,6 +93,22 @@ func (r *clumioPostProcessGCPConnectionResource) Schema(_ context.Context, _ res
 				Description: "The GCP regions to be used for inventory.",
 				ElementType: types.StringType,
 				Optional:    true,
+			},
+			schemaRegionConfiguration: schema.ListNestedAttribute{
+				Description: "The configuration of each GCP region to be used for inventory.",
+				Optional:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						schemaRegion: schema.StringAttribute{
+							Description: "The GCP region the configuration applies to.",
+							Required:    true,
+						},
+						schemaInventoryBridgeBucketName: schema.StringAttribute{
+							Description: "The inventory bridge bucket for the region.",
+							Required:    true,
+						},
+					},
+				},
 			},
 			schemaProperties: schema.MapAttribute{
 				Description: "A map to pass in additional information to be consumed " +

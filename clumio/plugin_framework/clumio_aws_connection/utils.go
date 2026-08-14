@@ -136,7 +136,7 @@ func getEnvironmentForConnection(_ context.Context, r *clumioAWSConnectionResour
 
 	accountNativeId := state.AccountNativeID.ValueString()
 	awsRegion := state.AWSRegion.ValueString()
-	environment, err := lookupEnvironmentForConnection(r.sdkEnvironments, accountNativeId, awsRegion)
+	environment, err := common.LookupAWSEnvironment(r.sdkEnvironments, accountNativeId, awsRegion)
 	if err == nil {
 		return environment, nil
 	}
@@ -146,7 +146,7 @@ func getEnvironmentForConnection(_ context.Context, r *clumioAWSConnectionResour
 	if r.client != nil && r.client.ClumioConfig.OrganizationalUnitContext != "" {
 		globalConfig := common.GetSDKConfigForOU(r.client.ClumioConfig, "")
 		globalEnvClient := newAWSEnvironmentClient(globalConfig)
-		environment, globalErr := lookupEnvironmentForConnection(
+		environment, globalErr := common.LookupAWSEnvironment(
 			globalEnvClient, accountNativeId, awsRegion)
 		if globalErr == nil {
 			return environment, nil
@@ -154,47 +154,6 @@ func getEnvironmentForConnection(_ context.Context, r *clumioAWSConnectionResour
 	}
 
 	return nil, err
-}
-
-func lookupEnvironmentForConnection(client sdkclients.AWSEnvironmentClient,
-	accountNativeId string, awsRegion string) (*models.AWSEnvironment, error) {
-	filterStr := fmt.Sprintf(
-		"{\"account_native_id\":{\"$eq\":%v}, \"aws_region\":{\"$eq\":%v}}",
-		common.JSONEscapeFilterValue(accountNativeId), common.JSONEscapeFilterValue(awsRegion))
-
-	limit := int64(1)
-	envs, apiErr := client.ListAwsEnvironments(&limit, nil, &filterStr, nil, nil)
-	if apiErr != nil {
-		return nil, fmt.Errorf(
-			"unable to retrieve environment corresponding to %v, %v (%v)",
-			accountNativeId, awsRegion, common.ParseMessageFromApiError(apiErr))
-	}
-	if envs == nil {
-		return nil, fmt.Errorf(
-			"unable to retrieve environment corresponding to %v, %v, but received nil response",
-			accountNativeId, awsRegion)
-	}
-	if envs.Embedded == nil || len(envs.Embedded.Items) == 0 {
-		return nil, fmt.Errorf(
-			"unable to retrieve environment corresponding to %v, %v, but no API error was returned",
-			accountNativeId, awsRegion)
-	}
-	if len(envs.Embedded.Items) > 1 {
-		count := int64(len(envs.Embedded.Items))
-		if envs.CurrentCount != nil {
-			count = *envs.CurrentCount
-		}
-		return nil, fmt.Errorf(
-			"expected only one environment corresponding to %v, %v, but found %v",
-			accountNativeId, awsRegion, count)
-	}
-	if envs.Embedded.Items[0].Id == nil || *envs.Embedded.Items[0].Id == "" {
-		return nil, fmt.Errorf(
-			"environment corresponding to %v, %v has no ID",
-			accountNativeId, awsRegion)
-	}
-
-	return envs.Embedded.Items[0], nil
 }
 
 // setExternalId checks and sets the ExternalID in the given state.

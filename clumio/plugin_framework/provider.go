@@ -13,8 +13,10 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_rule"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_auto_user_provisioning_setting"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_connection"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_environment"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_aws_manual_connection_resources"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_backups"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_dynamodb_tables"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcp_connection"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcs_bucket"
@@ -32,6 +34,7 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_asset"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_protection_group_bucket"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_report_configuration"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_restore_dynamodb_table"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_role"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_s3_bucket"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_user"
@@ -39,6 +42,7 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
 	clumioConfig "github.com/clumio-code/clumio-go-sdk/config"
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -46,9 +50,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure the implementation satisfies the following Provider interface.
+// Ensure the implementation satisfies the following Provider interfaces.
 var (
-	_ provider.Provider = &clumioProvider{}
+	_ provider.Provider            = &clumioProvider{}
+	_ provider.ProviderWithActions = &clumioProvider{}
 )
 
 // clumioProvider is the struct backing the Clumio Provider for Terraform.
@@ -160,6 +165,7 @@ func (p *clumioProvider) Configure(
 	}
 	resp.DataSourceData = client
 	resp.ResourceData = client
+	resp.ActionData = client
 	tflog.Info(ctx, "Configured Clumio client", map[string]any{"success": true})
 }
 
@@ -173,13 +179,22 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 		clumio_policy_rule.NewClumioPolicyRuleDataSource,
 		clumio_protection_group.NewClumioProtectionGroupDataSource,
 		clumio_aws_connection.NewClumioAWSConnectionDataSource,
+		clumio_aws_environment.NewClumioAWSEnvironmentDataSource,
 		clumio_user.NewClumioUserDataSource,
 		clumio_organizational_unit.NewClumioOrganizationalUnitDataSource,
 		clumio_s3_bucket.NewClumioS3BucketDataSource,
 		clumio_dynamodb_tables.NewClumioDynamoDBTablesDataSource,
+		clumio_dynamodb_backups.NewClumioDynamoDBBackupsDataSource,
 		clumio_protection_group_asset.NewClumioProtectionGroupAssetDataSource,
 		clumio_gcs_bucket.NewClumioGCSBucketDataSource,
 		clumio_gcs_protection_group.NewClumioGCSProtectionGroupDataSource,
+	}
+}
+
+// Actions defines the actions implemented in the provider. Any new action should be added here.
+func (p *clumioProvider) Actions(_ context.Context) []func() action.Action {
+	return []func() action.Action{
+		clumio_restore_dynamodb_table.NewClumioRestoreDynamoDBTableAction,
 	}
 }
 

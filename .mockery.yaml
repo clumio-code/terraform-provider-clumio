@@ -29,6 +29,7 @@ packages:
       AWSTemplatesClient: {}
       AutoUserProvisioningRuleClient: {}
       AutoUserProvisioningSettingClient: {}
+      BackupDynamoDBTableClient: {}
       DynamoDBTableClient: {}
       GcpConnectionClient: {}
       GcpGcsBucketClient: {}
@@ -43,6 +44,7 @@ packages:
       ProtectionGroupClient: {}
       ProtectionGroupS3AssetsClient: {}
       ReportConfigurationClient: {}
+      RestoredDynamoDBTableClient: {}
       RoleClient: {}
       S3BucketClient: {}
       TaskClient: {}

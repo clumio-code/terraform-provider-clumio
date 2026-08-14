@@ -2,7 +2,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = ">=0.21.0"
+      version = ">=0.22.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -27,12 +27,26 @@ data "google_project" "current" {
   project_id = "<gcp_project_id>"
 }
 
+# Per-region configuration for the connection. Clumio creates the inventory bridge bucket for
+# each region unless an existing bucket is specified via using_custom_inventory_bridge_bucket.
+locals {
+  region_configuration = [
+    {
+      region = "us-central1"
+    },
+    {
+      region                               = "us-west1"
+      using_custom_inventory_bridge_bucket = "<existing_inventory_bridge_bucket_name>"
+    }
+  ]
+}
+
 # Register a new Clumio connection for the GCP project. Clumio currently supports backup of GCP
 # resources in us-central1 and us-west1.
 resource "clumio_gcp_connection" "connection" {
   project_id  = data.google_project.current.project_id
   description = "My Clumio GCP Connection"
-  regions     = ["us-central1", "us-west1"]
+  regions     = [for r in local.region_configuration : r.region]
 }
 
 # Install the Clumio GCP template onto the registered connection
@@ -42,11 +56,10 @@ module "clumio_protect_gcp" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token                          = clumio_gcp_connection.connection.token
-  project_id                            = data.google_project.current.project_id
-  regions                               = clumio_gcp_connection.connection.regions
-  clumio_service_account_email          = clumio_gcp_connection.connection.clumio_service_account
-  create_clumio_inventory_bridge_bucket = true
+  clumio_token                 = clumio_gcp_connection.connection.token
+  project_id                   = data.google_project.current.project_id
+  clumio_service_account_email = clumio_gcp_connection.connection.clumio_service_account
+  region_configuration         = local.region_configuration
 
   # Enable protection of GCS buckets
   is_gcs_enabled = true

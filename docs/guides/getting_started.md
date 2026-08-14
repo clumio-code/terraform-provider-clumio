@@ -31,7 +31,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.21.0"
+      version = "~>0.22.0"
     }
     aws = {}
   }
@@ -219,11 +219,15 @@ module "clumio_protect_gcp" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token                          = clumio_gcp_connection.gcp_connection.token
-  project_id                            = data.google_project.current.project_id
-  regions                               = clumio_gcp_connection.gcp_connection.regions
-  clumio_service_account_email          = clumio_gcp_connection.gcp_connection.clumio_service_account
-  create_clumio_inventory_bridge_bucket = true
+  clumio_token                 = clumio_gcp_connection.gcp_connection.token
+  project_id                   = data.google_project.current.project_id
+  clumio_service_account_email = clumio_gcp_connection.gcp_connection.clumio_service_account
+
+  # Per-region configuration. Clumio creates the inventory bridge bucket for each region unless
+  # an existing bucket is specified via using_custom_inventory_bridge_bucket.
+  region_configuration = [
+    for region in clumio_gcp_connection.gcp_connection.regions : { region = region }
+  ]
 
   # Enable protection of GCS buckets
   is_gcs_enabled = true
@@ -344,15 +348,15 @@ module "clumio_protect" {
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id
 
   # Enable protection of all data sources.
-  is_ebs_enabled      = true
-  is_rds_enabled      = true
-  is_dynamodb_enabled = true
-  is_s3_enabled       = true
+  is_ebs_enabled       = true
+  is_rds_enabled       = true
+  is_dynamodb_enabled  = true
+  is_s3_enabled        = true
 }
 
 # Create a Clumio protection group that aggregates S3 buckets with the tag "clumio:example"
 resource "clumio_protection_group" "protection_group" {
-  name = "My Clumio Protection Group"
+  name        = "My Clumio Protection Group"
   bucket_rule = jsonencode({
     "aws_tag" = {
       "$eq" = {
@@ -405,7 +409,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = "~>0.21.0"
+      version = "~>0.22.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -443,11 +447,15 @@ module "clumio_protect_gcp" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token                          = clumio_gcp_connection.connection.token
-  project_id                            = data.google_project.current.project_id
-  regions                               = clumio_gcp_connection.connection.regions
-  clumio_service_account_email          = clumio_gcp_connection.connection.clumio_service_account
-  create_clumio_inventory_bridge_bucket = true
+  clumio_token                 = clumio_gcp_connection.connection.token
+  project_id                   = data.google_project.current.project_id
+  clumio_service_account_email = clumio_gcp_connection.connection.clumio_service_account
+
+  # Per-region configuration. Clumio creates the inventory bridge bucket for each region unless
+  # an existing bucket is specified via using_custom_inventory_bridge_bucket.
+  region_configuration = [
+    for region in clumio_gcp_connection.connection.regions : { region = region }
+  ]
 
   # Enable protection of GCS buckets
   is_gcs_enabled = true

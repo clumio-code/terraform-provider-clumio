@@ -2,7 +2,7 @@ terraform {
   required_providers {
     clumio = {
       source  = "clumio-code/clumio"
-      version = ">=0.21.0"
+      version = ">=0.22.0"
     }
     google = {
       source  = "hashicorp/google"
@@ -62,11 +62,15 @@ module "clumio_protect_project_a" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token                          = clumio_gcp_connection.project_a.token
-  project_id                            = data.google_project.project_a.project_id
-  regions                               = clumio_gcp_connection.project_a.regions
-  clumio_service_account_email          = clumio_gcp_connection.project_a.clumio_service_account
-  create_clumio_inventory_bridge_bucket = true
+  clumio_token                 = clumio_gcp_connection.project_a.token
+  project_id                   = data.google_project.project_a.project_id
+  clumio_service_account_email = clumio_gcp_connection.project_a.clumio_service_account
+
+  # Per-region configuration. Clumio creates the inventory bridge bucket for each region unless
+  # an existing bucket is specified via using_custom_inventory_bridge_bucket.
+  region_configuration = [
+    for region in clumio_gcp_connection.project_a.regions : { region = region }
+  ]
 
   # Enable protection of GCS buckets
   is_gcs_enabled = true
@@ -80,11 +84,15 @@ module "clumio_protect_project_b" {
   }
   source = "clumio-code/gcp-template/clumio"
 
-  clumio_token                          = clumio_gcp_connection.project_b.token
-  project_id                            = data.google_project.project_b.project_id
-  regions                               = clumio_gcp_connection.project_b.regions
-  clumio_service_account_email          = clumio_gcp_connection.project_b.clumio_service_account
-  create_clumio_inventory_bridge_bucket = true
+  clumio_token                 = clumio_gcp_connection.project_b.token
+  project_id                   = data.google_project.project_b.project_id
+  clumio_service_account_email = clumio_gcp_connection.project_b.clumio_service_account
+
+  # Per-region configuration. Clumio creates the inventory bridge bucket for each region unless
+  # an existing bucket is specified via using_custom_inventory_bridge_bucket.
+  region_configuration = [
+    for region in clumio_gcp_connection.project_b.regions : { region = region }
+  ]
 
   # Enable protection of GCS buckets
   is_gcs_enabled = true

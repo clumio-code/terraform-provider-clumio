@@ -1,3 +1,10 @@
+## 0.23.0
+This update contains the following changes:
+* Added `clumio_restore_dynamodb_table` action to initiate a restore of a DynamoDB table from a SecureVault backup or continuous backup (point-in-time restore). Invoking actions requires Terraform 1.14 or later.
+* Added `clumio_dynamodb_backups` data source to retrieve the backups of a DynamoDB table.
+* Added `clumio_aws_environment` data source to retrieve the identifier of the Clumio AWS environment associated with an AWS account and region.
+* Updated Clumio Go SDK to v0.32.1.
+
 ## 0.22.0
 This update contains the following changes:
 * Added `region_configuration` attribute to `clumio_post_process_gcp_connection` resource to specify per-region configuration such as the inventory bridge bucket name.

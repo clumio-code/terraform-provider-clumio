@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/acctest"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
@@ -513,7 +514,7 @@ func TestAccResourceClumioPolicyRecreate(t *testing.T) {
 			{
 				Config: getTestAccResourceClumioPolicyWindow(false),
 				Check: resource.ComposeTestCheckFunc(
-					common.DeletePolicy("clumio_policy.test_policy", true),
+					acctest.DeletePolicy("clumio_policy.test_policy", true),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

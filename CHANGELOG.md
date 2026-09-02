@@ -1,3 +1,8 @@
+## 0.23.1
+This update contains the following changes:
+* Added a software bill of materials (SBOM) for each provider binary to the release artifacts.
+* Removed test-only Go modules from the provider binary.
+
 ## 0.23.0
 This update contains the following changes:
 * Added `clumio_restore_dynamodb_table` action to initiate a restore of a DynamoDB table from a SecureVault backup or continuous backup (point-in-time restore). Invoking actions requires Terraform 1.14 or later.

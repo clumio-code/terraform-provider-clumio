@@ -16,6 +16,7 @@ import (
 	"time"
 
 	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/acctest"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
@@ -128,7 +129,7 @@ func TestAccResourceClumioPolicyAssignmentRecreate(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					// Delete the resource using the Clumio API after the plan is applied.
-					common.DeletePolicy("clumio_policy.test_policy", true),
+					acctest.DeletePolicy("clumio_policy.test_policy", true),
 				),
 				// This attribute is used to denote that the test expects that after the plan is
 				// applied and a refresh is run, a non-empty plan is expected due to differences
@@ -157,7 +158,7 @@ func TestAccResourceClumioPolicyAssignmentRecreate(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					// Delete the resource using the Clumio API after the plan is applied.
-					common.DeleteProtectionGroup(
+					acctest.DeleteProtectionGroup(
 						"clumio_protection_group.test_pg_policy_assignment", true),
 				),
 				// This attribute is used to denote that the test expects that after the plan is

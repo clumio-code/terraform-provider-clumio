@@ -16,6 +16,8 @@ filename: "{{.InterfaceName | snakecase}}_mock.go"
 # Use the testify-based mock template (with-expecter is on by default).
 template: testify
 template-data:
+  # Keep generated mocks out of the provider binary. Unit tests run with -tags=unit.
+  mock-build-tags: unit
   # Expand variadic arguments into individual expectation parameters.
   unroll-variadic: true
 # List of packages and interfaces to mock.

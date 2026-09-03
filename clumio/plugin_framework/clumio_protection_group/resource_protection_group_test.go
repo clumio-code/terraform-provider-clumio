@@ -17,6 +17,7 @@ import (
 	"time"
 
 	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/acctest"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
@@ -148,7 +149,7 @@ func TestAccResourceClumioProtectionGroupRecreate(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"clumio_protection_group.test_pg", "description",
 						regexp.MustCompile("test_pg_1")),
-					common.DeleteProtectionGroup("clumio_protection_group.test_pg", true),
+					acctest.DeleteProtectionGroup("clumio_protection_group.test_pg", true),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

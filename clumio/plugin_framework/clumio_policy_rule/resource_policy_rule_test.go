@@ -17,6 +17,7 @@ import (
 	"time"
 
 	clumiopf "github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/acctest"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
@@ -216,7 +217,7 @@ func TestAccResourceClumioPolicyRuleImport(t *testing.T) {
 				Destroy:            true,
 			},
 		},
-		CheckDestroy: common.DeletePolicy(policy_id, false),
+		CheckDestroy: acctest.DeletePolicy(policy_id, false),
 	})
 }
 

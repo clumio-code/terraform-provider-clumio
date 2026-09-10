@@ -1,3 +1,8 @@
+## 0.24.0
+This update contains the following changes:
+* Added `clumio_iceberg_tables` data source to retrieve the identifiers of Iceberg tables.
+* Added `aws_iceberg_glue_table` and `aws_iceberg_s3_table` to the documented `entity_type` values of `clumio_policy_assignment`.
+
 ## 0.23.1
 This update contains the following changes:
 * Added a software bill of materials (SBOM) for each provider binary to the release artifacts.

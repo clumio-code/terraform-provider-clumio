@@ -22,6 +22,7 @@ import (
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcs_bucket"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_gcs_protection_group"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_general_settings"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_iceberg_tables"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_organizational_unit"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/clumio_policy_assignment"
@@ -185,6 +186,7 @@ func (p *clumioProvider) DataSources(_ context.Context) []func() datasource.Data
 		clumio_s3_bucket.NewClumioS3BucketDataSource,
 		clumio_dynamodb_tables.NewClumioDynamoDBTablesDataSource,
 		clumio_dynamodb_backups.NewClumioDynamoDBBackupsDataSource,
+		clumio_iceberg_tables.NewClumioIcebergTablesDataSource,
 		clumio_protection_group_asset.NewClumioProtectionGroupAssetDataSource,
 		clumio_gcs_bucket.NewClumioGCSBucketDataSource,
 		clumio_gcs_protection_group.NewClumioGCSProtectionGroupDataSource,

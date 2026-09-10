@@ -156,7 +156,7 @@ func TestProviderDataSources(t *testing.T) {
 	clumioProvider := New()
 
 	resp := clumioProvider.DataSources(ctx)
-	assert.Equal(t, 15, len(resp))
+	assert.Equal(t, 16, len(resp))
 }
 
 // Unit test for the provider Actions function.

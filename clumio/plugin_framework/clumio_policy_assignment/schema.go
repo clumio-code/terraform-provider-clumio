@@ -51,8 +51,9 @@ func (r *clumioPolicyAssignmentResource) Schema(
 			},
 			schemaEntityType: schema.StringAttribute{
 				Description: "Type of resource to which the policy will be assigned. " +
-					"`protection_group`, `gcp_protection_group` and `aws_dynamodb_table` are " +
-					"currently supported.",
+					"`protection_group`, `gcp_protection_group`, `aws_dynamodb_table`, " +
+					"`aws_iceberg_glue_table` and `aws_iceberg_s3_table` are currently " +
+					"supported.",
 				Required:      true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators: []validator.String{

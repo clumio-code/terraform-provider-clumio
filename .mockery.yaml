@@ -37,6 +37,7 @@ packages:
       GcpGcsBucketClient: {}
       GcpProtectionGroupClient: {}
       GeneralSettingsClient: {}
+      IcebergTableClient: {}
       OrganizationalUnitClient: {}
       PolicyAssignmentClient: {}
       PolicyDefinitionClient: {}

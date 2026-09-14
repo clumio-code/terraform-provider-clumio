@@ -75,6 +75,23 @@ resource "clumio_policy_assignment" "example" {
 }
 ```
 
+### Assign Policy to Iceberg Table Example
+
+```terraform
+data "clumio_iceberg_tables" "ds_iceberg_tables" {
+  account_native_id = "AWS Account ID"
+  aws_region        = "AWS Region"
+  name              = "Iceberg table name"
+  catalog_type      = "aws_iceberg_glue_table"
+}
+
+resource "clumio_policy_assignment" "example" {
+  entity_id   = data.clumio_iceberg_tables.ds_iceberg_tables.iceberg_tables[0].id
+  entity_type = "aws_iceberg_glue_table"
+  policy_id   = "policy_id"
+}
+```
+
 ### Known Limitation
 There is a known limitation with the clumio_policy_assignment resource in a particular scenario.
 The below example shows a config where a policy is being created with support for protection_group_backup and aws_dynamodb_table_backup operations. When we apply this configuration, the policy will be created and the protection_group with the given entity_id will be assigned to the policy.
@@ -160,7 +177,7 @@ Note: This limitation is only in the case where both the clumio_policy and clumi
 ### Required
 
 - `entity_id` (String) Identifier of the resource to which the policy will be assigned.
-- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group`, `gcp_protection_group` and `aws_dynamodb_table` are currently supported.
+- `entity_type` (String) Type of resource to which the policy will be assigned. `protection_group`, `gcp_protection_group`, `aws_dynamodb_table`, `aws_iceberg_glue_table` and `aws_iceberg_s3_table` are currently supported.
 - `policy_id` (String) Identifier of the Clumio policy to be assigned.
 
 ### Read-Only

@@ -152,6 +152,26 @@ func TestCreateAWSConnection(t *testing.T) {
 		assert.Equal(t, defaultOrgUnitId, crm.OrganizationalUnitID.ValueString())
 	})
 
+	t.Run("unknown OU skips validation and uses the API OU", func(t *testing.T) {
+		crm.OrganizationalUnitID = basetypes.NewStringUnknown()
+		createResponse := &models.CreateAWSConnectionResponse{
+			Id:                   &id,
+			ConnectionStatus:     &connStatus,
+			ExternalId:           &externalId,
+			OrganizationalUnitId: &ouId,
+			Token:                &token,
+		}
+
+		mockAwsConnClient.EXPECT().CreateAwsConnection(
+			mock.MatchedBy(func(req *models.CreateAwsConnectionV1Request) bool {
+				return req.OrganizationalUnitId == nil
+			})).Times(1).Return(createResponse, nil)
+
+		diags := cr.createAWSConnection(ctx, &crm)
+		assert.Nil(t, diags)
+		assert.Equal(t, ouId, crm.OrganizationalUnitID.ValueString())
+	})
+
 	t.Run("CreateAwsConnection returns error when OU validation fails", func(t *testing.T) {
 		crm.OrganizationalUnitID = basetypes.NewStringValue(ouId)
 		mockOrgUnitsCient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(

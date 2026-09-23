@@ -73,19 +73,22 @@ func (r *clumioAWSConnectionResource) Configure(
 	r.pollInterval = 5 * time.Second
 }
 
-// ModifyPlan materializes the effective OU from provider context into planned state so Terraform
-// can detect a move when the provider alias/context changes.
+// ModifyPlan materializes the provider's OU context into planned state so Terraform can detect a
+// move when the provider alias/context changes.
 func (r *clumioAWSConnectionResource) ModifyPlan(
 	ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 
-	if req.Plan.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() || r.client == nil {
 		return
 	}
 
-	desiredOrgUnitID := getDesiredOrganizationalUnitID(r.client)
+	// An empty context resolves to the API token owner's default OU, which the provider cannot
+	// look up. Leave the OU unknown on create and unchanged on update.
+	desiredOrgUnitID := r.client.ClumioConfig.OrganizationalUnitContext
+	if desiredOrgUnitID == "" {
+		return
+	}
 
-	// An empty OU context resolves to the global OU, so a context change can move an existing
-	// connection across OUs. Surface that move as a plan-time warning instead of doing it silently.
 	if !req.State.Raw.IsNull() {
 		var state clumioAWSConnectionResourceModel
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -94,8 +97,8 @@ func (r *clumioAWSConnectionResource) ModifyPlan(
 			resp.Diagnostics.AddWarning(
 				"AWS connection will be moved to a different organizational unit",
 				fmt.Sprintf("On apply this connection will move from organizational unit %q to %q "+
-					"per the provider's organizational_unit_context (empty resolves to the global "+
-					"OU). Set the context to the intended organizational unit to avoid this.",
+					"per the provider's organizational_unit_context. Set the context to the "+
+					"intended organizational unit to avoid this.",
 					currentOrgUnitID, desiredOrgUnitID))
 		}
 	}

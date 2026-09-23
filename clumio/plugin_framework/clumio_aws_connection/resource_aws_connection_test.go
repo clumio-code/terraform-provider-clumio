@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 const defaultOrgUnitId = "00000000-0000-0000-0000-000000000000"
@@ -233,7 +234,7 @@ func TestAccResourceClumioAwsConnectionImport(t *testing.T) {
 }
 
 // Tests moving an AWS connection between Global OU and a child OU by changing the provider
-// context used by the resource.
+// context used by the resource. An empty context does not move the connection.
 func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
 	accountNativeId := os.Getenv(common.ClumioTestAwsAccountId2)
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
@@ -245,12 +246,14 @@ func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: getTestAccResourceClumioAwsConnectionMoveOU(
-					baseUrl, accountNativeId, testAwsRegion, false, false),
+					baseUrl, accountNativeId, testAwsRegion, false, false, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(
 							"clumio_aws_connection.test_conn", plancheck.ResourceActionCreate),
+						plancheck.ExpectUnknownValue("clumio_aws_connection.test_conn",
+							tfjsonpath.New("organizational_unit_id")),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -266,7 +269,7 @@ func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
 			},
 			{
 				Config: getTestAccResourceClumioAwsConnectionMoveOU(
-					baseUrl, accountNativeId, testAwsRegion, true, false),
+					baseUrl, accountNativeId, testAwsRegion, true, false, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -280,7 +283,7 @@ func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
 			},
 			{
 				Config: getTestAccResourceClumioAwsConnectionMoveOU(
-					baseUrl, accountNativeId, testAwsRegion, true, true),
+					baseUrl, accountNativeId, testAwsRegion, true, true, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -301,7 +304,7 @@ func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
 			},
 			{
 				Config: getTestAccResourceClumioAwsConnectionMoveOU(
-					baseUrl, accountNativeId, testAwsRegion, true, false),
+					baseUrl, accountNativeId, testAwsRegion, false, false, defaultOrgUnitId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -322,8 +325,12 @@ func TestAccResourceClumioAwsConnectionMoveOrganizationalUnit(t *testing.T) {
 			},
 			{
 				Config: getTestAccResourceClumioAwsConnectionMoveOU(
-					baseUrl, accountNativeId, testAwsRegion, false, false),
+					baseUrl, accountNativeId, testAwsRegion, false, false, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(
+							"clumio_aws_connection.test_conn", plancheck.ResourceActionNoop),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 						plancheck.ExpectResourceAction(
@@ -460,7 +467,7 @@ func getTestAccResourceClumioAwsConnection(
 
 func getTestAccResourceClumioAwsConnectionMoveOU(
 	baseUrl string, accountId string, awsRegion string, includeOUProvider bool,
-	useChildOU bool) string {
+	useChildOU bool, defaultOUContext string) string {
 	providerBlock := ""
 	providerRef := "clumio"
 	if includeOUProvider {
@@ -469,8 +476,8 @@ func getTestAccResourceClumioAwsConnectionMoveOU(
 	if includeOUProvider && useChildOU {
 		providerRef = "clumio.test_ou"
 	}
-	return fmt.Sprintf(testAccResourceClumioAwsConnectionMoveOU, baseUrl, providerBlock, providerRef,
-		accountId, awsRegion)
+	return fmt.Sprintf(testAccResourceClumioAwsConnectionMoveOU, baseUrl, defaultOUContext,
+		providerBlock, providerRef, accountId, awsRegion)
 }
 
 // testAccResourceClumioAwsConnection is the Terraform configuration for a basic
@@ -502,7 +509,8 @@ resource "clumio_aws_connection" "test_conn" {
 
 const testAccResourceClumioAwsConnectionMoveOU = `
 provider clumio{
-   clumio_api_base_url = "%s"
+   clumio_api_base_url                = "%s"
+   clumio_organizational_unit_context = "%s"
 }
 
 resource "clumio_organizational_unit" "test_ou" {

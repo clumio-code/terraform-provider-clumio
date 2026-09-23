@@ -29,6 +29,15 @@ func isAssetConfigDowngraded(
 	if !plan.AssetsEnabled.EC2MSSQL.ValueBool() && state.AssetsEnabled.EC2MSSQL.ValueBool() {
 		return true
 	}
+	// If Iceberg on Glue was removed now
+	if !plan.AssetsEnabled.IcebergOnGlue.ValueBool() && state.AssetsEnabled.IcebergOnGlue.ValueBool() {
+		return true
+	}
+	// If Iceberg on S3 Tables was removed now
+	if !plan.AssetsEnabled.IcebergOnS3Tables.ValueBool() &&
+		state.AssetsEnabled.IcebergOnS3Tables.ValueBool() {
+		return true
+	}
 	return false
 }
 

@@ -129,27 +129,7 @@ func (r *clumioAWSManualConnectionResource) clumioSetManualResourcesCommon(
 	connectionId := accountId + "_" + awsRegion
 
 	// Determine which asset types are enabled fo the connection
-	assetsEnabled := []*string{}
-	if state.AssetsEnabled.EBS.ValueBool() {
-		enabled := EBS
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.S3.ValueBool() {
-		enabled := S3
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.RDS.ValueBool() {
-		enabled := RDS
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.DynamoDB.ValueBool() {
-		enabled := DynamoDB
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.EC2MSSQL.ValueBool() {
-		enabled := EC2MSSQL
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
+	assetsEnabled := common.ListEnabledAwsAssetTypes(state.AssetsEnabled)
 
 	// Convert the schema into a Clumio API request, containing the enabled asset types and stack ARNs
 	// to the manually configured resources

@@ -71,7 +71,9 @@ func (r *clumioAWSConnectionResource) Schema(
 			},
 			schemaOrganizationalUnitId: schema.StringAttribute{
 				Description: "Identifier of the Clumio organizational unit associated with the " +
-					"connection. Terraform derives this from the configured provider context.",
+					"connection. Terraform derives this from the configured provider context. If the " +
+					"context is not set, the API uses the default organizational unit of the API " +
+					"token owner.",
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

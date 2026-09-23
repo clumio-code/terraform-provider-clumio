@@ -8,6 +8,7 @@ package clumio_aws_manual_connection
 import (
 	"context"
 
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,13 +31,7 @@ type clumioAWSManualConnectionResourceModel struct {
 
 // AssetsEnabledModel maps to the 'assets_enabled' field in clumioAWSManualConnectionResourceModel
 // and is used to denote which asset types are enabled for the manual connection.
-type AssetsEnabledModel struct {
-	EBS      types.Bool `tfsdk:"ebs"`
-	RDS      types.Bool `tfsdk:"rds"`
-	DynamoDB types.Bool `tfsdk:"ddb"`
-	S3       types.Bool `tfsdk:"s3"`
-	EC2MSSQL types.Bool `tfsdk:"mssql"`
-}
+type AssetsEnabledModel = common.AwsAssetsEnabledModel
 
 // ResourcesModel maps to the 'resources' field in clumioAWSManualConnectionResourceModel and is
 // used to denote the stack ARNs to the configured manual resources for the connection.
@@ -117,17 +112,12 @@ func (r *clumioAWSManualConnectionResource) Schema(
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			schemaAssetsEnabled: schema.ObjectAttribute{
+			schemaAssetsEnabled: schema.SingleNestedAttribute{
 				Description: "Assets enabled for the connection. Note that `mssql` is only " +
 					"available for legacy connections.",
 				Required: true,
-				AttributeTypes: map[string]attr.Type{
-					schemaIsEbsEnabled:      types.BoolType,
-					schemaIsDynamoDBEnabled: types.BoolType,
-					schemaIsRDSEnabled:      types.BoolType,
-					schemaIsS3Enabled:       types.BoolType,
-					schemaIsMssqlEnabled:    types.BoolType,
-				},
+				Attributes: common.BuildAwsAssetAttributes[schema.Attribute](
+					schema.BoolAttribute{Required: true}, schema.BoolAttribute{Optional: true}),
 			},
 			schemaResources: schema.ObjectAttribute{
 				Description: "An object containing the ARNs of the resources created for the manual AWS" +

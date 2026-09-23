@@ -50,9 +50,9 @@ func TestModifyPlanSetsOrganizationalUnitID(t *testing.T) {
 	assert.Equal(t, basetypes.NewStringValue(ouId), got.OrganizationalUnitID)
 }
 
-// TestModifyPlanEmptyContextWarnsOnOrganizationalUnitMove verifies that a context-driven OU move
-// is applied but surfaced as a plan-time warning rather than done silently.
-func TestModifyPlanEmptyContextWarnsOnOrganizationalUnitMove(t *testing.T) {
+// TestModifyPlanEmptyContextKeepsOrganizationalUnit verifies that an empty context does not move
+// an existing connection.
+func TestModifyPlanEmptyContextKeepsOrganizationalUnit(t *testing.T) {
 	ctx := context.Background()
 	res := NewClumioAWSConnectionResource().(*clumioAWSConnectionResource)
 	// Provider configured with an EMPTY OU context.
@@ -83,6 +83,6 @@ func TestModifyPlanEmptyContextWarnsOnOrganizationalUnitMove(t *testing.T) {
 	var got clumioAWSConnectionResourceModel
 	diags := resp.Plan.Get(ctx, &got)
 	assert.False(t, diags.HasError())
-	assert.Equal(t, basetypes.NewStringValue(defaultOrgUnitId), got.OrganizationalUnitID)
-	assert.Len(t, resp.Diagnostics.Warnings(), 1)
+	assert.Equal(t, basetypes.NewStringValue(ouId), got.OrganizationalUnitID)
+	assert.Empty(t, resp.Diagnostics.Warnings())
 }

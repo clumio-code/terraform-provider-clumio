@@ -40,7 +40,7 @@ resource "clumio_aws_connection" "example" {
 - `data_plane_account_id` (String) Identifier of the AWS account data plane within Clumio.
 - `id` (String) Unique identifier for the Clumio AWS connection.
 - `namespace` (String, Deprecated) K8S Namespace.
-- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the connection. Terraform derives this from the configured provider context.
+- `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the connection. Terraform derives this from the configured provider context. If the context is not set, the API uses the default organizational unit of the API token owner.
 - `role_external_id` (String) Unique identifier Clumio uses to access the service role within your account.
 - `token` (String) Distinct 36-character token used to identify resources set up by the Clumio AWS template installation on the account being connected.
 

@@ -49,4 +49,4 @@ provider "clumio" {
 
 		API Base URL:  https://ap-southeast-2.au.api.clumio.com
 - `clumio_api_token` (String, Sensitive) The API token required to invoke Clumio APIs. Information for generating this token is available here: https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens
-- `clumio_organizational_unit_context` (String) Organizational Unit context in which to create the clumio resources. If not set, the resources will be created in the context of the Global Organizational Unit. The value should be the id of the Organizational Unit and not the name.
+- `clumio_organizational_unit_context` (String) Organizational Unit context in which to create the clumio resources. If not set, the resources will be created in the default Organizational Unit of the API token owner. The value should be the id of the Organizational Unit and not the name.

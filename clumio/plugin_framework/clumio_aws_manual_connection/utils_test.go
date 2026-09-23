@@ -19,6 +19,9 @@ import (
 //   - Removing DynamoDB asset should return true
 //   - Removing S3 asset should return true
 //   - Removing EC2MSSQL asset should return true
+//   - Removing Iceberg on Glue asset should return true
+//   - Removing Iceberg on S3 Tables asset should return true
+//   - Leaving both Iceberg assets unset should return false
 func TestIsAssetConfigDowngraded(t *testing.T) {
 
 	state := &clumioAWSManualConnectionResourceModel{
@@ -28,6 +31,9 @@ func TestIsAssetConfigDowngraded(t *testing.T) {
 			DynamoDB: basetypes.NewBoolValue(true),
 			S3:       basetypes.NewBoolValue(true),
 			EC2MSSQL: basetypes.NewBoolValue(true),
+
+			IcebergOnGlue:     basetypes.NewBoolValue(true),
+			IcebergOnS3Tables: basetypes.NewBoolValue(true),
 		},
 	}
 
@@ -38,6 +44,9 @@ func TestIsAssetConfigDowngraded(t *testing.T) {
 			DynamoDB: basetypes.NewBoolValue(true),
 			S3:       basetypes.NewBoolValue(true),
 			EC2MSSQL: basetypes.NewBoolValue(true),
+
+			IcebergOnGlue:     basetypes.NewBoolValue(true),
+			IcebergOnS3Tables: basetypes.NewBoolValue(true),
 		},
 	}
 
@@ -91,5 +100,44 @@ func TestIsAssetConfigDowngraded(t *testing.T) {
 		downgrade := isAssetConfigDowngraded(plan, state)
 		assert.True(t, downgrade)
 		plan.AssetsEnabled.EC2MSSQL = basetypes.NewBoolValue(true)
+	})
+
+	// If plan has Iceberg on Glue as disabled and state has it as enabled, then return true.
+	t.Run("Returns true if Iceberg on Glue is false", func(t *testing.T) {
+
+		plan.AssetsEnabled.IcebergOnGlue = basetypes.NewBoolValue(false)
+		downgrade := isAssetConfigDowngraded(plan, state)
+		assert.True(t, downgrade)
+		plan.AssetsEnabled.IcebergOnGlue = basetypes.NewBoolValue(true)
+	})
+
+	// If plan has Iceberg on S3 Tables as disabled and state has it as enabled, then return true.
+	t.Run("Returns true if Iceberg on S3 Tables is false", func(t *testing.T) {
+
+		plan.AssetsEnabled.IcebergOnS3Tables = basetypes.NewBoolValue(false)
+		downgrade := isAssetConfigDowngraded(plan, state)
+		assert.True(t, downgrade)
+		plan.AssetsEnabled.IcebergOnS3Tables = basetypes.NewBoolValue(true)
+	})
+
+	// A configuration written before Iceberg support leaves both Iceberg attributes null, and that
+	// is not a downgrade.
+	t.Run("Returns false if both Iceberg assets are null", func(t *testing.T) {
+
+		nullIceberg := &clumioAWSManualConnectionResourceModel{
+			AssetsEnabled: &AssetsEnabledModel{
+				EBS:      basetypes.NewBoolValue(true),
+				RDS:      basetypes.NewBoolValue(true),
+				DynamoDB: basetypes.NewBoolValue(true),
+				S3:       basetypes.NewBoolValue(true),
+				EC2MSSQL: basetypes.NewBoolValue(true),
+
+				IcebergOnGlue:     basetypes.NewBoolNull(),
+				IcebergOnS3Tables: basetypes.NewBoolNull(),
+			},
+		}
+
+		downgrade := isAssetConfigDowngraded(nullIceberg, nullIceberg)
+		assert.False(t, downgrade)
 	})
 }

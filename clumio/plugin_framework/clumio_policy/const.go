@@ -100,8 +100,7 @@ const (
 
 	DisableEventbridgeNotificationDesc = "If true, tries to disable EventBridge notification for " +
 		"the given bucket, when continuous backup no longer conducts. It may override the " +
-		"existing bucket notification configuration in the customer's account. This takes effect " +
-		"only when event_bridge_enabled is set to false."
+		"existing bucket notification configuration in the customer's account."
 
 	icebergTableBackupDesc = "The advanced settings for Iceberg backup operations." +
 		" `backup_last_snapshot_only` and `backup_compacted_snapshot_only` control which" +

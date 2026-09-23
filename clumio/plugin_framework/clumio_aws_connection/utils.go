@@ -20,14 +20,6 @@ var newAWSEnvironmentClient = sdkclients.NewAWSEnvironmentClient
 var newOrganizationalUnitClient = sdkclients.NewOrganizationalUnitClient
 var newTaskClient = sdkclients.NewTaskClient
 
-// getDesiredOrganizationalUnitID returns the OU implied by the configured provider context.
-func getDesiredOrganizationalUnitID(client *common.ApiClient) string {
-	if client == nil || client.ClumioConfig.OrganizationalUnitContext == "" {
-		return defaultOrgUnitId
-	}
-	return client.ClumioConfig.OrganizationalUnitContext
-}
-
 // setOrganizationalUnitID normalizes the stored OU to a concrete known value.
 func setOrganizationalUnitID(state *clumioAWSConnectionResourceModel, organizationalUnitID *string) {
 	if organizationalUnitID != nil && *organizationalUnitID != "" {

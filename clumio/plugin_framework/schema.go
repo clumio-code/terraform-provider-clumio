@@ -57,7 +57,7 @@ func (p *clumioProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 			"clumio_organizational_unit_context": schema.StringAttribute{
 				MarkdownDescription: "Organizational Unit context in which to create the" +
 					" clumio resources. If not set, the resources will be created in" +
-					" the context of the Global Organizational Unit. The value should" +
+					" the default Organizational Unit of the API token owner. The value should" +
 					" be the id of the Organizational Unit and not the name.",
 				Optional: true,
 			},

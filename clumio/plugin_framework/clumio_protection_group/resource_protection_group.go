@@ -18,9 +18,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &clumioProtectionGroupResource{}
-	_ resource.ResourceWithConfigure   = &clumioProtectionGroupResource{}
-	_ resource.ResourceWithImportState = &clumioProtectionGroupResource{}
+	_ resource.Resource                 = &clumioProtectionGroupResource{}
+	_ resource.ResourceWithConfigure    = &clumioProtectionGroupResource{}
+	_ resource.ResourceWithImportState  = &clumioProtectionGroupResource{}
+	_ resource.ResourceWithUpgradeState = &clumioProtectionGroupResource{}
 )
 
 // clumioProtectionGroupResource is the struct backing the clumio_protection_group Terraform

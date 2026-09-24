@@ -10,6 +10,7 @@ import (
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -58,6 +59,28 @@ type prefixFilterModel struct {
 // while others are required or optional inputs from the user.
 func (r *clumioProtectionGroupResource) Schema(
 	_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = protectionGroupSchemaV1()
+}
+
+// protectionGroupSchemaV1 uses list nesting for object_filter and prefix_filters. The resource
+// model already represents both blocks as slices, and list nesting prevents Terraform Plugin
+// Framework from embedding the complete block value in every nested set path during semantic
+// equality checks.
+func protectionGroupSchemaV1() schema.Schema {
+	return protectionGroupSchema(true)
+}
+
+// protectionGroupSchemaV0 is retained to decode state written before the nested block migration.
+func protectionGroupSchemaV0() schema.Schema {
+	return protectionGroupSchema(false)
+}
+
+func protectionGroupSchema(useListNestedBlocks bool) schema.Schema {
+	schemaVersion := int64(0)
+	if useListNestedBlocks {
+		schemaVersion = 1
+	}
+
 	prefixFilterSchemaAttributes := map[string]schema.Attribute{
 		schemaExcludedSubPrefixes: schema.SetAttribute{
 			Description: "List of subprefixes to exclude from the prefix.",
@@ -97,16 +120,51 @@ func (r *clumioProtectionGroupResource) Schema(
 		},
 	}
 
-	objectFilterSchemaBlocks := map[string]schema.Block{
-		schemaPrefixFilters: schema.SetNestedBlock{
+	var prefixFiltersBlock schema.Block
+	if useListNestedBlocks {
+		prefixFiltersBlock = schema.ListNestedBlock{
 			Description: "Prefix Filters.",
 			NestedObject: schema.NestedBlockObject{
 				Attributes: prefixFilterSchemaAttributes,
 			},
-		},
+		}
+	} else {
+		prefixFiltersBlock = schema.SetNestedBlock{
+			Description: "Prefix Filters.",
+			NestedObject: schema.NestedBlockObject{
+				Attributes: prefixFilterSchemaAttributes,
+			},
+		}
+	}
+	objectFilterSchemaBlocks := map[string]schema.Block{
+		schemaPrefixFilters: prefixFiltersBlock,
 	}
 
-	resp.Schema = schema.Schema{
+	var objectFilterBlock schema.Block
+	if useListNestedBlocks {
+		objectFilterBlock = schema.ListNestedBlock{
+			NestedObject: schema.NestedBlockObject{
+				Attributes: objectFilterSchemaAttributes,
+				Blocks:     objectFilterSchemaBlocks,
+			},
+			Validators: []validator.List{
+				listvalidator.SizeAtMost(1),
+			},
+		}
+	} else {
+		objectFilterBlock = schema.SetNestedBlock{
+			NestedObject: schema.NestedBlockObject{
+				Attributes: objectFilterSchemaAttributes,
+				Blocks:     objectFilterSchemaBlocks,
+			},
+			Validators: []validator.Set{
+				common.WrapSetValidator(setvalidator.SizeAtMost(1)),
+			},
+		}
+	}
+
+	return schema.Schema{
+		Version: schemaVersion,
 		// This description is used by the documentation generator and the language server.
 		Description: "Clumio S3 Protection Group Resource used to create and manage Protection Groups.",
 		Attributes: map[string]schema.Attribute{
@@ -171,15 +229,7 @@ func (r *clumioProtectionGroupResource) Schema(
 			},
 		},
 		Blocks: map[string]schema.Block{
-			schemaObjectFilter: schema.SetNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: objectFilterSchemaAttributes,
-					Blocks:     objectFilterSchemaBlocks,
-				},
-				Validators: []validator.Set{
-					common.WrapSetValidator(setvalidator.SizeAtMost(1)),
-				},
-			},
+			schemaObjectFilter: objectFilterBlock,
 		},
 	}
 }

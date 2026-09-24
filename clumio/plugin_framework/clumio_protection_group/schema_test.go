@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,4 +27,10 @@ func TestSchema(t *testing.T) {
 	for _, attr := range resp.Schema.Attributes {
 		assert.NotEmpty(t, attr.GetDescription())
 	}
+
+	// Nested set blocks make refresh O(n^3) in the number of excluded_sub_prefixes.
+	objectFilter, ok := resp.Schema.Blocks[schemaObjectFilter].(schema.ListNestedBlock)
+	assert.True(t, ok)
+	_, ok = objectFilter.NestedObject.Blocks[schemaPrefixFilters].(schema.ListNestedBlock)
+	assert.True(t, ok)
 }

@@ -25,7 +25,11 @@ func (r *clumioAWSConnectionResource) createAWSConnection(
 
 	var diags diag.Diagnostics
 
-	if plan.OrganizationalUnitID.ValueString() != defaultOrgUnitId {
+	var orgUnitID *string
+	if !plan.OrganizationalUnitID.IsUnknown() {
+		orgUnitID = plan.OrganizationalUnitID.ValueStringPointer()
+	}
+	if orgUnitID != nil && *orgUnitID != defaultOrgUnitId {
 		if _, err := getOrgUnitForConnection(
 			r.sdkOrgUnits, plan.OrganizationalUnitID.ValueString()); err != nil {
 			summary := fmt.Sprintf("invalid %s", schemaOrganizationalUnitId)
@@ -39,7 +43,7 @@ func (r *clumioAWSConnectionResource) createAWSConnection(
 		AccountNativeId:      plan.AccountNativeID.ValueStringPointer(),
 		AwsRegion:            plan.AWSRegion.ValueStringPointer(),
 		Description:          plan.Description.ValueStringPointer(),
-		OrganizationalUnitId: plan.OrganizationalUnitID.ValueStringPointer(),
+		OrganizationalUnitId: orgUnitID,
 	}
 
 	// Call the Clumio API to create the AWS connection.

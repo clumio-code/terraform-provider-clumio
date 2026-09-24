@@ -1446,8 +1446,8 @@ resource "clumio_policy" "test_policy" {
 		type           = "aws_iceberg_table_backup"
 		slas {
 			retention_duration {
-				unit  = "days"
-				value = 31
+				unit  = "months"
+				value = 1
 			}
 			rpo_frequency {
 				unit  = "days"

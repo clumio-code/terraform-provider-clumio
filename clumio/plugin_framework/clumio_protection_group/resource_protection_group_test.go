@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -214,6 +215,48 @@ func TestAccResourceClumioAwsProtectionGroupImport(t *testing.T) {
 	})
 }
 
+// Tests that the API keeps the configured prefix_filters order, as the list block compares by
+// position.
+func TestAccResourceClumioProtectionGroupPrefixFilterOrder(t *testing.T) {
+	prefixes := []string{"zeta", "alpha", "mu", "beta"}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioProtectionGroupPrefixFilters(prefixes...),
+				Check: resource.ComposeTestCheckFunc(
+					checkPrefixFilterOrder(prefixes)...),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func checkPrefixFilterOrder(prefixes []string) []resource.TestCheckFunc {
+	checks := make([]resource.TestCheckFunc, len(prefixes))
+	for i, p := range prefixes {
+		checks[i] = resource.TestCheckResourceAttr("clumio_protection_group.test_pg",
+			fmt.Sprintf("object_filter.0.prefix_filters.%d.prefix", i), p+"/")
+	}
+	return checks
+}
+
+// getTestAccResourceClumioProtectionGroupPrefixFilters returns the Terraform configuration for a
+// clumio_protection_group resource with one prefix_filters block per prefix, in the given order.
+func getTestAccResourceClumioProtectionGroupPrefixFilters(prefixes ...string) string {
+	var pf strings.Builder
+	for _, p := range prefixes {
+		fmt.Fprintf(&pf, testAccPrefixFilter, p, p, p)
+	}
+	return fmt.Sprintf(testAccResourceClumioProtectionGroupPrefixFilters,
+		os.Getenv(common.ClumioApiBaseUrl), pf.String())
+}
+
 // getTestAccResourceClumioProtectionGroup returns the Terraform configuration for a basic
 // clumio_protection_group resource.
 func getTestAccResourceClumioProtectionGroup(description bool, prefixFilter bool) string {
@@ -292,6 +335,30 @@ resource "clumio_protection_group" "test_pg"{
 	storage_classes = ["S3 Intelligent-Tiering", "S3 One Zone-IA", "S3 Standard", "S3 Standard-IA", "S3 Reduced Redundancy"]
   }
 }
+`
+
+// testAccResourceClumioProtectionGroupPrefixFilters is the Terraform configuration for a
+// clumio_protection_group resource with multiple prefix_filters blocks.
+const testAccResourceClumioProtectionGroupPrefixFilters = `
+provider clumio{
+   clumio_api_base_url = "%s"
+}
+
+resource "clumio_protection_group" "test_pg"{
+  bucket_rule = "{\"aws_tag\":{\"$eq\":{\"key\":\"Environment\", \"value\":\"Prod\"}}}"
+  name = "test_pg_prefix_filters"
+  object_filter {
+%s
+	storage_classes = ["S3 Standard"]
+  }
+}
+`
+
+const testAccPrefixFilter = `
+	prefix_filters {
+	  prefix = "%s/"
+	  excluded_sub_prefixes = ["%s/y/", "%s/b/"]
+	}
 `
 
 // testAccResourceClumioProtectionGroupDuplicateName is the Terraform configuration for a

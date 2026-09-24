@@ -22,27 +22,8 @@ func (r *clumioAwsManualConnectionResourcesDatasource) readAWSManualConnectionRe
 
 	var diags diag.Diagnostics
 
-	assetsEnabled := []*string{}
-	if state.AssetsEnabled.EBS.ValueBool() {
-		enabled := EBS
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.S3.ValueBool() {
-		enabled := S3
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.RDS.ValueBool() {
-		enabled := RDS
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.DynamoDB.ValueBool() {
-		enabled := DynamoDB
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
-	if state.AssetsEnabled.EC2MSSQL.ValueBool() {
-		enabled := EC2MSSQL
-		assetsEnabled = append(assetsEnabled, &enabled)
-	}
+	assetsEnabled := common.ListEnabledAwsAssetTypes(state.AssetsEnabled)
+
 	showManualResources := true
 	returnGroupToken := false
 

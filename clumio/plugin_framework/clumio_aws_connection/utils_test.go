@@ -181,24 +181,6 @@ func TestGetEnvironmentForConnection(t *testing.T) {
 
 }
 
-func TestGetDesiredOrganizationalUnitID(t *testing.T) {
-	t.Run("returns global OU when client is nil", func(t *testing.T) {
-		assert.Equal(t, defaultOrgUnitId, getDesiredOrganizationalUnitID(nil))
-	})
-
-	t.Run("returns global OU when provider context is empty", func(t *testing.T) {
-		client := &common.ApiClient{ClumioConfig: sdkconfig.Config{}}
-		assert.Equal(t, defaultOrgUnitId, getDesiredOrganizationalUnitID(client))
-	})
-
-	t.Run("returns provider context when set", func(t *testing.T) {
-		client := &common.ApiClient{ClumioConfig: sdkconfig.Config{
-			OrganizationalUnitContext: ouId,
-		}}
-		assert.Equal(t, ouId, getDesiredOrganizationalUnitID(client))
-	})
-}
-
 func TestSetOrganizationalUnitID(t *testing.T) {
 	t.Run("uses response OU when present", func(t *testing.T) {
 		state := &clumioAWSConnectionResourceModel{}

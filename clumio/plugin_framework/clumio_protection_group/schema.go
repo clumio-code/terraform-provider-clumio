@@ -8,8 +8,7 @@ package clumio_protection_group
 import (
 	"context"
 
-	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -98,7 +97,7 @@ func (r *clumioProtectionGroupResource) Schema(
 	}
 
 	objectFilterSchemaBlocks := map[string]schema.Block{
-		schemaPrefixFilters: schema.SetNestedBlock{
+		schemaPrefixFilters: schema.ListNestedBlock{
 			Description: "Prefix Filters.",
 			NestedObject: schema.NestedBlockObject{
 				Attributes: prefixFilterSchemaAttributes,
@@ -171,13 +170,13 @@ func (r *clumioProtectionGroupResource) Schema(
 			},
 		},
 		Blocks: map[string]schema.Block{
-			schemaObjectFilter: schema.SetNestedBlock{
+			schemaObjectFilter: schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: objectFilterSchemaAttributes,
 					Blocks:     objectFilterSchemaBlocks,
 				},
-				Validators: []validator.Set{
-					common.WrapSetValidator(setvalidator.SizeAtMost(1)),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
 			},
 		},

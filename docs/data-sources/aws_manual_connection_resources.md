@@ -32,7 +32,7 @@ data "clumio_aws_manual_connection_resources" "test_get_resources" {
 ### Required
 
 - `account_native_id` (String) AWS Account ID to be connected to Clumio.
-- `asset_types_enabled` (Object) Assets to be connected to Clumio. Note that `mssql` is only available for legacy connections. (see [below for nested schema](#nestedatt--asset_types_enabled))
+- `asset_types_enabled` (Attributes) Assets to be connected to Clumio. Note that `mssql` is only available for legacy connections. (see [below for nested schema](#nestedatt--asset_types_enabled))
 - `aws_region` (String) AWS Region to be connected to Clumio.
 
 ### Read-Only
@@ -50,3 +50,8 @@ Required:
 - `mssql` (Boolean)
 - `rds` (Boolean)
 - `s3` (Boolean)
+
+Optional:
+
+- `iceberg_on_glue` (Boolean)
+- `iceberg_on_s3_tables` (Boolean)

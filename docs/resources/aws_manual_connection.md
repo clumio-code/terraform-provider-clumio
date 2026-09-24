@@ -52,7 +52,7 @@ resource "clumio_aws_manual_connection" "test_update_resources" {
 ### Required
 
 - `account_id` (String) Identifier of the AWS account to be linked with Clumio.
-- `assets_enabled` (Object) Assets enabled for the connection. Note that `mssql` is only available for legacy connections. (see [below for nested schema](#nestedatt--assets_enabled))
+- `assets_enabled` (Attributes) Assets enabled for the connection. Note that `mssql` is only available for legacy connections. (see [below for nested schema](#nestedatt--assets_enabled))
 - `aws_region` (String) Region of the AWS account to be linked with Clumio.
 - `resources` (Object) An object containing the ARNs of the resources created for the manual AWS connection. Please refer to this guide for instructions on how to create them. - https://documentation.commvault.com/clumio/manual_setup_for_aws_account_integration.html. If any of the ARNs are not applicable to the manual connection, provide an empty string "". (see [below for nested schema](#nestedatt--resources))
 
@@ -70,6 +70,11 @@ Required:
 - `mssql` (Boolean)
 - `rds` (Boolean)
 - `s3` (Boolean)
+
+Optional:
+
+- `iceberg_on_glue` (Boolean)
+- `iceberg_on_s3_tables` (Boolean)
 
 
 <a id="nestedatt--resources"></a>

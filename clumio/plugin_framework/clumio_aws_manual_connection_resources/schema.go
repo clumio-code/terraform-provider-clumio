@@ -8,7 +8,7 @@ package clumio_aws_manual_connection_resources
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,13 +28,7 @@ type clumioAwsManualConnectionResourcesModel struct {
 
 // assetTypesEnabled is a model used inside clumioAwsManualConnectionResourcesModel for determining
 // the asset types enabled for the configuration
-type assetTypesEnabledModel struct {
-	EBS      types.Bool `tfsdk:"ebs"`
-	RDS      types.Bool `tfsdk:"rds"`
-	DynamoDB types.Bool `tfsdk:"ddb"`
-	S3       types.Bool `tfsdk:"s3"`
-	EC2MSSQL types.Bool `tfsdk:"mssql"`
-}
+type assetTypesEnabledModel = common.AwsAssetsEnabledModel
 
 // Schema defines the structure and constraints of the clumio_aws_manual_connection_resources
 // Terraform datasource. Schema is a method on the clumioAwsManualConnectionResourcesDatasource
@@ -60,17 +54,12 @@ func (*clumioAwsManualConnectionResourcesDatasource) Schema(
 				Description: "AWS Region to be connected to Clumio.",
 				Required:    true,
 			},
-			schemaAssetTypesEnabled: schema.ObjectAttribute{
+			schemaAssetTypesEnabled: schema.SingleNestedAttribute{
 				Description: "Assets to be connected to Clumio. Note that `mssql` is only " +
 					"available for legacy connections.",
 				Required: true,
-				AttributeTypes: map[string]attr.Type{
-					schemaIsEbsEnabled:      types.BoolType,
-					schemaIsDynamoDBEnabled: types.BoolType,
-					schemaIsRDSEnabled:      types.BoolType,
-					schemaIsS3Enabled:       types.BoolType,
-					schemaIsMssqlEnabled:    types.BoolType,
-				},
+				Attributes: common.BuildAwsAssetAttributes[schema.Attribute](
+					schema.BoolAttribute{Required: true}, schema.BoolAttribute{Optional: true}),
 			},
 			schemaResources: schema.StringAttribute{
 				Description: "Generated manual resources for provided configuration.",

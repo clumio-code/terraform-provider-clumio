@@ -1,3 +1,12 @@
+## 0.24.1
+This update contains the following changes:
+* Added the `iceberg_on_glue` and `iceberg_on_s3_tables` asset types to `clumio_aws_manual_connection` and the `clumio_aws_manual_connection_resources` data source.
+* Removed the deprecated `event_bridge_enabled` reference from the `clumio_policy` documentation.
+* Added the Terraform Registry manifest to the release artifacts.
+* Improved the refresh time of `clumio_protection_group` resources that have many `object_filter` or `prefix_filters` entries.
+* Fixed bugs.
+* Updated dependencies.
+
 ## 0.24.0
 This update contains the following changes:
 * Added `clumio_iceberg_tables` data source to retrieve the identifiers of Iceberg tables.

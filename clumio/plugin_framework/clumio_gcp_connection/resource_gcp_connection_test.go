@@ -31,6 +31,7 @@ import (
 // Basic test of the clumio_gcp_connection resource. It tests the following scenarios:
 //   - Creates a connection and verifies that the plan was applied properly.
 //   - Updates the description and regions and verifies that the resource will be updated.
+//   - Imports the connection by project ID and verifies that the imported state matches.
 //   - Ensures that updates to the project ID requires that the resource is re-created as opposed to
 //     just updated.
 func TestAccResourceClumioGcpConnection(t *testing.T) {
@@ -86,6 +87,12 @@ func TestAccResourceClumioGcpConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"clumio_gcp_connection.test_conn", "regions.#", "2"),
 				),
+			},
+			{
+				ResourceName:      "clumio_gcp_connection.test_conn",
+				ImportState:       true,
+				ImportStateId:     projectId,
+				ImportStateVerify: true,
 			},
 			{
 				Config: getTestAccResourceClumioGcpConnection(

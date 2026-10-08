@@ -13,7 +13,11 @@ import (
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -385,4 +389,26 @@ func TestReadGcpConnection(t *testing.T) {
 		assert.False(t, diags.HasError())
 		assert.True(t, remove)
 	})
+}
+
+// Unit test for ImportState: the import ID is set as project_id.
+func TestImportStateGcpConnection(t *testing.T) {
+	ctx := context.Background()
+	r := &clumioGCPConnectionResource{}
+
+	schemaResp := &resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, schemaResp)
+	resp := &resource.ImportStateResponse{
+		State: tfsdk.State{
+			Schema: schemaResp.Schema,
+			Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+		},
+	}
+
+	r.ImportState(ctx, resource.ImportStateRequest{ID: "1234"}, resp)
+
+	assert.False(t, resp.Diagnostics.HasError())
+	var projectID types.String
+	resp.State.GetAttribute(ctx, path.Root(schemaProjectId), &projectID)
+	assert.Equal(t, "1234", projectID.ValueString())
 }

@@ -10,13 +10,15 @@ import (
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &clumioGCPConnectionResource{}
-	_ resource.ResourceWithConfigure = &clumioGCPConnectionResource{}
+	_ resource.Resource                = &clumioGCPConnectionResource{}
+	_ resource.ResourceWithConfigure   = &clumioGCPConnectionResource{}
+	_ resource.ResourceWithImportState = &clumioGCPConnectionResource{}
 )
 
 type clumioGCPConnectionResource struct {
@@ -148,4 +150,9 @@ func (r *clumioGCPConnectionResource) Delete(ctx context.Context, req resource.D
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// ImportState imports the connection by its GCP project ID.
+func (r *clumioGCPConnectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(schemaProjectId), req, resp)
 }

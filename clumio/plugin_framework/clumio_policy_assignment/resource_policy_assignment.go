@@ -28,6 +28,7 @@ type clumioPolicyAssignmentResource struct {
 	sdkGcpProtectionGroups sdkclients.GcpProtectionGroupClient
 	sdkPolicyAssignments   sdkclients.PolicyAssignmentClient
 	sdkDynamoDBTables      sdkclients.DynamoDBTableClient
+	sdkIcebergTables       sdkclients.IcebergTableClient
 	sdkTasks               sdkclients.TaskClient
 	pollTimeout            time.Duration
 	pollInterval           time.Duration
@@ -63,6 +64,7 @@ func (r *clumioPolicyAssignmentResource) Configure(
 	r.sdkGcpProtectionGroups = sdkclients.NewGcpProtectionGroupClient(r.client.ClumioConfig)
 	r.sdkPolicyAssignments = sdkclients.NewPolicyAssignmentClient(r.client.ClumioConfig)
 	r.sdkDynamoDBTables = sdkclients.NewDynamoDBTableClient(r.client.ClumioConfig)
+	r.sdkIcebergTables = sdkclients.NewIcebergTableClient(r.client.ClumioConfig)
 	r.sdkTasks = sdkclients.NewTaskClient(r.client.ClumioConfig)
 	r.pollTimeout = 300 * time.Second
 	r.pollInterval = 5 * time.Second

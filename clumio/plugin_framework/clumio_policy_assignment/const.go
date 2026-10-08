@@ -18,11 +18,6 @@ const (
 	protectionGroupBackup        = "protection_group_backup"
 	gcpProtectionGroupBackup     = "gcp_protection_group_backup"
 	dynamodbTableBackup          = "aws_dynamodb_table_backup"
-
-	//Common error messages used by the resource.
-	readProtectionGroupErrFmt    = "Unable to read Protection Group %v."
-	readGcpProtectionGroupErrFmt = "Unable to read GCP Protection Group %v."
-	readDynamoDBTableErrFmt      = "Unable to read DynamoDB table %v."
 )
 
 var (

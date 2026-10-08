@@ -11,6 +11,8 @@ import (
 	"net/http"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
+
+	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -85,10 +87,7 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 	ctx context.Context, state *policyAssignmentResourceModel) (bool, diag.Diagnostics) {
 
 	var diags diag.Diagnostics
-	sdkProtectionGroups := r.sdkProtectionGroups
-	sdkGcpProtectionGroups := r.sdkGcpProtectionGroups
 	sdkPolicyDefinitions := r.sdkPolicyDefinitions
-	sdkDynamoDBTables := r.sdkDynamoDBTables
 
 	// Call the Clumio API to read the policy definition. If the policy no longer exists, the
 	// assignment is stale and is removed from state.
@@ -109,24 +108,41 @@ func (r *clumioPolicyAssignmentResource) readPolicyAssignment(
 		}
 		return remove, diags
 	}
+	entityId := state.EntityID.ValueString()
 	entityType := state.EntityType.ValueString()
-	if entityType != entityTypeProtectionGroup && entityType != entityTypeGcpProtectionGroup &&
-		entityType != entityTypeAWSDynamoDBTable {
-		summary := "Invalid entityType"
-		detail := fmt.Sprintf("The entity type %v is not supported for policy assignment.",
-			entityType)
-		diags.AddError(summary, detail)
-		return false, diags
-	}
-
 	switch entityType {
 	case entityTypeProtectionGroup:
-		return r.readAndValidateProtectionGroup(ctx, sdkProtectionGroups, state, policyId)
+		resp, apiErr := r.sdkProtectionGroups.ReadProtectionGroup(entityId, nil)
+		return validateAssignment(ctx, "Protection Group", entityId, policyId, resp, apiErr,
+			func(pg *models.ReadProtectionGroupResponse) *string {
+				return protectionPolicyId(pg.ProtectionInfo)
+			})
 	case entityTypeGcpProtectionGroup:
-		return r.readAndValidateGcpProtectionGroup(ctx, sdkGcpProtectionGroups, state, policyId)
+		resp, apiErr := r.sdkGcpProtectionGroups.ReadGcpProtectionGroup(entityId, nil)
+		return validateAssignment(ctx, "GCP Protection Group", entityId, policyId, resp, apiErr,
+			func(pg *models.ReadGCPProtectionGroupResponse) *string {
+				if pg.ProtectionInfo == nil {
+					return nil
+				}
+				return pg.ProtectionInfo.PolicyId
+			})
 	case entityTypeAWSDynamoDBTable:
-		return r.readAndValidateDynamoDBTable(ctx, sdkDynamoDBTables, state, policyId)
+		resp, apiErr := r.sdkDynamoDBTables.ReadAwsDynamodbTable(entityId, nil, nil)
+		return validateAssignment(ctx, "DynamoDB table", entityId, policyId, resp, apiErr,
+			func(t *models.ReadDynamoDBTableResponse) *string {
+				return protectionPolicyId(t.ProtectionInfo)
+			})
+	case entityTypeIcebergGlueTable, entityTypeIcebergS3Table:
+		resp, apiErr := r.sdkIcebergTables.ReadAwsIcebergTable(entityId, nil, nil)
+		return validateAssignment(ctx, "Iceberg table", entityId, policyId, resp, apiErr,
+			func(t *models.ReadIcebergTableResponse) *string {
+				return t.DirectAssignmentPolicyId
+			})
 	}
+	summary := "Invalid entityType"
+	detail := fmt.Sprintf("The entity type %v is not supported for policy assignment.",
+		entityType)
+	diags.AddError(summary, detail)
 	return false, diags
 }
 

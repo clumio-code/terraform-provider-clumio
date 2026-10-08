@@ -39,3 +39,12 @@ resource "clumio_gcp_connection" "example" {
 - `clumio_service_account` (String) Identifier for the Clumio GCP service account
 - `id` (String) Unique identifier of the connection
 - `token` (String) The 36-character Clumio GCP integration token used to identify the installation of the Clumio GCP integration resources in the project.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# format of the Clumio GCP Connection import ID is <GCP_PROJECT_ID>
+terraform import clumio_gcp_connection.example my-gcp-project
+```

@@ -992,3 +992,74 @@ func TestReadPolicyAssignmentGcpProtectionGroup(t *testing.T) {
 		assert.True(t, remove)
 	})
 }
+
+// TestReadPolicyAssignmentIcebergTable tests the read flow for both Iceberg table entity types.
+//   - Success: the Iceberg table has the expected policy applied.
+//   - Removal: the Iceberg table is not found (404).
+//   - Removal: the Iceberg table has a different policy applied.
+func TestReadPolicyAssignmentIcebergTable(t *testing.T) {
+
+	ctx := context.Background()
+	mockPolicyDefinitions := sdkclients.NewMockPolicyDefinitionClient(t)
+	mockIcebergTables := sdkclients.NewMockIcebergTableClient(t)
+	par := &clumioPolicyAssignmentResource{
+		name: resourceName,
+		client: &common.ApiClient{
+			ClumioConfig: sdkconfig.Config{},
+		},
+		sdkPolicyDefinitions: mockPolicyDefinitions,
+		sdkIcebergTables:     mockIcebergTables,
+	}
+	pdResp := &models.ReadPolicyResponse{Id: &policyId, OrganizationalUnitId: &ou}
+
+	for _, entityType := range []string{entityTypeIcebergGlueTable, entityTypeIcebergS3Table} {
+		model := &policyAssignmentResourceModel{
+			ID: basetypes.NewStringValue(
+				fmt.Sprintf("%s_%s_%s", policyId, entityId, entityType)),
+			EntityID:   basetypes.NewStringValue(entityId),
+			EntityType: basetypes.NewStringValue(entityType),
+			PolicyID:   basetypes.NewStringValue(policyId),
+		}
+
+		t.Run(entityType+" has the policy applied", func(t *testing.T) {
+			readResp := &models.ReadIcebergTableResponse{
+				Id:                       &entityId,
+				DirectAssignmentPolicyId: &policyId,
+			}
+			mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+				Return(pdResp, nil)
+			mockIcebergTables.EXPECT().ReadAwsIcebergTable(entityId, mock.Anything, mock.Anything).
+				Times(1).Return(readResp, nil)
+
+			remove, diags := par.readPolicyAssignment(ctx, model)
+			assert.Nil(t, diags)
+			assert.False(t, remove)
+		})
+
+		t.Run(entityType+" not found", func(t *testing.T) {
+			mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+				Return(pdResp, nil)
+			mockIcebergTables.EXPECT().ReadAwsIcebergTable(entityId, mock.Anything, mock.Anything).
+				Times(1).Return(nil, &apiutils.APIError{ResponseCode: 404})
+
+			remove, diags := par.readPolicyAssignment(ctx, model)
+			assert.Nil(t, diags)
+			assert.True(t, remove)
+		})
+
+		t.Run(entityType+" has a different policy applied", func(t *testing.T) {
+			readResp := &models.ReadIcebergTableResponse{
+				Id:                       &entityId,
+				DirectAssignmentPolicyId: &otherPolicyId,
+			}
+			mockPolicyDefinitions.EXPECT().ReadPolicyDefinition(policyId, mock.Anything).Times(1).
+				Return(pdResp, nil)
+			mockIcebergTables.EXPECT().ReadAwsIcebergTable(entityId, mock.Anything, mock.Anything).
+				Times(1).Return(readResp, nil)
+
+			remove, diags := par.readPolicyAssignment(ctx, model)
+			assert.Nil(t, diags)
+			assert.True(t, remove)
+		})
+	}
+}

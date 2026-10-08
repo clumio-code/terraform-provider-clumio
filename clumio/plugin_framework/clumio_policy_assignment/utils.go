@@ -10,8 +10,8 @@ import (
 	"net/http"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
-	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
 
+	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	"github.com/clumio-code/clumio-go-sdk/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -49,134 +49,39 @@ func mapSchemaPolicyAssignmentToClumioPolicyAssignment(
 	}
 }
 
-// readAndValidateDynamoDBTable reads the Protection Group and validates that the given policy is
-// assigned to the Protection Group.
-func (r *clumioPolicyAssignmentResource) readAndValidateProtectionGroup(ctx context.Context,
-	sdkProtectionGroups sdkclients.ProtectionGroupClient, state *policyAssignmentResourceModel,
-	policyId string) (bool, diag.Diagnostics) {
+// validateAssignment returns true when the entity is gone or no longer has the policy applied,
+// so that the caller removes the assignment from state.
+func validateAssignment[T any](ctx context.Context, entityName, entityId, policyId string,
+	resp *T, apiErr *apiutils.APIError, assignedPolicyId func(*T) *string) (
+	bool, diag.Diagnostics) {
 
 	var diags diag.Diagnostics
-	// Call the Clumio API to read the protection group. Barring any errors, if the protection
-	// group is not found or if the protection group no longer has the desired policy attached,
-	// the function returns "true" to indicate to the caller that the expected resource no
-	// longer exists.
-	entityId := state.EntityID.ValueString()
-	readResponse, apiErr := sdkProtectionGroups.ReadProtectionGroup(entityId, nil)
 	if apiErr != nil {
-		remove := false
 		if apiErr.ResponseCode == http.StatusNotFound {
-			msgStr := fmt.Sprintf(
-				"Clumio Protection Group with ID %s not found. Removing from state.",
-				entityId)
-			tflog.Warn(ctx, msgStr)
-			remove = true
-		} else {
-			summary := fmt.Sprintf(readProtectionGroupErrFmt, entityId)
-			detail := common.ParseMessageFromApiError(apiErr)
-			diags.AddError(summary, detail)
+			tflog.Warn(ctx, fmt.Sprintf(
+				"%s with ID %s not found. Removing from state.", entityName, entityId))
+			return true, diags
 		}
-		return remove, diags
-	}
-	if readResponse == nil {
-		summary := common.NilErrorMessageSummary
-		detail := common.NilErrorMessageDetail
-		diags.AddError(summary, detail)
+		diags.AddError(fmt.Sprintf("Unable to read %s %v.", entityName, entityId),
+			common.ParseMessageFromApiError(apiErr))
 		return false, diags
 	}
-	if readResponse.ProtectionInfo == nil || readResponse.ProtectionInfo.PolicyId == nil ||
-		*readResponse.ProtectionInfo.PolicyId != policyId {
-		msgStr := fmt.Sprintf("Protection group with id: %s does not have policy %s applied."+
-			" Removing from state.", entityId, policyId)
-		tflog.Warn(ctx, msgStr)
+	if resp == nil {
+		diags.AddError(common.NilErrorMessageSummary, common.NilErrorMessageDetail)
+		return false, diags
+	}
+	if id := assignedPolicyId(resp); id == nil || *id != policyId {
+		tflog.Warn(ctx, fmt.Sprintf("%s with ID %s does not have policy %s applied."+
+			" Removing from state.", entityName, entityId, policyId))
 		return true, diags
 	}
 	return false, diags
 }
 
-// readAndValidateGcpProtectionGroup reads the GCP Protection Group and validates that the given
-// policy is assigned to the GCP Protection Group.
-func (r *clumioPolicyAssignmentResource) readAndValidateGcpProtectionGroup(ctx context.Context,
-	sdkGcpProtectionGroups sdkclients.GcpProtectionGroupClient,
-	state *policyAssignmentResourceModel, policyId string) (bool, diag.Diagnostics) {
-
-	var diags diag.Diagnostics
-	// Call the Clumio API to read the GCP protection group. Barring any errors, if the protection
-	// group is not found or if the protection group no longer has the desired policy attached,
-	// the function returns "true" to indicate to the caller that the expected resource no
-	// longer exists.
-	entityId := state.EntityID.ValueString()
-	readResponse, apiErr := sdkGcpProtectionGroups.ReadGcpProtectionGroup(entityId, nil)
-	if apiErr != nil {
-		remove := false
-		if apiErr.ResponseCode == http.StatusNotFound {
-			msgStr := fmt.Sprintf(
-				"Clumio GCP Protection Group with ID %s not found. Removing from state.",
-				entityId)
-			tflog.Warn(ctx, msgStr)
-			remove = true
-		} else {
-			summary := fmt.Sprintf(readGcpProtectionGroupErrFmt, entityId)
-			detail := common.ParseMessageFromApiError(apiErr)
-			diags.AddError(summary, detail)
-		}
-		return remove, diags
+// protectionPolicyId returns the ID of the policy that protects the entity, or nil.
+func protectionPolicyId(info *models.ProtectionInfoWithRule) *string {
+	if info == nil {
+		return nil
 	}
-	if readResponse == nil {
-		summary := common.NilErrorMessageSummary
-		detail := common.NilErrorMessageDetail
-		diags.AddError(summary, detail)
-		return false, diags
-	}
-	if readResponse.ProtectionInfo == nil || readResponse.ProtectionInfo.PolicyId == nil ||
-		*readResponse.ProtectionInfo.PolicyId != policyId {
-		msgStr := fmt.Sprintf("GCP protection group with id: %s does not have policy %s applied."+
-			" Removing from state.", entityId, policyId)
-		tflog.Warn(ctx, msgStr)
-		return true, diags
-	}
-	return false, diags
-}
-
-// readAndValidateDynamoDBTable reads the DynamoDB table and validates that the given policy is
-// assigned to the DynamoDB table.
-func (r *clumioPolicyAssignmentResource) readAndValidateDynamoDBTable(ctx context.Context,
-	sdkDynamoDBTables sdkclients.DynamoDBTableClient, state *policyAssignmentResourceModel,
-	policyId string) (bool, diag.Diagnostics) {
-
-	var diags diag.Diagnostics
-	// Call the Clumio API to read the DynamoDB table. Barring any errors, if the DynamoDB
-	// table is not found or if the DynamoDB table no longer has the desired policy attached,
-	// the function returns "true" to indicate to the caller that the expected resource no
-	// longer exists.
-	entityId := state.EntityID.ValueString()
-	readResponse, apiErr := sdkDynamoDBTables.ReadAwsDynamodbTable(entityId, nil, nil)
-	if apiErr != nil {
-		remove := false
-		if apiErr.ResponseCode == http.StatusNotFound {
-			msgStr := fmt.Sprintf(
-				"DynamoDB table with ID %s not found. Removing from state.",
-				entityId)
-			tflog.Warn(ctx, msgStr)
-			remove = true
-		} else {
-			summary := fmt.Sprintf(readDynamoDBTableErrFmt, entityId)
-			detail := common.ParseMessageFromApiError(apiErr)
-			diags.AddError(summary, detail)
-		}
-		return remove, diags
-	}
-	if readResponse == nil {
-		summary := common.NilErrorMessageSummary
-		detail := common.NilErrorMessageDetail
-		diags.AddError(summary, detail)
-		return false, diags
-	}
-	if readResponse.ProtectionInfo == nil ||
-		*readResponse.ProtectionInfo.PolicyId != policyId {
-		msgStr := fmt.Sprintf("DynamoDB table with id: %s does not have policy %s applied."+
-			" Removing from state.", entityId, policyId)
-		tflog.Warn(ctx, msgStr)
-		return true, diags
-	}
-	return false, diags
+	return info.PolicyId
 }

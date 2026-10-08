@@ -35,6 +35,7 @@ func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, sta
 	}
 
 	// Convert the Clumio API response back to a schema and populate all computed fields of the state
+	state.ID = types.StringPointerValue(res.Token)
 	state.Token = types.StringPointerValue(res.Token)
 	state.ClumioControlPlaneId = types.StringPointerValue(res.ControlPlaneId)
 	state.ClumioControlPlaneRole = types.StringPointerValue(res.ControlPlaneRole)
@@ -45,8 +46,11 @@ func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, sta
 	state.Regions = regionsValue
 
 	state.DeploymentType = types.StringPointerValue(res.DeploymentType)
+	description := types.StringPointerValue(res.Description)
+	if !state.Description.IsNull() || description.ValueString() != "" {
+		state.Description = description
+	}
 
-	// Description and ProjectID are not computed values
 	return false, diags
 }
 

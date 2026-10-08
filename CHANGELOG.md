@@ -1,3 +1,9 @@
+## 0.24.2
+This update contains the following changes:
+* Added `terraform import` support for `clumio_gcp_connection`.
+* Fixed an apply failure in `clumio_policy` when the Iceberg snapshot flags are omitted. `backup_last_snapshot_only` and `backup_compacted_snapshot_only` now default to `false`.
+* Fixed the refresh of `clumio_policy_assignment` for the `aws_iceberg_glue_table` and `aws_iceberg_s3_table` entity types.
+
 ## 0.24.1
 This update contains the following changes:
 * Added the `iceberg_on_glue` and `iceberg_on_s3_tables` asset types to `clumio_aws_manual_connection` and the `clumio_aws_manual_connection_resources` data source.

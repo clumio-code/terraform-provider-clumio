@@ -74,7 +74,8 @@ func TestDatasourceReadPolicy(t *testing.T) {
 						Name:             &name,
 						Operations: []*models.PolicyOperation{
 							{
-								ClumioType: &operationType,
+								ClumioType:       &operationType,
+								ActivationStatus: &activationStatus,
 							},
 						},
 						OrganizationalUnitId: &ou,
@@ -90,6 +91,11 @@ func TestDatasourceReadPolicy(t *testing.T) {
 
 		diags := rds.readPolicy(ctx, rdsm)
 		assert.Nil(t, diags)
+		policy := rdsm.Policies.Elements()[0].(types.Object)
+		op := policy.Attributes()[schemaOperations].(types.Set).Elements()[0].(types.Object)
+		assert.Equal(t, basetypes.NewStringValue(operationType), op.Attributes()[schemaOperationType])
+		assert.Equal(t, basetypes.NewStringValue(activationStatus),
+			op.Attributes()[schemaActivationStatus])
 	})
 
 	// Tests that Diagnostics is returned in case the list policy definitions API call returns an

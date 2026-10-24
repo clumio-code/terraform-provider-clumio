@@ -47,6 +47,12 @@ type backupTierModel struct {
 	BackupTier types.String `tfsdk:"backup_tier"`
 }
 
+// protectionGroupBackupModel maps to the ProtectionGroupBackup attribute in advancedSettingsModel.
+type protectionGroupBackupModel struct {
+	BackupTier types.String `tfsdk:"backup_tier"`
+	ThreatScan types.Bool   `tfsdk:"threat_scan"`
+}
+
 // icebergBackupModel maps to the IcebergTableBackup attribute in advancedSettingsModel and
 // contains the advanced settings for Iceberg backup operations.
 type icebergBackupModel struct {
@@ -70,18 +76,18 @@ type ContinuousConfigModel struct {
 // advancedSettingsModel maps to the AdvancedSettings attribute in policyOperationModel which
 // contains additional operation-specific policy settings.
 type advancedSettingsModel struct {
-	EC2MssqlDatabaseBackup   []*replicaModel          `tfsdk:"ec2_mssql_database_backup"`
-	EC2MssqlLogBackup        []*replicaModel          `tfsdk:"ec2_mssql_log_backup"`
-	MssqlDatabaseBackup      []*replicaModel          `tfsdk:"mssql_database_backup"`
-	MssqlLogBackup           []*replicaModel          `tfsdk:"mssql_log_backup"`
-	ProtectionGroupBackup    []*backupTierModel       `tfsdk:"protection_group_backup"`
-	GcpProtectionGroupBackup []*backupTierModel       `tfsdk:"gcp_protection_group_backup"`
-	S3ContinuousBackup       []*ContinuousConfigModel `tfsdk:"protection_group_continuous_backup"`
-	EBSVolumeBackup          []*backupTierModel       `tfsdk:"aws_ebs_volume_backup"`
-	EC2InstanceBackup        []*backupTierModel       `tfsdk:"aws_ec2_instance_backup"`
-	RDSPitrConfigSync        []*pitrConfigModel       `tfsdk:"aws_rds_config_sync"`
-	RDSLogicalBackup         []*backupTierModel       `tfsdk:"aws_rds_resource_granular_backup"`
-	IcebergTableBackup       []*icebergBackupModel    `tfsdk:"aws_iceberg_table_backup"`
+	EC2MssqlDatabaseBackup   []*replicaModel               `tfsdk:"ec2_mssql_database_backup"`
+	EC2MssqlLogBackup        []*replicaModel               `tfsdk:"ec2_mssql_log_backup"`
+	MssqlDatabaseBackup      []*replicaModel               `tfsdk:"mssql_database_backup"`
+	MssqlLogBackup           []*replicaModel               `tfsdk:"mssql_log_backup"`
+	ProtectionGroupBackup    []*protectionGroupBackupModel `tfsdk:"protection_group_backup"`
+	GcpProtectionGroupBackup []*backupTierModel            `tfsdk:"gcp_protection_group_backup"`
+	S3ContinuousBackup       []*ContinuousConfigModel      `tfsdk:"protection_group_continuous_backup"`
+	EBSVolumeBackup          []*backupTierModel            `tfsdk:"aws_ebs_volume_backup"`
+	EC2InstanceBackup        []*backupTierModel            `tfsdk:"aws_ec2_instance_backup"`
+	RDSPitrConfigSync        []*pitrConfigModel            `tfsdk:"aws_rds_config_sync"`
+	RDSLogicalBackup         []*backupTierModel            `tfsdk:"aws_rds_resource_granular_backup"`
+	IcebergTableBackup       []*icebergBackupModel         `tfsdk:"aws_iceberg_table_backup"`
 }
 
 // policyOperationModel maps to the Operations attribute in policyResourceModel and contains
@@ -95,6 +101,7 @@ type policyOperationModel struct {
 	AdvancedSettings []*advancedSettingsModel `tfsdk:"advanced_settings"`
 	BackupAwsRegion  types.String             `tfsdk:"backup_aws_region"`
 	Timezone         types.String             `tfsdk:"timezone"`
+	ActivationStatus types.String             `tfsdk:"activation_status"`
 }
 
 // unitValueModel maps to the RetentionDuration attribute in slaModel and it provides the unit
@@ -235,6 +242,12 @@ func (r *policyResource) Schema(
 						Description: "Backup tier to store the backup in. Valid values are:" +
 							" `cold` and `frozen`.\n\t- `cold` = Clumio SecureVault Standard\n\t" +
 							"- `frozen` = Clumio SecureVault Archive",
+					},
+					schemaThreatScan: schema.BoolAttribute{
+						Optional:    true,
+						Computed:    true,
+						Default:     booldefault.StaticBool(false),
+						Description: "Determines whether threat scanning is enabled for protection group backups.",
 					},
 				},
 			},
@@ -452,6 +465,16 @@ func (r *policyResource) Schema(
 			Optional: true,
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
+			},
+		},
+		schemaActivationStatus: schema.StringAttribute{
+			Description: "The status of this operation. Valid values are: `activated` and `deactivated`." +
+				" The operation runs only when both this and the policy-level `activation_status`" +
+				" are `activated`. If omitted, Terraform does not manage the status and the current" +
+				" status of the operation is kept.",
+			Optional: true,
+			Validators: []validator.String{
+				stringvalidator.OneOf(activationStatusActivated, activationStatusDectivated),
 			},
 		},
 	}

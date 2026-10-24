@@ -770,6 +770,47 @@ func TestAccResourceClumioPolicyTimezone(t *testing.T) {
 	})
 }
 
+// Tests the per-operation activation_status. It deactivates one operation while its sibling stays
+// active, re-activates it, deactivates it again and verifies that omitting the attribute keeps the
+// stored status.
+func TestAccResourceClumioPolicyOperationActivationStatus(t *testing.T) {
+	resourceName := "clumio_policy.tf_child_timezone_policy"
+	checkStatuses := func(ebs, ec2 string) resource.TestCheckFunc {
+		return resource.ComposeTestCheckFunc(
+			resource.TestCheckTypeSetElemNestedAttrs(resourceName, "operations.*",
+				map[string]string{"type": "aws_ebs_volume_backup", "activation_status": ebs}),
+			resource.TestCheckTypeSetElemNestedAttrs(resourceName, "operations.*",
+				map[string]string{"type": "aws_ec2_instance_backup", "activation_status": ec2}),
+		)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
+		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: getTestAccResourceClumioPolicyOperationActivationStatus(
+					"deactivated", "activated"),
+				Check: checkStatuses("deactivated", "activated"),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyOperationActivationStatus(
+					"activated", "activated"),
+				Check: checkStatuses("activated", "activated"),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyOperationActivationStatus(
+					"deactivated", "activated"),
+				Check: checkStatuses("deactivated", "activated"),
+			},
+			{
+				Config: getTestAccResourceClumioPolicyOperationActivationStatus("", ""),
+				Check: checkOperationActivationStatusUsingSDK(
+					resourceName, "aws_ebs_volume_backup", "deactivated"),
+			},
+		},
+	})
+}
+
 // getTestAccResourceClumioPolicyWindow returns the Terraform configuration for a clumio_policy resource
 // containing a backup window.
 func getTestAccResourceClumioPolicyWindow(update bool) string {
@@ -1131,6 +1172,51 @@ func getTestAccResourceClumioPolicyChildTimezone(timezone1, timezone2 *string) s
 		child2 = fmt.Sprintf(`timezone = "%s"`, *timezone2)
 	}
 	return fmt.Sprintf(testAccResourceClumioPolicyChildTimezone, baseUrl, child1, child2)
+}
+
+// getTestAccResourceClumioPolicyOperationActivationStatus returns the Terraform configuration for a
+// clumio_policy resource with the given operation activation statuses. An empty status is omitted.
+func getTestAccResourceClumioPolicyOperationActivationStatus(ebsStatus, ec2Status string) string {
+	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
+	child1 := ""
+	child2 := ""
+	if ebsStatus != "" {
+		child1 = fmt.Sprintf(`activation_status = "%s"`, ebsStatus)
+	}
+	if ec2Status != "" {
+		child2 = fmt.Sprintf(`activation_status = "%s"`, ec2Status)
+	}
+	return fmt.Sprintf(testAccResourceClumioPolicyChildTimezone, baseUrl, child1, child2)
+}
+
+// checkOperationActivationStatusUsingSDK reads the policy using the Clumio API and verifies the
+// activation_status of the operation with the given type.
+func checkOperationActivationStatusUsingSDK(
+	resourceName, operationType, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+		pd := sdkclients.NewPolicyDefinitionClient(sdkconfig.Config{
+			Token:                     os.Getenv(common.ClumioApiToken),
+			BaseUrl:                   os.Getenv(common.ClumioApiBaseUrl),
+			OrganizationalUnitContext: os.Getenv(common.ClumioOrganizationalUnitContext),
+		})
+		res, apiErr := pd.ReadPolicyDefinition(rs.Primary.ID, nil)
+		if apiErr != nil {
+			return apiErr
+		}
+		for _, operation := range res.Operations {
+			if *operation.ClumioType == operationType {
+				if operation.ActivationStatus == nil || *operation.ActivationStatus != want {
+					return fmt.Errorf("operation %s activation_status: want %s", operationType, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("operation %s not found", operationType)
+	}
 }
 
 // getTestClumioPolicyEmptyParams returns the Terraform configuration for a clumio_policy resource with

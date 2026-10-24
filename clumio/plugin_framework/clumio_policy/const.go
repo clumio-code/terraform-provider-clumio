@@ -36,6 +36,7 @@ const (
 	schemaS3ContinuousBackup             = "protection_group_continuous_backup"
 	schemaDisableEventbridgeNotification = "disable_eventbridge_notification"
 	schemaBackupTier                     = "backup_tier"
+	schemaThreatScan                     = "threat_scan"
 	schemaEBSVolumeBackup                = "aws_ebs_volume_backup"
 	schemaEC2InstanceBackup              = "aws_ec2_instance_backup"
 	schemaRDSPitrConfigSync              = "aws_rds_config_sync"

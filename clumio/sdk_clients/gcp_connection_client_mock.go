@@ -168,8 +168,8 @@ func (_c *MockGcpConnectionClient_DeleteGcpConnection_Call) RunAndReturn(run fun
 }
 
 // ListGcpConnections provides a mock function for the type MockGcpConnectionClient
-func (_mock *MockGcpConnectionClient) ListGcpConnections(limit *int64, start *string, filter *string) (*models.ListGCPConnectionsResponse, *apiutils.APIError) {
-	ret := _mock.Called(limit, start, filter)
+func (_mock *MockGcpConnectionClient) ListGcpConnections(limit *int64, start *string, filter *string, embed *string) (*models.ListGCPConnectionsResponse, *apiutils.APIError) {
+	ret := _mock.Called(limit, start, filter, embed)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListGcpConnections")
@@ -177,18 +177,18 @@ func (_mock *MockGcpConnectionClient) ListGcpConnections(limit *int64, start *st
 
 	var r0 *models.ListGCPConnectionsResponse
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string) (*models.ListGCPConnectionsResponse, *apiutils.APIError)); ok {
-		return returnFunc(limit, start, filter)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string) (*models.ListGCPConnectionsResponse, *apiutils.APIError)); ok {
+		return returnFunc(limit, start, filter, embed)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string) *models.ListGCPConnectionsResponse); ok {
-		r0 = returnFunc(limit, start, filter)
+	if returnFunc, ok := ret.Get(0).(func(*int64, *string, *string, *string) *models.ListGCPConnectionsResponse); ok {
+		r0 = returnFunc(limit, start, filter, embed)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ListGCPConnectionsResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string) *apiutils.APIError); ok {
-		r1 = returnFunc(limit, start, filter)
+	if returnFunc, ok := ret.Get(1).(func(*int64, *string, *string, *string) *apiutils.APIError); ok {
+		r1 = returnFunc(limit, start, filter, embed)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -206,11 +206,12 @@ type MockGcpConnectionClient_ListGcpConnections_Call struct {
 //   - limit *int64
 //   - start *string
 //   - filter *string
-func (_e *MockGcpConnectionClient_Expecter) ListGcpConnections(limit interface{}, start interface{}, filter interface{}) *MockGcpConnectionClient_ListGcpConnections_Call {
-	return &MockGcpConnectionClient_ListGcpConnections_Call{Call: _e.mock.On("ListGcpConnections", limit, start, filter)}
+//   - embed *string
+func (_e *MockGcpConnectionClient_Expecter) ListGcpConnections(limit interface{}, start interface{}, filter interface{}, embed interface{}) *MockGcpConnectionClient_ListGcpConnections_Call {
+	return &MockGcpConnectionClient_ListGcpConnections_Call{Call: _e.mock.On("ListGcpConnections", limit, start, filter, embed)}
 }
 
-func (_c *MockGcpConnectionClient_ListGcpConnections_Call) Run(run func(limit *int64, start *string, filter *string)) *MockGcpConnectionClient_ListGcpConnections_Call {
+func (_c *MockGcpConnectionClient_ListGcpConnections_Call) Run(run func(limit *int64, start *string, filter *string, embed *string)) *MockGcpConnectionClient_ListGcpConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 *int64
 		if args[0] != nil {
@@ -224,10 +225,15 @@ func (_c *MockGcpConnectionClient_ListGcpConnections_Call) Run(run func(limit *i
 		if args[2] != nil {
 			arg2 = args[2].(*string)
 		}
+		var arg3 *string
+		if args[3] != nil {
+			arg3 = args[3].(*string)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -238,7 +244,7 @@ func (_c *MockGcpConnectionClient_ListGcpConnections_Call) Return(listGCPConnect
 	return _c
 }
 
-func (_c *MockGcpConnectionClient_ListGcpConnections_Call) RunAndReturn(run func(limit *int64, start *string, filter *string) (*models.ListGCPConnectionsResponse, *apiutils.APIError)) *MockGcpConnectionClient_ListGcpConnections_Call {
+func (_c *MockGcpConnectionClient_ListGcpConnections_Call) RunAndReturn(run func(limit *int64, start *string, filter *string, embed *string) (*models.ListGCPConnectionsResponse, *apiutils.APIError)) *MockGcpConnectionClient_ListGcpConnections_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -308,8 +314,8 @@ func (_c *MockGcpConnectionClient_PostProcessGcpConnection_Call) RunAndReturn(ru
 }
 
 // ReadGcpConnection provides a mock function for the type MockGcpConnectionClient
-func (_mock *MockGcpConnectionClient) ReadGcpConnection(projectId string) (*models.ReadGCPConnectionResponse, *apiutils.APIError) {
-	ret := _mock.Called(projectId)
+func (_mock *MockGcpConnectionClient) ReadGcpConnection(projectId string, embed *string) (*models.ReadGCPConnectionResponse, *apiutils.APIError) {
+	ret := _mock.Called(projectId, embed)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadGcpConnection")
@@ -317,18 +323,18 @@ func (_mock *MockGcpConnectionClient) ReadGcpConnection(projectId string) (*mode
 
 	var r0 *models.ReadGCPConnectionResponse
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(string) (*models.ReadGCPConnectionResponse, *apiutils.APIError)); ok {
-		return returnFunc(projectId)
+	if returnFunc, ok := ret.Get(0).(func(string, *string) (*models.ReadGCPConnectionResponse, *apiutils.APIError)); ok {
+		return returnFunc(projectId, embed)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string) *models.ReadGCPConnectionResponse); ok {
-		r0 = returnFunc(projectId)
+	if returnFunc, ok := ret.Get(0).(func(string, *string) *models.ReadGCPConnectionResponse); ok {
+		r0 = returnFunc(projectId, embed)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.ReadGCPConnectionResponse)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(string) *apiutils.APIError); ok {
-		r1 = returnFunc(projectId)
+	if returnFunc, ok := ret.Get(1).(func(string, *string) *apiutils.APIError); ok {
+		r1 = returnFunc(projectId, embed)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -344,18 +350,24 @@ type MockGcpConnectionClient_ReadGcpConnection_Call struct {
 
 // ReadGcpConnection is a helper method to define mock.On call
 //   - projectId string
-func (_e *MockGcpConnectionClient_Expecter) ReadGcpConnection(projectId interface{}) *MockGcpConnectionClient_ReadGcpConnection_Call {
-	return &MockGcpConnectionClient_ReadGcpConnection_Call{Call: _e.mock.On("ReadGcpConnection", projectId)}
+//   - embed *string
+func (_e *MockGcpConnectionClient_Expecter) ReadGcpConnection(projectId interface{}, embed interface{}) *MockGcpConnectionClient_ReadGcpConnection_Call {
+	return &MockGcpConnectionClient_ReadGcpConnection_Call{Call: _e.mock.On("ReadGcpConnection", projectId, embed)}
 }
 
-func (_c *MockGcpConnectionClient_ReadGcpConnection_Call) Run(run func(projectId string)) *MockGcpConnectionClient_ReadGcpConnection_Call {
+func (_c *MockGcpConnectionClient_ReadGcpConnection_Call) Run(run func(projectId string, embed *string)) *MockGcpConnectionClient_ReadGcpConnection_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
 			arg0 = args[0].(string)
 		}
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -366,7 +378,7 @@ func (_c *MockGcpConnectionClient_ReadGcpConnection_Call) Return(readGCPConnecti
 	return _c
 }
 
-func (_c *MockGcpConnectionClient_ReadGcpConnection_Call) RunAndReturn(run func(projectId string) (*models.ReadGCPConnectionResponse, *apiutils.APIError)) *MockGcpConnectionClient_ReadGcpConnection_Call {
+func (_c *MockGcpConnectionClient_ReadGcpConnection_Call) RunAndReturn(run func(projectId string, embed *string) (*models.ReadGCPConnectionResponse, *apiutils.APIError)) *MockGcpConnectionClient_ReadGcpConnection_Call {
 	_c.Call.Return(run)
 	return _c
 }

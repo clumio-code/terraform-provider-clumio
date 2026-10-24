@@ -67,6 +67,12 @@ func (r *clumioPolicyDataSource) readPolicy(
 
 	// Convert the Clumio API response for the policies into the datasource schema model.
 	if res.Embedded != nil && res.Embedded.Items != nil && len(res.Embedded.Items) > 0 {
+		opObjType := types.ObjectType{
+			AttrTypes: map[string]attr.Type{
+				schemaOperationType:    types.StringType,
+				schemaActivationStatus: types.StringType,
+			},
+		}
 		objtype := types.ObjectType{
 			AttrTypes: map[string]attr.Type{
 				schemaId:                   types.StringType,
@@ -75,15 +81,25 @@ func (r *clumioPolicyDataSource) readPolicy(
 				schemaTimezone:             types.StringType,
 				schemaOrganizationalUnitId: types.StringType,
 				schemaOperationTypes:       types.SetType{ElemType: types.StringType},
+				schemaOperations:           types.SetType{ElemType: opObjType},
 			},
 		}
 		attrVals := make([]attr.Value, 0)
 		for _, item := range res.Embedded.Items {
 			resOperationTypes := make([]string, 0)
+			resOperations := make([]attr.Value, 0)
 			for _, operation := range item.Operations {
 				resOperationTypes = append(resOperationTypes, *operation.ClumioType)
+				op, conversionDiags := types.ObjectValue(opObjType.AttrTypes, map[string]attr.Value{
+					schemaOperationType:    basetypes.NewStringPointerValue(operation.ClumioType),
+					schemaActivationStatus: basetypes.NewStringPointerValue(operation.ActivationStatus),
+				})
+				diags.Append(conversionDiags...)
+				resOperations = append(resOperations, op)
 			}
 			opTypes, conversionDiags := types.SetValueFrom(ctx, types.StringType, resOperationTypes)
+			diags.Append(conversionDiags...)
+			ops, conversionDiags := types.SetValue(opObjType, resOperations)
 			diags.Append(conversionDiags...)
 			if diags.HasError() {
 				return diags
@@ -95,6 +111,7 @@ func (r *clumioPolicyDataSource) readPolicy(
 			attrTypes[schemaTimezone] = types.StringType
 			attrTypes[schemaOrganizationalUnitId] = types.StringType
 			attrTypes[schemaOperationTypes] = types.SetType{ElemType: types.StringType}
+			attrTypes[schemaOperations] = types.SetType{ElemType: opObjType}
 
 			attrValues := make(map[string]attr.Value)
 			attrValues[schemaId] = basetypes.NewStringPointerValue(item.Id)
@@ -105,6 +122,7 @@ func (r *clumioPolicyDataSource) readPolicy(
 			attrValues[schemaOrganizationalUnitId] = basetypes.NewStringPointerValue(
 				item.OrganizationalUnitId)
 			attrValues[schemaOperationTypes] = opTypes
+			attrValues[schemaOperations] = ops
 			obj, conversionDiags := types.ObjectValue(attrTypes, attrValues)
 			diags.Append(conversionDiags...)
 			if diags.HasError() {

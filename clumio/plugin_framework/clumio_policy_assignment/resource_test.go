@@ -18,7 +18,11 @@ import (
 	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/clumio-code/clumio-go-sdk/models"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -1060,6 +1064,45 @@ func TestReadPolicyAssignmentIcebergTable(t *testing.T) {
 			remove, diags := par.readPolicyAssignment(ctx, model)
 			assert.Nil(t, diags)
 			assert.True(t, remove)
+		})
+	}
+}
+
+// Unit test for ImportState: the import ID splits into policy_id, entity_id and entity_type.
+func TestImportStatePolicyAssignment(t *testing.T) {
+	ctx := context.Background()
+	r := &clumioPolicyAssignmentResource{}
+	schemaResp := &resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, schemaResp)
+	newResp := func() *resource.ImportStateResponse {
+		return &resource.ImportStateResponse{
+			State: tfsdk.State{
+				Schema: schemaResp.Schema,
+				Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+			},
+		}
+	}
+
+	t.Run("Success", func(t *testing.T) {
+		id := "pol-1_ent-1_aws_iceberg_glue_table"
+		resp := newResp()
+		r.ImportState(ctx, resource.ImportStateRequest{ID: id}, resp)
+		assert.False(t, resp.Diagnostics.HasError())
+		var model policyAssignmentResourceModel
+		resp.State.Get(ctx, &model)
+		assert.Equal(t, policyAssignmentResourceModel{
+			ID:         types.StringValue(id),
+			PolicyID:   types.StringValue("pol-1"),
+			EntityID:   types.StringValue("ent-1"),
+			EntityType: types.StringValue(entityTypeIcebergGlueTable),
+		}, model)
+	})
+
+	for _, id := range []string{"", "pol-1", "pol-1_ent-1", "_ent-1_protection_group"} {
+		t.Run("Invalid "+id, func(t *testing.T) {
+			resp := newResp()
+			r.ImportState(ctx, resource.ImportStateRequest{ID: id}, resp)
+			assert.True(t, resp.Diagnostics.HasError())
 		})
 	}
 }

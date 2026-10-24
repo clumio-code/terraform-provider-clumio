@@ -1,3 +1,12 @@
+## 0.25.0
+This update contains the following changes:
+* Added `activation_status` to the `operations` block of `clumio_policy` to activate or deactivate one operation of a policy.
+* Added `operations` with per-operation `activation_status` to the `clumio_policy` data source.
+* Added `threat_scan` to the `protection_group_backup` advanced settings of `clumio_policy`.
+* Added `terraform import` support for `clumio_policy_assignment`.
+* Updated Clumio Go SDK to v0.33.0.
+* Updated dependencies.
+
 ## 0.24.2
 This update contains the following changes:
 * Added `terraform import` support for `clumio_gcp_connection`.

@@ -7,15 +7,20 @@ package clumio_policy_assignment
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"time"
 )
 
 var (
-	_ resource.Resource              = &clumioPolicyAssignmentResource{}
-	_ resource.ResourceWithConfigure = &clumioPolicyAssignmentResource{}
+	_ resource.Resource                = &clumioPolicyAssignmentResource{}
+	_ resource.ResourceWithConfigure   = &clumioPolicyAssignmentResource{}
+	_ resource.ResourceWithImportState = &clumioPolicyAssignmentResource{}
 )
 
 // clumioPolicyAssignmentResource is the struct backing the clumio_policy_assignment Terraform resource.
@@ -166,4 +171,21 @@ func (r *clumioPolicyAssignmentResource) Delete(
 
 	diags = r.deletePolicyAssignment(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+}
+
+// ImportState imports the assignment by the ID <policy_id>_<entity_id>_<entity_type>.
+func (r *clumioPolicyAssignmentResource) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+
+	// The IDs have no underscores, but the entity type can.
+	parts := strings.SplitN(req.ID, "_", 3)
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		resp.Diagnostics.AddError("Invalid import ID", fmt.Sprintf(
+			"Expected <policy_id>_<entity_id>_<entity_type>, got %q.", req.ID))
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(schemaId), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(schemaPolicyId), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(schemaEntityId), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(schemaEntityType), parts[2])...)
 }

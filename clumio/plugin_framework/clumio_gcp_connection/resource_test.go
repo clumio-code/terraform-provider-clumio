@@ -351,7 +351,7 @@ func TestReadGcpConnection(t *testing.T) {
 	}
 
 	t.Run("Read GCP connection success scenario", func(t *testing.T) {
-		mockSdkConnection.EXPECT().ReadGcpConnection(model.ProjectID.ValueString()).Times(1).
+		mockSdkConnection.EXPECT().ReadGcpConnection(model.ProjectID.ValueString(), mock.Anything).Times(1).
 			Return(res, nil)
 
 		remove, diags := r.readGcpConnection(ctx, model)
@@ -373,7 +373,7 @@ func TestReadGcpConnection(t *testing.T) {
 	})
 
 	t.Run("SDK API for read GCP connection returns an error", func(t *testing.T) {
-		mockSdkConnection.EXPECT().ReadGcpConnection(mock.Anything).Times(1).
+		mockSdkConnection.EXPECT().ReadGcpConnection(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiError)
 
 		remove, diags := r.readGcpConnection(ctx, model)
@@ -382,7 +382,7 @@ func TestReadGcpConnection(t *testing.T) {
 	})
 
 	t.Run("SDK API not found error return remove bool as true", func(t *testing.T) {
-		mockSdkConnection.EXPECT().ReadGcpConnection(mock.Anything).Times(1).
+		mockSdkConnection.EXPECT().ReadGcpConnection(mock.Anything, mock.Anything).Times(1).
 			Return(nil, apiErrorStatusNotFound)
 
 		remove, diags := r.readGcpConnection(ctx, model)

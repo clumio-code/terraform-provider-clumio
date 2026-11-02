@@ -20,7 +20,7 @@ import (
 func (r *clumioGCPConnectionResource) readGcpConnection(ctx context.Context, state *clumioGCPConnectionResourceModel) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	res, apiErr := r.sdkConnections.ReadGcpConnection(state.ProjectID.ValueString())
+	res, apiErr := r.sdkConnections.ReadGcpConnection(state.ProjectID.ValueString(), nil)
 	if apiErr != nil {
 		if apiErr.ResponseCode == http.StatusNotFound {
 			summary := fmt.Sprintf("%s (ID: %v) not found. Removing from state", r.name, state.ProjectID.ValueString())

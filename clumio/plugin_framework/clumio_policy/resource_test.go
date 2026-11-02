@@ -307,6 +307,31 @@ func TestReadPolicy(t *testing.T) {
 		assert.False(t, remove)
 	})
 
+	// Tests that an operation activation_status is read only when the state manages it.
+	t.Run("read policy tracks only managed operation activation_status", func(t *testing.T) {
+		readResponse.Operations[0].ActivationStatus = &activationStatus
+		defer func() { readResponse.Operations[0].ActivationStatus = nil }()
+		mockPolicy.EXPECT().ReadPolicyDefinition(id, mock.Anything).Times(2).
+			Return(readResponse, nil)
+
+		unmanaged := policyResourceModel{ID: basetypes.NewStringValue(id)}
+		_, diags := pr.readPolicy(context.Background(), &unmanaged)
+		assert.Nil(t, diags)
+		assert.True(t, unmanaged.Operations[0].ActivationStatus.IsNull())
+
+		managed := policyResourceModel{
+			ID: basetypes.NewStringValue(id),
+			Operations: []*policyOperationModel{{
+				OperationType:    basetypes.NewStringValue(operationType),
+				ActivationStatus: basetypes.NewStringValue(activationStatusDectivated),
+			}},
+		}
+		_, diags = pr.readPolicy(context.Background(), &managed)
+		assert.Nil(t, diags)
+		assert.Equal(t, basetypes.NewStringValue(activationStatus),
+			managed.Operations[0].ActivationStatus)
+	})
+
 	// Tests that in case the policy is not found, it returns true to indicate that the policy
 	// should be removed from the state.
 	t.Run("read policy returns not found error", func(t *testing.T) {

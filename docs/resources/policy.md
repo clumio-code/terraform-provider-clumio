@@ -33,6 +33,7 @@ resource "clumio_policy" "example_s3_protection_group" {
     advanced_settings {
       protection_group_backup {
         backup_tier = "cold"
+        threat_scan = true
       }
     }
   }
@@ -422,6 +423,7 @@ Required:
 
 Optional:
 
+- `activation_status` (String) The status of this operation. Valid values are: `activated` and `deactivated`. The operation runs only when both this and the policy-level `activation_status` are `activated`. If omitted, Terraform does not manage the status and the current status of the operation is kept.
 - `advanced_settings` (Block Set) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
 - `backup_aws_region` (String) The region in which this backup is stored. This might be used for cross-region backup. Possible values are AWS region string, for example: `us-east-1`, `us-west-2`, .... If no value is provided, it defaults to in-region (the asset's source region).
 - `backup_window_tz` (Block Set) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))
@@ -546,6 +548,7 @@ Optional:
 - `backup_tier` (String) Backup tier to store the backup in. Valid values are: `cold` and `frozen`.
 	- `cold` = Clumio SecureVault Standard
 	- `frozen` = Clumio SecureVault Archive
+- `threat_scan` (Boolean) Determines whether threat scanning is enabled for protection group backups.
 
 
 <a id="nestedblock--operations--advanced_settings--protection_group_continuous_backup"></a>

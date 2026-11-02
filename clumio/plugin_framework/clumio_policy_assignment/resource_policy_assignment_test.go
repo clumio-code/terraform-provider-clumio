@@ -27,8 +27,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// Basic test of the clumio_policy_assignment resource. It tests the following scenario:
+// Basic test of the clumio_policy_assignment resource. It tests the following scenarios:
 //   - Creates a policy assignment and verifies that the plan was applied properly.
+//   - Imports the policy assignment and verifies that the imported state matches.
 func TestAccResourceClumioPolicyAssignment(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
@@ -53,6 +54,11 @@ func TestAccResourceClumioPolicyAssignment(t *testing.T) {
 							plancheck.ResourceActionNoop),
 					},
 				},
+			},
+			{
+				ResourceName:      "clumio_policy_assignment.test_policy_assignment",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

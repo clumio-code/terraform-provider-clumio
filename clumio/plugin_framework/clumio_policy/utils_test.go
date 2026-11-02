@@ -46,6 +46,8 @@ var (
 	preferredReplica               = "mock-preferred-replica"
 	alternativeReplica             = "mock-alternate-replica"
 	disableEventbridgeNotification = true
+	threatScan                     = true
+	opActivationStatus             = "deactivated"
 )
 
 // Unit test for the utility function to convert ClumioOperations to SchemaOperations. This tests
@@ -62,7 +64,8 @@ func TestMapClumioOperationsToSchemaOperations(t *testing.T) {
 				EndTime:   &endTime,
 				StartTime: &startTime,
 			},
-			ClumioType: &operationType,
+			ClumioType:       &operationType,
+			ActivationStatus: &opActivationStatus,
 			Slas: []*models.BackupSLA{
 				{
 					RetentionDuration: &models.RetentionBackupSLAParam{
@@ -103,6 +106,7 @@ func TestMapClumioOperationsToSchemaOperations(t *testing.T) {
 	assert.Equal(t, *modelOp.BackupWindowTz.EndTime,
 		schemaOp.BackupWindowTz[0].EndTime.ValueString())
 	assert.Equal(t, *modelOp.ClumioType, schemaOp.OperationType.ValueString())
+	assert.Equal(t, *modelOp.ActivationStatus, schemaOp.ActivationStatus.ValueString())
 
 	// Ensure the first SLA's attributes are correct.
 	modelSla := *modelOperations[0].Slas[0]
@@ -289,6 +293,7 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
 			ProtectionGroupBackup: &models.ProtectionGroupBackupAdvancedSetting{
 				BackupTier: &backupTier,
+				ThreatScan: &threatScan,
 			},
 		}
 		modelOperations[0].ClumioType = &operationType9
@@ -298,6 +303,8 @@ func TestMapClumioOperationsToSchemaOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, *modelOpAdvSettings.ProtectionGroupBackup.BackupTier,
 			schemaOpAdvSettings.ProtectionGroupBackup[0].BackupTier.ValueString())
+		assert.Equal(t, *modelOpAdvSettings.ProtectionGroupBackup.ThreatScan,
+			schemaOpAdvSettings.ProtectionGroupBackup[0].ThreatScan.ValueBool())
 	})
 	t.Run("Test GCP Protection Group Advanced Setting", func(t *testing.T) {
 		modelOperations[0].AdvancedSettings = &models.PolicyAdvancedSettings{
@@ -401,7 +408,8 @@ func TestMapSchemaOperationsToClumioOperations(t *testing.T) {
 					},
 				},
 			},
-			BackupAwsRegion: basetypes.NewStringValue(backupRegion),
+			BackupAwsRegion:  basetypes.NewStringValue(backupRegion),
+			ActivationStatus: basetypes.NewStringValue(opActivationStatus),
 		},
 	}
 	modelOperations, diags := mapSchemaOperationsToClumioOperations(ctx, schemaOperations)
@@ -413,6 +421,7 @@ func TestMapSchemaOperationsToClumioOperations(t *testing.T) {
 	assert.Equal(t, schemaOp.ActionSetting.ValueString(), *modelOp.ActionSetting)
 	assert.Equal(t, schemaOp.OperationType.ValueString(), *modelOp.ClumioType)
 	assert.Equal(t, schemaOp.BackupAwsRegion.ValueString(), *modelOp.BackupAwsRegion)
+	assert.Equal(t, schemaOp.ActivationStatus.ValueString(), *modelOp.ActivationStatus)
 	assert.Equal(t, schemaOp.BackupWindowTz[0].StartTime.ValueString(),
 		*modelOp.BackupWindowTz.StartTime)
 	assert.Equal(t, schemaOp.BackupWindowTz[0].EndTime.ValueString(),
@@ -439,6 +448,19 @@ func TestMapSchemaOperationsToClumioOperations(t *testing.T) {
 	assert.Equal(t, schemaSla.RPOFrequency[0].Unit.ValueString(), *modelSla.RpoFrequency.Unit)
 	assert.Equal(t, schemaSla.RPOFrequency[0].Value.ValueInt64(), *modelSla.RpoFrequency.Value)
 	assert.Equal(t, offset, *modelSla.RpoFrequency.Offsets[0])
+}
+
+// Unit test to ensure a null or unknown operation activation_status is not sent to the API.
+func TestMapSchemaOperationsToClumioOperationsOmitActivationStatus(t *testing.T) {
+	ctx := context.Background()
+	schemaOperations := []*policyOperationModel{
+		{ActivationStatus: basetypes.NewStringNull()},
+		{ActivationStatus: basetypes.NewStringUnknown()},
+	}
+	modelOperations, diags := mapSchemaOperationsToClumioOperations(ctx, schemaOperations)
+	assert.Nil(t, diags)
+	assert.Nil(t, modelOperations[0].ActivationStatus)
+	assert.Nil(t, modelOperations[1].ActivationStatus)
 }
 
 // Unit tests for MapClumioOperationsToSchemaOperations containing different Advanced Settings
@@ -671,9 +693,10 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 	t.Run("Test Protection Group Backup Advanced Setting", func(t *testing.T) {
 		schemaOperations[0].AdvancedSettings = []*advancedSettingsModel{
 			{
-				ProtectionGroupBackup: []*backupTierModel{
+				ProtectionGroupBackup: []*protectionGroupBackupModel{
 					{
 						BackupTier: basetypes.NewStringValue(backupTier),
+						ThreatScan: basetypes.NewBoolValue(threatScan),
 					},
 				},
 			},
@@ -685,6 +708,8 @@ func TestMapSchemaOperationsToClumioOperationsAdvSettings(t *testing.T) {
 		schemaOpAdvSettings := schemaOperations[0].AdvancedSettings[0]
 		assert.Equal(t, schemaOpAdvSettings.ProtectionGroupBackup[0].BackupTier.ValueString(),
 			*modelOpAdvSettings.ProtectionGroupBackup.BackupTier)
+		assert.Equal(t, schemaOpAdvSettings.ProtectionGroupBackup[0].ThreatScan.ValueBool(),
+			*modelOpAdvSettings.ProtectionGroupBackup.ThreatScan)
 	})
 
 	t.Run("Test GCP Protection Group Backup Advanced Setting", func(t *testing.T) {

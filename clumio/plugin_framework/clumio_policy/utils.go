@@ -44,7 +44,15 @@ func readPolicyAndUpdateModel(ctx context.Context,
 	state.LockStatus = types.StringPointerValue(res.LockStatus)
 	state.Name = types.StringPointerValue(res.Name)
 	state.ActivationStatus = types.StringPointerValue(res.ActivationStatus)
+	managedStatuses := activationStatusByUniqueType(state.Operations)
 	stateOp, diags := mapClumioOperationsToSchemaOperations(ctx, res.Operations)
+	// Operations match by type, so a status on a duplicated type is not tracked.
+	for _, operation := range stateOp {
+		prior, ok := managedStatuses[operation.OperationType.ValueString()]
+		if !ok || prior.IsNull() {
+			operation.ActivationStatus = types.StringNull()
+		}
+	}
 	state.Operations = stateOp
 	return nil, diags
 }
@@ -96,6 +104,11 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 
 		timezone := common.GetStringPtr(operation.Timezone)
 
+		var activationStatus *string
+		if !operation.ActivationStatus.IsUnknown() {
+			activationStatus = operation.ActivationStatus.ValueStringPointer()
+		}
+
 		policyOperation := &models.PolicyOperationInput{
 			ActionSetting:    operation.ActionSetting.ValueStringPointer(),
 			BackupWindowTz:   backupWindowTz,
@@ -104,6 +117,7 @@ func mapSchemaOperationsToClumioOperations(ctx context.Context,
 			AdvancedSettings: advancedSettings,
 			BackupAwsRegion:  backupAwsRegionPtr,
 			Timezone:         timezone,
+			ActivationStatus: activationStatus,
 		}
 		policyOperations = append(policyOperations, policyOperation)
 	}
@@ -120,6 +134,7 @@ func mapClumioOperationsToSchemaOperations(ctx context.Context,
 		schemaOperation := &policyOperationModel{}
 		schemaOperation.ActionSetting = types.StringPointerValue(operation.ActionSetting)
 		schemaOperation.OperationType = types.StringPointerValue(operation.ClumioType)
+		schemaOperation.ActivationStatus = types.StringPointerValue(operation.ActivationStatus)
 
 		if operation.BackupAwsRegion != nil {
 			schemaOperation.BackupAwsRegion = types.StringPointerValue(operation.BackupAwsRegion)
@@ -234,10 +249,12 @@ func buildSchemaOperationAdvancedSettings(
 		}
 	}
 	if operation.AdvancedSettings.ProtectionGroupBackup != nil {
-		advSettings.ProtectionGroupBackup = []*backupTierModel{
+		advSettings.ProtectionGroupBackup = []*protectionGroupBackupModel{
 			{
 				BackupTier: types.StringPointerValue(
 					operation.AdvancedSettings.ProtectionGroupBackup.BackupTier),
+				ThreatScan: types.BoolPointerValue(
+					operation.AdvancedSettings.ProtectionGroupBackup.ThreatScan),
 			},
 		}
 	}
@@ -329,6 +346,8 @@ func getOperationAdvancedSettings(
 				&models.ProtectionGroupBackupAdvancedSetting{
 					BackupTier: operation.AdvancedSettings[0].ProtectionGroupBackup[0].
 						BackupTier.ValueStringPointer(),
+					ThreatScan: operation.AdvancedSettings[0].ProtectionGroupBackup[0].
+						ThreatScan.ValueBoolPointer(),
 				}
 		}
 		if operation.AdvancedSettings[0].GcpProtectionGroupBackup != nil {
@@ -408,4 +427,20 @@ func getOperationAdvancedSettings(
 		}
 	}
 	return advancedSettings
+}
+
+// activationStatusByUniqueType maps each operation type that occurs once to its activation_status.
+func activationStatusByUniqueType(operations []*policyOperationModel) map[string]types.String {
+	statuses := make(map[string]types.String)
+	seen := make(map[string]bool)
+	for _, operation := range operations {
+		opType := operation.OperationType.ValueString()
+		if seen[opType] {
+			delete(statuses, opType)
+			continue
+		}
+		seen[opType] = true
+		statuses[opType] = operation.ActivationStatus
+	}
+	return statuses
 }

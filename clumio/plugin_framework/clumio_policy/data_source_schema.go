@@ -74,6 +74,22 @@ func (r *clumioPolicyDataSource) Schema(
 							Description: "Activation status of the policy.",
 							Computed:    true,
 						},
+						schemaOperations: schema.SetNestedAttribute{
+							Description: "Operations of the policy.",
+							Computed:    true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									schemaOperationType: schema.StringAttribute{
+										Description: "The type of the operation.",
+										Computed:    true,
+									},
+									schemaActivationStatus: schema.StringAttribute{
+										Description: "Activation status of the operation.",
+										Computed:    true,
+									},
+								},
+							},
+						},
 						schemaTimezone: schema.StringAttribute{
 							Description: "The time zone for the policy, in IANA format.",
 							Computed:    true,

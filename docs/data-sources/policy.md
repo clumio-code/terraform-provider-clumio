@@ -42,5 +42,14 @@ Read-Only:
 - `id` (String) Unique identifier of the policy.
 - `name` (String) The name of the policy.
 - `operation_types` (Set of String) Operation types supported by the policy.
+- `operations` (Attributes Set) Operations of the policy. (see [below for nested schema](#nestedatt--policies--operations))
 - `organizational_unit_id` (String) Identifier of the Clumio organizational unit associated with the policy.
 - `timezone` (String) The time zone for the policy, in IANA format.
+
+<a id="nestedatt--policies--operations"></a>
+### Nested Schema for `policies.operations`
+
+Read-Only:
+
+- `activation_status` (String) Activation status of the operation.
+- `type` (String) The type of the operation.

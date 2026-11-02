@@ -40,8 +40,8 @@ func (_m *MockAWSTemplatesClient) EXPECT() *MockAWSTemplatesClient_Expecter {
 }
 
 // CreateConnectionTemplate provides a mock function for the type MockAWSTemplatesClient
-func (_mock *MockAWSTemplatesClient) CreateConnectionTemplate(returnGroupToken *bool, body *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError) {
-	ret := _mock.Called(returnGroupToken, body)
+func (_mock *MockAWSTemplatesClient) CreateConnectionTemplate(body *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError) {
+	ret := _mock.Called(body)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateConnectionTemplate")
@@ -49,18 +49,18 @@ func (_mock *MockAWSTemplatesClient) CreateConnectionTemplate(returnGroupToken *
 
 	var r0 *models.CreateAWSTemplateV2Response
 	var r1 *apiutils.APIError
-	if returnFunc, ok := ret.Get(0).(func(*bool, *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)); ok {
-		return returnFunc(returnGroupToken, body)
+	if returnFunc, ok := ret.Get(0).(func(*models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)); ok {
+		return returnFunc(body)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*bool, *models.CreateConnectionTemplateV1Request) *models.CreateAWSTemplateV2Response); ok {
-		r0 = returnFunc(returnGroupToken, body)
+	if returnFunc, ok := ret.Get(0).(func(*models.CreateConnectionTemplateV1Request) *models.CreateAWSTemplateV2Response); ok {
+		r0 = returnFunc(body)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*models.CreateAWSTemplateV2Response)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*bool, *models.CreateConnectionTemplateV1Request) *apiutils.APIError); ok {
-		r1 = returnFunc(returnGroupToken, body)
+	if returnFunc, ok := ret.Get(1).(func(*models.CreateConnectionTemplateV1Request) *apiutils.APIError); ok {
+		r1 = returnFunc(body)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*apiutils.APIError)
@@ -75,25 +75,19 @@ type MockAWSTemplatesClient_CreateConnectionTemplate_Call struct {
 }
 
 // CreateConnectionTemplate is a helper method to define mock.On call
-//   - returnGroupToken *bool
 //   - body *models.CreateConnectionTemplateV1Request
-func (_e *MockAWSTemplatesClient_Expecter) CreateConnectionTemplate(returnGroupToken interface{}, body interface{}) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
-	return &MockAWSTemplatesClient_CreateConnectionTemplate_Call{Call: _e.mock.On("CreateConnectionTemplate", returnGroupToken, body)}
+func (_e *MockAWSTemplatesClient_Expecter) CreateConnectionTemplate(body interface{}) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
+	return &MockAWSTemplatesClient_CreateConnectionTemplate_Call{Call: _e.mock.On("CreateConnectionTemplate", body)}
 }
 
-func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) Run(run func(returnGroupToken *bool, body *models.CreateConnectionTemplateV1Request)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
+func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) Run(run func(body *models.CreateConnectionTemplateV1Request)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 *bool
+		var arg0 *models.CreateConnectionTemplateV1Request
 		if args[0] != nil {
-			arg0 = args[0].(*bool)
-		}
-		var arg1 *models.CreateConnectionTemplateV1Request
-		if args[1] != nil {
-			arg1 = args[1].(*models.CreateConnectionTemplateV1Request)
+			arg0 = args[0].(*models.CreateConnectionTemplateV1Request)
 		}
 		run(
 			arg0,
-			arg1,
 		)
 	})
 	return _c
@@ -104,7 +98,7 @@ func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) Return(createAWS
 	return _c
 }
 
-func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) RunAndReturn(run func(returnGroupToken *bool, body *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
+func (_c *MockAWSTemplatesClient_CreateConnectionTemplate_Call) RunAndReturn(run func(body *models.CreateConnectionTemplateV1Request) (*models.CreateAWSTemplateV2Response, *apiutils.APIError)) *MockAWSTemplatesClient_CreateConnectionTemplate_Call {
 	_c.Call.Return(run)
 	return _c
 }

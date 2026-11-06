@@ -404,7 +404,7 @@ resource "clumio_policy" "example_backup_windown_timezone" {
 
 ### Optional
 
-- `activation_status` (String) The status of the policy. Valid values are: `activated` and `deactivated`. `activated` backups will take place regularly according to the policy SLA. `deactivated` backups will not begin until the policy is reactivated. The assets associated with the policy will have their compliance status set to deactivated.
+- `activation_status` (String) The status of the policy. Valid values are: `activated` and `deactivated`. `deactivated` deactivates every operation of the policy. Backups do not start until the policy is activated again, and the assets of the policy have their compliance status set to deactivated. A change from `deactivated` to `activated` activates every operation again.
 - `operations` (Block Set) Each data source to be protected should have details provided in the list of operations. These details include information such as how often to protect the data source, whether a backup window is desired, which type of protection to perform, etc. (see [below for nested schema](#nestedblock--operations))
 - `timezone` (String, Deprecated) The time zone for the policy, in IANA format. For example: `America/Los_Angeles`, `America/New_York`, `Etc/UTC`, etc. For more information, see the Time Zone Database (https://www.iana.org/time-zones) on the IANA website.
 
@@ -423,7 +423,7 @@ Required:
 
 Optional:
 
-- `activation_status` (String) The status of this operation. Valid values are: `activated` and `deactivated`. The operation runs only when both this and the policy-level `activation_status` are `activated`. If omitted, Terraform does not manage the status and the current status of the operation is kept.
+- `activation_status` (String) The status of this operation. Valid values are: `activated` and `deactivated`. The operation runs only when both this and the policy-level `activation_status` are `activated`. When the policy-level `activation_status` changes, every operation gets the same status. If omitted, Terraform does not manage the status. Plan fails if this is `activated` on a `deactivated` policy, or `deactivated` when the policy changes to `activated`. It cannot be set on an operation type that occurs more than once.
 - `advanced_settings` (Block Set) Additional operation-specific policy settings. (see [below for nested schema](#nestedblock--operations--advanced_settings))
 - `backup_aws_region` (String) The region in which this backup is stored. This might be used for cross-region backup. Possible values are AWS region string, for example: `us-east-1`, `us-west-2`, .... If no value is provided, it defaults to in-region (the asset's source region).
 - `backup_window_tz` (Block Set) The start and end times for the customized backup window that reflects the user-defined timezone. (see [below for nested schema](#nestedblock--operations--backup_window_tz))

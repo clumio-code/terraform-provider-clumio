@@ -7,6 +7,7 @@ package clumio_policy
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
@@ -14,12 +15,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
 	_ resource.Resource                = &policyResource{}
 	_ resource.ResourceWithConfigure   = &policyResource{}
 	_ resource.ResourceWithImportState = &policyResource{}
+	_ resource.ResourceWithModifyPlan  = &policyResource{}
 )
 
 // policyResource is the struct backing the clumio_policy Terraform resource. It holds the Clumio
@@ -60,6 +63,72 @@ func (r *policyResource) Configure(
 	r.sdkTasks = sdkclients.NewTaskClient(r.client.ClumioConfig)
 	r.pollTimeout = 3600 * time.Second
 	r.pollInterval = 5 * time.Second
+}
+
+// ModifyPlan rejects an operation activation_status that the policy-level status overrides.
+func (r *policyResource) ModifyPlan(
+	ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	var planStatus, stateStatus types.String
+	var operations types.Set
+	resp.Diagnostics.Append(
+		req.Plan.GetAttribute(ctx, path.Root(schemaActivationStatus), &planStatus)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(schemaOperations), &operations)...)
+	if !req.State.Raw.IsNull() {
+		resp.Diagnostics.Append(
+			req.State.GetAttribute(ctx, path.Root(schemaActivationStatus), &stateStatus)...)
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var overridden, detail string
+	switch {
+	case planStatus.ValueString() == activationStatusDectivated:
+		overridden = activationStatusActivated
+		detail = "A deactivated policy deactivates every operation. Remove the operation" +
+			" activation_status, or activate the policy."
+	case planStatus.ValueString() == activationStatusActivated &&
+		stateStatus.ValueString() == activationStatusDectivated:
+		overridden = activationStatusDectivated
+		detail = "Activating a deactivated policy activates every operation. Remove the" +
+			" operation activation_status for this apply, then set it in a later apply."
+	}
+
+	typeCount := make(map[string]int)
+	var statuses []types.String
+	var opTypes []string
+	for _, element := range operations.Elements() {
+		operation, ok := element.(types.Object)
+		if !ok {
+			continue
+		}
+		opType, _ := operation.Attributes()[schemaOperationType].(types.String)
+		status, _ := operation.Attributes()[schemaActivationStatus].(types.String)
+		typeCount[opType.ValueString()]++
+		opTypes = append(opTypes, opType.ValueString())
+		statuses = append(statuses, status)
+	}
+	for i, status := range statuses {
+		if status.IsNull() {
+			continue
+		}
+		if typeCount[opTypes[i]] > 1 {
+			resp.Diagnostics.AddAttributeError(path.Root(schemaOperations),
+				"Operation activation_status on a duplicated operation type",
+				fmt.Sprintf("Operation type %q occurs more than once. Remove activation_status"+
+					" from these operations.", opTypes[i]))
+			return
+		}
+		if overridden != "" && status.ValueString() == overridden {
+			resp.Diagnostics.AddAttributeError(path.Root(schemaOperations),
+				"Operation activation_status conflicts with the policy activation_status", detail)
+			return
+		}
+	}
 }
 
 // Create creates the resource via the Clumio API and sets the initial Terraform state.

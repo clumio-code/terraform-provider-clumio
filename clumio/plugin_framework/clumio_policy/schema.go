@@ -470,8 +470,11 @@ func (r *policyResource) Schema(
 		schemaActivationStatus: schema.StringAttribute{
 			Description: "The status of this operation. Valid values are: `activated` and `deactivated`." +
 				" The operation runs only when both this and the policy-level `activation_status`" +
-				" are `activated`. If omitted, Terraform does not manage the status and the current" +
-				" status of the operation is kept.",
+				" are `activated`. When the policy-level `activation_status` changes, every" +
+				" operation gets the same status. If omitted, Terraform does not manage the status." +
+				" Plan fails if this is `activated` on a `deactivated` policy, or `deactivated`" +
+				" when the policy changes to `activated`. It cannot be set on an operation type" +
+				" that occurs more than once.",
 			Optional: true,
 			Validators: []validator.String{
 				stringvalidator.OneOf(activationStatusActivated, activationStatusDectivated),
@@ -551,10 +554,10 @@ func (r *policyResource) Schema(
 			},
 			schemaActivationStatus: schema.StringAttribute{
 				Description: "The status of the policy. Valid values are: `activated` and `deactivated`." +
-					" `activated` backups will take place regularly according to the policy SLA." +
-					" `deactivated` backups will not begin until the policy is reactivated." +
-					" The assets associated with the policy will have their compliance" +
-					" status set to deactivated.",
+					" `deactivated` deactivates every operation of the policy. Backups do not" +
+					" start until the policy is activated again, and the assets of the policy" +
+					" have their compliance status set to deactivated. A change from" +
+					" `deactivated` to `activated` activates every operation again.",
 				Optional: true,
 				// Use computed property to accept both empty string and null value.
 				Computed: true,

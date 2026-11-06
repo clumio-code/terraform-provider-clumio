@@ -8,6 +8,7 @@ package clumio_policy
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -17,8 +18,11 @@ import (
 	apiutils "github.com/clumio-code/clumio-go-sdk/api_utils"
 	sdkconfig "github.com/clumio-code/clumio-go-sdk/config"
 	"github.com/clumio-code/clumio-go-sdk/models"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -651,4 +655,74 @@ func TestDeletePolicy(t *testing.T) {
 		diags := pr.deletePolicy(context.Background(), prm)
 		assert.NotNil(t, diags)
 	})
+}
+
+// Unit test for ModifyPlan with these cases:
+//   - Deactivated policy with an activated operation is rejected.
+//   - Policy activation with a deactivated operation is rejected.
+//   - A status on a duplicated operation type is rejected.
+//   - Compatible statuses pass.
+func TestModifyPlanActivationStatus(t *testing.T) {
+	ctx := context.Background()
+	pr := policyResource{}
+	schemaResp := &resource.SchemaResponse{}
+	pr.Schema(ctx, resource.SchemaRequest{}, schemaResp)
+
+	model := func(policyStatus string, opStatuses ...types.String) *policyResourceModel {
+		m := &policyResourceModel{
+			ID:               basetypes.NewStringValue(id),
+			Name:             basetypes.NewStringValue(name),
+			ActivationStatus: basetypes.NewStringValue(policyStatus),
+		}
+		for i, opStatus := range opStatuses {
+			m.Operations = append(m.Operations, &policyOperationModel{
+				ActionSetting:    basetypes.NewStringValue(fmt.Sprintf("action-%d", i)),
+				OperationType:    basetypes.NewStringValue("aws_ebs_volume_backup"),
+				ActivationStatus: opStatus,
+			})
+		}
+		return m
+	}
+	activated := basetypes.NewStringValue(activationStatusActivated)
+	deactivated := basetypes.NewStringValue(activationStatusDectivated)
+
+	tests := []struct {
+		name      string
+		state     *policyResourceModel
+		plan      *policyResourceModel
+		wantError bool
+	}{
+		{"deactivated policy, activated operation", nil,
+			model(activationStatusDectivated, activated), true},
+		{"deactivated policy from state, activated operation",
+			model(activationStatusDectivated, deactivated),
+			model(activationStatusDectivated, activated), true},
+		{"duplicated operation type with a status", nil,
+			model(activationStatusActivated, activated, types.StringNull()), true},
+		{"duplicated operation type without a status", nil,
+			model(activationStatusActivated, types.StringNull(), types.StringNull()), false},
+		{"policy activation, deactivated operation", model(activationStatusDectivated, deactivated),
+			model(activationStatusActivated, deactivated), true},
+		{"policy activation, unset operation", model(activationStatusDectivated, deactivated),
+			model(activationStatusActivated, types.StringNull()), false},
+		{"activated policy, deactivated operation", model(activationStatusActivated, activated),
+			model(activationStatusActivated, deactivated), false},
+		{"deactivated policy, deactivated operation", model(activationStatusActivated, activated),
+			model(activationStatusDectivated, deactivated), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan := tfsdk.Plan{Schema: schemaResp.Schema}
+			assert.False(t, plan.Set(ctx, tt.plan).HasError())
+			state := tfsdk.State{Schema: schemaResp.Schema}
+			if tt.state != nil {
+				assert.False(t, state.Set(ctx, tt.state).HasError())
+			} else {
+				state.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil)
+			}
+			resp := &resource.ModifyPlanResponse{Plan: plan}
+			pr.ModifyPlan(ctx, resource.ModifyPlanRequest{Plan: plan, State: state}, resp)
+			assert.Equal(t, tt.wantError, resp.Diagnostics.HasError())
+		})
+	}
 }

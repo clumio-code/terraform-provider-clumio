@@ -1,3 +1,9 @@
+## 0.25.1
+This update contains the following changes:
+* Documented that the `activation_status` of `clumio_policy` applies to every operation of the policy.
+* Fixed apply errors in `clumio_policy`. The plan now fails when an operation `activation_status` conflicts with the policy-level `activation_status`, or is set on an operation type that occurs more than once.
+* Updated Clumio Go SDK to v0.34.0.
+
 ## 0.25.0
 This update contains the following changes:
 * Added `activation_status` to the `operations` block of `clumio_policy` to activate or deactivate one operation of a policy.

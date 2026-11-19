@@ -91,9 +91,10 @@ const (
 	rdsLogicalBackupDesc = "Optional configuration settings for the aws_rds_resource_granular_backup operation."
 
 	rdsLogicalBackupAdvancedSettingDesc = "Backup tier to store the RDS backup in. Valid values" +
-		" are: `frozen` and `standard`. For new policies, the only supported value is `frozen`. " +
+		" are: `archive` and `standard`. For new policies, the only supported value is `archive`. " +
 		"`standard` is supported for existing policies for a limited " +
-		"period of time.\n\t- `frozen` = Clumio SecureVault Archive\n\t- `standard` = Clumio SecureVault record"
+		"period of time. The old name `frozen` of `archive` still works, but it is deprecated." +
+		"\n\t- `archive` = Clumio SecureVault Archive\n\t- `standard` = Clumio SecureVault record"
 
 	S3ContinuousBackupDesc = "Additional policy configuration settings for the " +
 		"`aws_s3_continuous_backup` operation. If this operation is not of type " +

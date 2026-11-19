@@ -1,8 +1,7 @@
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }
@@ -49,8 +48,8 @@ module "clumio_protect" {
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled       = true
-  is_rds_enabled       = true
-  is_dynamodb_enabled  = true
-  is_s3_enabled        = true
+  is_ebs_enabled      = true
+  is_rds_enabled      = true
+  is_dynamodb_enabled = true
+  is_s3_enabled       = true
 }

@@ -9,22 +9,22 @@ resource "clumio_policy_rule" "example_2" {
   policy_id      = tolist(data.clumio_policy.test_policy.policies)[0].id
   before_rule_id = ""
   condition = jsonencode({
-    "entity_type": {
-      "$eq": "aws_ec2_instance"
+    "entity_type" : {
+      "$eq" : "aws_ec2_instance"
     },
-    "aws_account_native_id": {
-      "$eq": "123456789012"
+    "aws_account_native_id" : {
+      "$eq" : "123456789012"
     },
-    "aws_region": {
-      "$eq": "us-west-2"
+    "aws_region" : {
+      "$eq" : "us-west-2"
     },
-    "asset_name": {
-      "$eq": "web-server-01"
+    "asset_name" : {
+      "$eq" : "web-server-01"
     },
-    "aws_tag": {
-      "$contains": {
-        "key": "Key1",
-        "value": "Value1"
+    "aws_tag" : {
+      "$contains" : {
+        "key" : "Key1",
+        "value" : "Value1"
       }
     }
   })

@@ -240,8 +240,9 @@ func (r *policyResource) Schema(
 					schemaBackupTier: schema.StringAttribute{
 						Optional: true,
 						Description: "Backup tier to store the backup in. Valid values are:" +
-							" `cold` and `frozen`.\n\t- `cold` = Clumio SecureVault Standard\n\t" +
-							"- `frozen` = Clumio SecureVault Archive",
+							" `standard` and `archive`. The old names `cold` and `frozen` still work," +
+							" but they are deprecated.\n\t- `standard` = Clumio SecureVault Standard\n\t" +
+							"- `archive` = Clumio SecureVault Archive",
 					},
 					schemaThreatScan: schema.BoolAttribute{
 						Optional:    true,

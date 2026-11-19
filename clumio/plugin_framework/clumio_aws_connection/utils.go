@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/clumio-code/terraform-provider-clumio/clumio/plugin_framework/common"
 	sdkclients "github.com/clumio-code/terraform-provider-clumio/clumio/sdk_clients"
@@ -30,6 +31,10 @@ func setOrganizationalUnitID(state *clumioAWSConnectionResourceModel, organizati
 }
 
 // updateOrgUnitForConnection moves the AWS connection between OUs by patching entity membership.
+// The backend accepts an add only when the entity already sits in the target OU's parent, and a
+// remove lifts the entity to the OU's parent; a repeated add or remove is a no-op. Each PATCH
+// therefore moves the entity one level, so the move walks the entity up to the lowest common
+// ancestor of the current and target OUs and then down to the target, one PATCH per level.
 func updateOrgUnitForConnection(
 	ctx context.Context, r *clumioAWSConnectionResource, plan *clumioAWSConnectionResourceModel,
 	state *clumioAWSConnectionResourceModel) error {
@@ -58,50 +63,117 @@ func updateOrgUnitForConnection(
 		taskClient = newTaskClient(globalConfig)
 	}
 
-	currentOrgUnitID := state.OrganizationalUnitID.ValueString()
-	orgUnitID := plan.OrganizationalUnitID.ValueString()
-	var updateEntities *models.UpdateEntities
-	if currentOrgUnitID == defaultOrgUnitId {
-		updateEntities = &models.UpdateEntities{Add: entityModels}
-	} else if orgUnitID == defaultOrgUnitId {
-		orgUnitID = currentOrgUnitID
-		updateEntities = &models.UpdateEntities{Remove: entityModels}
-	} else {
-		currentOrgUnit, err := getOrgUnitForConnection(orgUnitClient, currentOrgUnitID)
+	// An OU-scoped API key can read only its own OU and the OUs below it, so the walk never reads
+	// an OU above the common ancestor. Both walks finish before the first PATCH.
+	targetID := plan.OrganizationalUnitID.ValueString()
+	removeFrom, commonID, err := getOrgUnitsUpToCommonAncestor(
+		orgUnitClient, state.OrganizationalUnitID.ValueString(), targetID)
+	if err != nil {
+		return err
+	}
+	addTo, err := getOrgUnitsBelowAncestor(orgUnitClient, targetID, commonID)
+	if err != nil {
+		return err
+	}
+
+	for _, orgUnitID := range removeFrom {
+		err = patchOrgUnitEntities(ctx, r, orgUnitClient, taskClient, orgUnitID,
+			&models.UpdateEntities{Remove: entityModels})
 		if err != nil {
 			return err
 		}
-		if currentOrgUnit.ParentId != nil && *currentOrgUnit.ParentId == orgUnitID {
-			orgUnitID = currentOrgUnitID
-			updateEntities = &models.UpdateEntities{Remove: entityModels}
-		} else {
-			updateEntities = &models.UpdateEntities{Add: entityModels}
+	}
+	for _, orgUnitID := range slices.Backward(addTo) {
+		err = patchOrgUnitEntities(ctx, r, orgUnitClient, taskClient, orgUnitID,
+			&models.UpdateEntities{Add: entityModels})
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
+// getOrgUnitsUpToCommonAncestor climbs from the current OU to the first OU that is the target or
+// contains it. It returns the OUs climbed out of, bottom-up, and that common ancestor.
+func getOrgUnitsUpToCommonAncestor(client sdkclients.OrganizationalUnitClient,
+	currentID string, targetID string) ([]string, string, error) {
+
+	var climbed []string
+	for currentID != targetID && currentID != defaultOrgUnitId {
+		orgUnit, err := getOrgUnitForConnection(client, currentID)
+		if err != nil {
+			return nil, "", err
+		}
+		if slices.ContainsFunc(orgUnit.DescendantIds, func(id *string) bool {
+			return id != nil && *id == targetID
+		}) {
+			break
+		}
+		climbed = append(climbed, currentID)
+		currentID = getParentOrgUnitID(orgUnit)
+		if slices.Contains(climbed, currentID) {
+			return nil, "", fmt.Errorf("organizational unit %v is its own ancestor", currentID)
+		}
+	}
+	return climbed, currentID, nil
+}
+
+// getOrgUnitsBelowAncestor climbs from the target OU up to the given ancestor and returns the
+// OUs passed, bottom-up, excluding the ancestor.
+func getOrgUnitsBelowAncestor(client sdkclients.OrganizationalUnitClient,
+	targetID string, ancestorID string) ([]string, error) {
+
+	var climbed []string
+	for orgUnitID := targetID; orgUnitID != ancestorID; {
+		if orgUnitID == defaultOrgUnitId || slices.Contains(climbed, orgUnitID) {
+			return nil, fmt.Errorf("organizational unit %v is not below organizational unit %v",
+				targetID, ancestorID)
+		}
+		orgUnit, err := getOrgUnitForConnection(client, orgUnitID)
+		if err != nil {
+			return nil, err
+		}
+		climbed = append(climbed, orgUnitID)
+		orgUnitID = getParentOrgUnitID(orgUnit)
+	}
+	return climbed, nil
+}
+
+// getParentOrgUnitID returns the parent of the given OU, treating a missing parent as Global.
+func getParentOrgUnitID(orgUnit *models.ReadOrganizationalUnitResponse) string {
+	if orgUnit.ParentId == nil || *orgUnit.ParentId == "" {
+		return defaultOrgUnitId
+	}
+	return *orgUnit.ParentId
+}
+
+// patchOrgUnitEntities applies one entity add or remove to the given OU and waits for its task.
+func patchOrgUnitEntities(ctx context.Context, r *clumioAWSConnectionResource,
+	orgUnitClient sdkclients.OrganizationalUnitClient, taskClient sdkclients.TaskClient,
+	organizationalUnitID string, updateEntities *models.UpdateEntities) error {
+
+	action := fmt.Sprintf("add the connection to organizational unit %v", organizationalUnitID)
+	if updateEntities.Remove != nil {
+		action = fmt.Sprintf("remove the connection from organizational unit %v", organizationalUnitID)
+	}
 	ouUpdateRequest := &models.PatchOrganizationalUnitV2Request{
 		Entities: updateEntities,
 	}
-	res, apiErr := orgUnitClient.PatchOrganizationalUnit(orgUnitID, nil, ouUpdateRequest)
+	res, apiErr := orgUnitClient.PatchOrganizationalUnit(organizationalUnitID, nil, ouUpdateRequest)
 	if apiErr != nil {
-		return fmt.Errorf(
-			"unable to update the Organizational Unit for the connection (%v)",
-			common.ParseMessageFromApiError(apiErr))
+		return fmt.Errorf("unable to %v (%v)", action, common.ParseMessageFromApiError(apiErr))
 	}
 	if res.StatusCode != http.StatusAccepted {
-		return fmt.Errorf(
-			"unable to update the Organizational Unit for the connection (HTTP status code: %v)",
-			res.StatusCode)
+		return fmt.Errorf("unable to %v (HTTP status code: %v)", action, res.StatusCode)
 	}
 	if res.Http202 == nil || res.Http202.TaskId == nil {
-		return fmt.Errorf("unable to update the Organizational Unit for the connection (no task ID)")
+		return fmt.Errorf("unable to %v (no task ID)", action)
 	}
 
-	err = common.PollTask(ctx, taskClient, *res.Http202.TaskId, r.pollTimeout, r.pollInterval)
+	err := common.PollTask(ctx, taskClient, *res.Http202.TaskId, r.pollTimeout, r.pollInterval)
 	if err != nil {
-		return fmt.Errorf("unable to update the Organizational Unit for the connection (%w)", err)
+		return fmt.Errorf("unable to %v (%w)", action, err)
 	}
-
 	return nil
 }
 

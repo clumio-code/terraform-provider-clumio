@@ -37,8 +37,7 @@ To install and initialize the provider, run `terraform init` followed by `terraf
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.9.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }

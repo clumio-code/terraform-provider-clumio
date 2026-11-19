@@ -51,7 +51,7 @@ resource "clumio_policy" "test_policy" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }
@@ -127,7 +127,7 @@ resource "clumio_policy" "test_policy" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }

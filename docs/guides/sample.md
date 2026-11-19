@@ -19,8 +19,7 @@ This configuration includes:
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }
@@ -67,20 +66,20 @@ module "clumio_protect" {
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id
 
   # Enablement of datasources in the module are based on the registered connection
-  is_ebs_enabled       = true
-  is_rds_enabled       = true
-  is_dynamodb_enabled  = true
-  is_s3_enabled        = true
+  is_ebs_enabled      = true
+  is_rds_enabled      = true
+  is_dynamodb_enabled = true
+  is_s3_enabled       = true
 }
 
 # Create a Clumio protection group that aggregates S3 buckets with the tag "clumio:example"
 resource "clumio_protection_group" "protection_group" {
-  name        = "My Clumio Protection Group"
+  name = "My Clumio Protection Group"
   bucket_rule = jsonencode({
     "aws_tag" = {
       "$eq" = {
-        "key"   = "Key1"
-        "value" = "Value1"
+        "key"   = "clumio"
+        "value" = "example"
       }
     }
   })
@@ -107,7 +106,7 @@ resource "clumio_policy" "policy" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }
@@ -136,8 +135,8 @@ resource "clumio_policy_assignment" "assignment" {
 
 # Create a Clumio policy rule and associate it with the policy
 resource "clumio_policy_rule" "rule_1" {
-  name           = "First Rule"
-  policy_id      = clumio_policy.policy.id
+  name      = "First Rule"
+  policy_id = clumio_policy.policy.id
   condition = jsonencode({
     "entity_type" : {
       "$eq" : "aws_ebs_volume"
@@ -154,8 +153,8 @@ resource "clumio_policy_rule" "rule_1" {
 
 # Create a second Clumio policy rule, prioritized after "rule_1", and associate it with the policy
 resource "clumio_policy_rule" "rule_2" {
-  name           = "Second Rule"
-  policy_id      = clumio_policy.policy.id
+  name      = "Second Rule"
+  policy_id = clumio_policy.policy.id
   condition = jsonencode({
     "entity_type" : {
       "$eq" : "aws_ebs_volume"

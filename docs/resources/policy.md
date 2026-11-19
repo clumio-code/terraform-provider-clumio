@@ -32,7 +32,7 @@ resource "clumio_policy" "example_s3_protection_group" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
         threat_scan = true
       }
     }
@@ -154,7 +154,7 @@ resource "clumio_policy" "policy" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }
@@ -259,7 +259,7 @@ resource "clumio_policy" "example_rds" {
     }
     advanced_settings {
       aws_rds_resource_granular_backup {
-        backup_tier = "frozen"
+        backup_tier = "archive"
       }
     }
   }
@@ -491,8 +491,8 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `frozen` and `standard`. For new policies, the only supported value is `frozen`. `standard` is supported for existing policies for a limited period of time.
-	- `frozen` = Clumio SecureVault Archive
+- `backup_tier` (String) Backup tier to store the RDS backup in. Valid values are: `archive` and `standard`. For new policies, the only supported value is `archive`. `standard` is supported for existing policies for a limited period of time. The old name `frozen` of `archive` still works, but it is deprecated.
+	- `archive` = Clumio SecureVault Archive
 	- `standard` = Clumio SecureVault record
 
 
@@ -545,9 +545,9 @@ Optional:
 
 Optional:
 
-- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `cold` and `frozen`.
-	- `cold` = Clumio SecureVault Standard
-	- `frozen` = Clumio SecureVault Archive
+- `backup_tier` (String) Backup tier to store the backup in. Valid values are: `standard` and `archive`. The old names `cold` and `frozen` still work, but they are deprecated.
+	- `standard` = Clumio SecureVault Standard
+	- `archive` = Clumio SecureVault Archive
 - `threat_scan` (Boolean) Determines whether threat scanning is enabled for protection group backups.
 
 

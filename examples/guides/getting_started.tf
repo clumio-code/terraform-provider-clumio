@@ -1,8 +1,7 @@
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.21.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }
@@ -49,20 +48,20 @@ module "clumio_protect" {
   clumio_aws_account_id = clumio_aws_connection.connection.clumio_aws_account_id
 
   # Enable protection of all data sources.
-  is_ebs_enabled       = true
-  is_rds_enabled       = true
-  is_dynamodb_enabled  = true
-  is_s3_enabled        = true
+  is_ebs_enabled      = true
+  is_rds_enabled      = true
+  is_dynamodb_enabled = true
+  is_s3_enabled       = true
 }
 
 # Create a Clumio protection group that aggregates S3 buckets with the tag "clumio:example"
 resource "clumio_protection_group" "protection_group" {
-  name        = "My Clumio Protection Group"
+  name = "My Clumio Protection Group"
   bucket_rule = jsonencode({
     "aws_tag" = {
       "$eq" = {
-        "key"   = "Key1"
-        "value" = "Value1"
+        "key"   = "clumio"
+        "value" = "example"
       }
     }
   })
@@ -89,7 +88,7 @@ resource "clumio_policy" "policy" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }

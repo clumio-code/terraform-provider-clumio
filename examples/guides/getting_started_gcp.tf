@@ -1,8 +1,7 @@
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.22.0"
+      source = "clumio-code/clumio"
     }
     google = {
       source  = "hashicorp/google"

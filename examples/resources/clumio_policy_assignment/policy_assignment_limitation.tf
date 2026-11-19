@@ -2,34 +2,34 @@ resource "clumio_policy" "test_policy" {
   name = "test-policy"
   operations {
     action_setting = "immediate"
-    type = "aws_dynamodb_table_backup"
+    type           = "aws_dynamodb_table_backup"
     slas {
       retention_duration {
-        unit = "days"
+        unit  = "days"
         value = 3
       }
       rpo_frequency {
-        unit = "hours"
+        unit  = "hours"
         value = 4
       }
     }
   }
   operations {
     action_setting = "immediate"
-    type = "protection_group_backup"
+    type           = "protection_group_backup"
     slas {
       retention_duration {
-        unit = "months"
+        unit  = "months"
         value = 3
       }
       rpo_frequency {
-        unit = "days"
+        unit  = "days"
         value = 2
       }
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }

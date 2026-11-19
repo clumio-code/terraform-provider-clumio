@@ -16,7 +16,7 @@ resource "clumio_policy" "example_rds" {
     }
     advanced_settings {
       aws_rds_resource_granular_backup {
-        backup_tier = "frozen"
+        backup_tier = "archive"
       }
     }
   }

@@ -1,3 +1,10 @@
+## 0.25.2
+This update contains the following changes:
+* Fixed `clumio_aws_connection` moves between organizational units that are not parent and child. The provider now moves the connection one level at a time through the nearest common ancestor instead of failing the apply.
+* Documented `standard` and `archive` as the `backup_tier` values of `clumio_policy`.
+* Added the Japan and Southeast Asia API base URLs to the documentation.
+* Updated dependencies.
+
 ## 0.25.1
 This update contains the following changes:
 * Documented that the `activation_status` of `clumio_policy` applies to every operation of the policy.

@@ -3,10 +3,10 @@ data "clumio_role" "example" {
 }
 
 resource "clumio_auto_user_provisioning_rule" "example_1" {
-  name                    = "example-auto-user-provisioning-rule-1"
+  name = "example-auto-user-provisioning-rule-1"
   condition = jsonencode({
-    "user.groups": {
-      "$eq": "Group1"
+    "user.groups" : {
+      "$eq" : "Group1"
     }
   })
   role_id                 = data.clumio_role.example.id
@@ -14,10 +14,10 @@ resource "clumio_auto_user_provisioning_rule" "example_1" {
 }
 
 resource "clumio_auto_user_provisioning_rule" "example_2" {
-  name                    = "example-auto-user-provisioning-rule-2"
+  name = "example-auto-user-provisioning-rule-2"
   condition = jsonencode({
-    "user.groups": {
-      "$in": ["Group1", "Group2"]
+    "user.groups" : {
+      "$in" : ["Group1", "Group2"]
     }
   })
   role_id                 = data.clumio_role.example.id
@@ -25,10 +25,10 @@ resource "clumio_auto_user_provisioning_rule" "example_2" {
 }
 
 resource "clumio_auto_user_provisioning_rule" "example_3" {
-  name                    = "example-auto-user-provisioning-rule-3"
+  name = "example-auto-user-provisioning-rule-3"
   condition = jsonencode({
-    "user.groups": {
-      "$all": ["Group1", "Group2"]
+    "user.groups" : {
+      "$all" : ["Group1", "Group2"]
     }
   })
   role_id                 = data.clumio_role.example.id
@@ -36,11 +36,11 @@ resource "clumio_auto_user_provisioning_rule" "example_3" {
 }
 
 resource "clumio_auto_user_provisioning_rule" "example_4" {
-  name                    = "example-auto-user-provisioning-rule-4"
+  name = "example-auto-user-provisioning-rule-4"
   condition = jsonencode({
-    "user.groups": {
-      "$contains": {
-        "$in": ["Group1", "Group2"]
+    "user.groups" : {
+      "$contains" : {
+        "$in" : ["Group1", "Group2"]
       }
     }
   })
@@ -49,11 +49,11 @@ resource "clumio_auto_user_provisioning_rule" "example_4" {
 }
 
 resource "clumio_auto_user_provisioning_rule" "example_5" {
-  name                    = "example-auto-user-provisioning-rule-5"
+  name = "example-auto-user-provisioning-rule-5"
   condition = jsonencode({
-    "user.groups": {
-      "$contains": {
-        "$all": ["Group1", "Group2"]
+    "user.groups" : {
+      "$contains" : {
+        "$all" : ["Group1", "Group2"]
       }
     }
   })

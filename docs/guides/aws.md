@@ -27,8 +27,7 @@ the AWS account and region to be protected.
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }
@@ -92,8 +91,7 @@ is installed onto both regions of the same AWS account.
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }
@@ -197,8 +195,7 @@ for additional details.
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }

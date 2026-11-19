@@ -1,13 +1,13 @@
 resource "clumio_aws_manual_connection" "test_update_resources" {
 
   account_id = "123456789012" # Replace with your actual AWS account ID.
-  aws_region = "us-west-2" # Replace with your actual AWS region.
+  aws_region = "us-west-2"    # Replace with your actual AWS region.
   assets_enabled = {
     ebs   = true
     rds   = true
     ddb   = true
     s3    = true
-    mssql = false  # Note that "mssql" is only available on legacy connections.
+    mssql = false # Note that "mssql" is only available on legacy connections.
   }
   resources = {
     clumio_iam_role_arn     = "clumio_iam_role_arn"

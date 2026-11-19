@@ -2,14 +2,14 @@ resource "clumio_policy" "test_policy" {
   name = "test-policy"
   operations {
     action_setting = "immediate"
-    type = "aws_dynamodb_table_backup"
+    type           = "aws_dynamodb_table_backup"
     slas {
       retention_duration {
-        unit = "days"
+        unit  = "days"
         value = 3
       }
       rpo_frequency {
-        unit = "hours"
+        unit  = "hours"
         value = 4
       }
     }

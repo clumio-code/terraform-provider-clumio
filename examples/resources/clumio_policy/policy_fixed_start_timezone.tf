@@ -17,6 +17,6 @@ resource "clumio_policy" "example_backup_windown_timezone" {
     backup_window_tz {
       start_time = "05:00"
     }
-    timezone          = "America/Los_Angeles"
+    timezone = "America/Los_Angeles"
   }
 }

@@ -30,8 +30,7 @@ Download the providers with `terraform init`:
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.22.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }
@@ -134,8 +133,8 @@ resource "clumio_protection_group" "protection_group" {
   bucket_rule = jsonencode({
     "aws_tag" = {
       "$eq" = {
-        "key"   = "Key1"
-        "value" = "Value1"
+        "key"   = "clumio"
+        "value" = "example"
       }
     }
   })
@@ -162,7 +161,7 @@ resource "clumio_policy" "policy" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }

@@ -321,13 +321,14 @@ func TestAccResourceClumioPolicy(t *testing.T) {
 //   - Creates a policy for RDS with the frozen backup tier and verifies that the plan was applied
 //     properly.
 //   - Updates the RDS compliance policy and verifies that the resource will be updated.
+//   - Renames the backup tier from frozen to archive.
 func TestRdsComplianceClumioPolicy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { clumiopf.UtilTestAccPreCheckClumio(t) },
 		ProtoV6ProviderFactories: clumiopf.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getTestAccResourceClumioPolicyRDSCompliance(false),
+				Config: getTestAccResourceClumioPolicyRDSCompliance(false, "frozen"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -345,7 +346,7 @@ func TestRdsComplianceClumioPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: getTestAccResourceClumioPolicyRDSCompliance(true),
+				Config: getTestAccResourceClumioPolicyRDSCompliance(true, "frozen"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -361,6 +362,19 @@ func TestRdsComplianceClumioPolicy(t *testing.T) {
 						"operations.0.slas.0.retention_duration.0.value",
 						regexp.MustCompile("28")),
 				),
+			},
+			{
+				// Renaming frozen to archive is an in-place update of the name only.
+				Config: getTestAccResourceClumioPolicyRDSCompliance(true, "archive"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("clumio_policy.test_policy",
+							plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr("clumio_policy.test_policy",
+					"operations.0.advanced_settings.0.aws_rds_resource_granular_backup.0.backup_tier",
+					"archive"),
 			},
 		},
 	})
@@ -1000,7 +1014,7 @@ func getTestAccResourceClumioPolicyBackupRegion(scenario int) string {
 
 // getTestAccResourceClumioPolicyRDSCompliance returns the Terraform configuration for a clumio_policy resource to
 // support RDS backup for compliance.
-func getTestAccResourceClumioPolicyRDSCompliance(update bool) string {
+func getTestAccResourceClumioPolicyRDSCompliance(update bool, backupTier string) string {
 
 	baseUrl := os.Getenv(common.ClumioApiBaseUrl)
 	name := "Rds Compliance Policy Create"
@@ -1017,7 +1031,7 @@ func getTestAccResourceClumioPolicyRDSCompliance(update bool) string {
 	}
 	advanced_settings {
 		aws_rds_resource_granular_backup {
-			backup_tier = "frozen"
+			backup_tier = "%s"
 		}
 	}
 	`
@@ -1036,12 +1050,12 @@ func getTestAccResourceClumioPolicyRDSCompliance(update bool) string {
 		}
 		advanced_settings {
 			aws_rds_resource_granular_backup {
-				backup_tier = "frozen"
+				backup_tier = "%s"
 			}
 		}
 		`
 	}
-	return fmt.Sprintf(testAccResourceClumioRdsPolicy, baseUrl, name, slas)
+	return fmt.Sprintf(testAccResourceClumioRdsPolicy, baseUrl, name, fmt.Sprintf(slas, backupTier))
 }
 
 // getTestAccResourceClumioPolicyIceberg returns the Terraform configuration for a clumio_policy

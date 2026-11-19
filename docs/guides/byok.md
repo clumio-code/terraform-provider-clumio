@@ -35,8 +35,7 @@ variable "existing_cmk_id" {
 terraform {
   required_providers {
     clumio = {
-      source  = "clumio-code/clumio"
-      version = "~>0.20.0"
+      source = "clumio-code/clumio"
     }
     aws = {}
   }

@@ -272,6 +272,8 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
 			Return(listEnvsResponse, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(parentOuId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &parentOuId}, nil)
 		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(parentOuId, mock.Anything, mock.Anything).
 			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
 				assert.Len(t, body.Entities.Add, 1)
@@ -285,7 +287,7 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
-	t.Run("moves connection from non-global OU to another OU by add", func(t *testing.T) {
+	t.Run("moves connection between sibling OUs by remove then add", func(t *testing.T) {
 		mockAwsEnvClient := sdkclients.NewMockAWSEnvironmentClient(t)
 		mockOrgUnitsClient := sdkclients.NewMockOrganizationalUnitClient(t)
 		mockTaskClient := sdkclients.NewMockTaskClient(t)
@@ -326,16 +328,332 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 			Return(listEnvsResponse, nil)
 		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(parentOuId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &parentOuId}, nil)
+		var patched []string
+		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(ouId, mock.Anything, mock.Anything).
+			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
+				patched = append(patched, id)
+				assert.Len(t, body.Entities.Remove, 1)
+				assert.Nil(t, body.Entities.Add)
+				assert.Equal(t, envId, *body.Entities.Remove[0].PrimaryEntity.Id)
+			}).Return(patchResponse, nil).Once()
 		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(parentOuId, mock.Anything, mock.Anything).
 			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
+				patched = append(patched, id)
 				assert.Len(t, body.Entities.Add, 1)
 				assert.Nil(t, body.Entities.Remove)
 				assert.Equal(t, envId, *body.Entities.Add[0].PrimaryEntity.Id)
 			}).Return(patchResponse, nil).Once()
-		mockTaskClient.EXPECT().ReadTask(taskId).Times(1).Return(taskResponse, nil)
+		mockTaskClient.EXPECT().ReadTask(taskId).Times(2).Return(taskResponse, nil)
 
 		err := updateOrgUnitForConnection(ctx, cr, plan, state)
 		assert.Nil(t, err)
+		assert.Equal(t, []string{ouId, parentOuId}, patched)
+	})
+
+	t.Run("moves connection between cousin OUs one level per patch", func(t *testing.T) {
+		mockAwsEnvClient := sdkclients.NewMockAWSEnvironmentClient(t)
+		mockOrgUnitsClient := sdkclients.NewMockOrganizationalUnitClient(t)
+		mockTaskClient := sdkclients.NewMockTaskClient(t)
+
+		cr := &clumioAWSConnectionResource{
+			client:          &common.ApiClient{ClumioConfig: sdkconfig.Config{}},
+			sdkEnvironments: mockAwsEnvClient,
+			sdkOrgUnits:     mockOrgUnitsClient,
+			sdkTasks:        mockTaskClient,
+			pollTimeout:     time.Second,
+			pollInterval:    time.Millisecond,
+		}
+
+		// root -> a -> b holds the connection; root -> c is the target.
+		rootId, aId, bId, cId, globalId := "root", "a", "b", "c", defaultOrgUnitId
+		plan := &clumioAWSConnectionResourceModel{
+			OrganizationalUnitID: basetypes.NewStringValue(cId),
+		}
+		state := &clumioAWSConnectionResourceModel{
+			AccountNativeID:      basetypes.NewStringValue(accountId),
+			AWSRegion:            basetypes.NewStringValue(region),
+			OrganizationalUnitID: basetypes.NewStringValue(bId),
+		}
+
+		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{{Id: &envId}},
+			},
+		}
+		patchResponse := &models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 202,
+			Http202: &models.PatchOrganizationalUnitResponse{
+				TaskId: &taskId,
+			},
+		}
+		taskResponse := &models.ReadTaskResponse{Status: &status}
+
+		mockAwsEnvClient.EXPECT().ListAwsEnvironments(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+			Return(listEnvsResponse, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(bId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &bId, ParentId: &aId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(aId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &aId, ParentId: &rootId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(cId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &cId, ParentId: &rootId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(rootId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{
+				Id: &rootId, ParentId: &globalId,
+				DescendantIds: []*string{&aId, &bId, &cId}}, nil)
+		var patched []string
+		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
+				op := "remove"
+				if body.Entities.Add != nil {
+					op = "add"
+				}
+				patched = append(patched, op+":"+id)
+			}).Return(patchResponse, nil).Times(3)
+		mockTaskClient.EXPECT().ReadTask(taskId).Times(3).Return(taskResponse, nil)
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.Nil(t, err)
+		assert.Equal(t, []string{"remove:b", "remove:a", "add:c"}, patched)
+	})
+
+	t.Run("moves connection from global OU down several levels in order", func(t *testing.T) {
+		mockAwsEnvClient := sdkclients.NewMockAWSEnvironmentClient(t)
+		mockOrgUnitsClient := sdkclients.NewMockOrganizationalUnitClient(t)
+		mockTaskClient := sdkclients.NewMockTaskClient(t)
+
+		cr := &clumioAWSConnectionResource{
+			client:          &common.ApiClient{ClumioConfig: sdkconfig.Config{}},
+			sdkEnvironments: mockAwsEnvClient,
+			sdkOrgUnits:     mockOrgUnitsClient,
+			sdkTasks:        mockTaskClient,
+			pollTimeout:     time.Second,
+			pollInterval:    time.Millisecond,
+		}
+
+		// root -> a -> b is the target; root reports an empty parent, which means Global.
+		rootId, aId, bId, emptyId := "root", "a", "b", ""
+		plan := &clumioAWSConnectionResourceModel{
+			OrganizationalUnitID: basetypes.NewStringValue(bId),
+		}
+		state := &clumioAWSConnectionResourceModel{
+			AccountNativeID:      basetypes.NewStringValue(accountId),
+			AWSRegion:            basetypes.NewStringValue(region),
+			OrganizationalUnitID: basetypes.NewStringValue(defaultOrgUnitId),
+		}
+
+		listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{{Id: &envId}},
+			},
+		}
+		patchResponse := &models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 202,
+			Http202: &models.PatchOrganizationalUnitResponse{
+				TaskId: &taskId,
+			},
+		}
+		taskResponse := &models.ReadTaskResponse{Status: &status}
+
+		mockAwsEnvClient.EXPECT().ListAwsEnvironments(
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+			Return(listEnvsResponse, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(bId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &bId, ParentId: &aId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(aId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &aId, ParentId: &rootId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(rootId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &rootId, ParentId: &emptyId}, nil)
+		var patched []string
+		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
+				op := "remove"
+				if body.Entities.Add != nil {
+					op = "add"
+				}
+				patched = append(patched, op+":"+id)
+			}).Return(patchResponse, nil).Times(3)
+		mockTaskClient.EXPECT().ReadTask(taskId).Times(3).Return(taskResponse, nil)
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.Nil(t, err)
+		assert.Equal(t, []string{"add:root", "add:a", "add:b"}, patched)
+	})
+
+	// root -> a -> b holds the connection; root -> c is the target. The walk is remove:b,
+	// remove:a, add:c, and a failed task on any hop must stop the walk and name that hop.
+	for failedHop, wantErr := range []string{
+		"unable to remove the connection from organizational unit b",
+		"unable to remove the connection from organizational unit a",
+		"unable to add the connection to organizational unit c",
+	} {
+		t.Run(fmt.Sprintf("stops the walk when hop %d fails", failedHop+1), func(t *testing.T) {
+			mockAwsEnvClient := sdkclients.NewMockAWSEnvironmentClient(t)
+			mockOrgUnitsClient := sdkclients.NewMockOrganizationalUnitClient(t)
+			mockTaskClient := sdkclients.NewMockTaskClient(t)
+
+			cr := &clumioAWSConnectionResource{
+				client:          &common.ApiClient{ClumioConfig: sdkconfig.Config{}},
+				sdkEnvironments: mockAwsEnvClient,
+				sdkOrgUnits:     mockOrgUnitsClient,
+				sdkTasks:        mockTaskClient,
+				pollTimeout:     time.Second,
+				pollInterval:    time.Millisecond,
+			}
+
+			rootId, aId, bId, cId, globalId := "root", "a", "b", "c", defaultOrgUnitId
+			plan := &clumioAWSConnectionResourceModel{
+				OrganizationalUnitID: basetypes.NewStringValue(cId),
+			}
+			state := &clumioAWSConnectionResourceModel{
+				AccountNativeID:      basetypes.NewStringValue(accountId),
+				AWSRegion:            basetypes.NewStringValue(region),
+				OrganizationalUnitID: basetypes.NewStringValue(bId),
+			}
+
+			listEnvsResponse := &models.ListAWSEnvironmentsResponse{
+				Embedded: &models.AWSEnvironmentListEmbedded{
+					Items: []*models.AWSEnvironment{{Id: &envId}},
+				},
+			}
+			failedStatus := common.TaskFailed
+
+			mockAwsEnvClient.EXPECT().ListAwsEnvironments(
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+				Return(listEnvsResponse, nil)
+			mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(bId, mock.Anything).Times(1).Return(
+				&models.ReadOrganizationalUnitResponse{Id: &bId, ParentId: &aId}, nil)
+			mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(aId, mock.Anything).Times(1).Return(
+				&models.ReadOrganizationalUnitResponse{Id: &aId, ParentId: &rootId}, nil)
+			mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(cId, mock.Anything).Times(1).Return(
+				&models.ReadOrganizationalUnitResponse{Id: &cId, ParentId: &rootId}, nil)
+			mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(rootId, mock.Anything).Times(1).Return(
+				&models.ReadOrganizationalUnitResponse{
+					Id: &rootId, ParentId: &globalId,
+					DescendantIds: []*string{&aId, &bId, &cId}}, nil)
+			var patched []string
+			mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(mock.Anything, mock.Anything, mock.Anything).
+				RunAndReturn(func(id string, _ *string, _ *models.PatchOrganizationalUnitV2Request) (
+					*models.PatchOrganizationalUnitResponseWrapper, *apiutils.APIError) {
+					patched = append(patched, id)
+					hopTaskId := fmt.Sprint(len(patched))
+					return &models.PatchOrganizationalUnitResponseWrapper{
+						StatusCode: 202,
+						Http202:    &models.PatchOrganizationalUnitResponse{TaskId: &hopTaskId},
+					}, nil
+				}).Times(failedHop + 1)
+			mockTaskClient.EXPECT().ReadTask(mock.Anything).
+				RunAndReturn(func(id string) (*models.ReadTaskResponse, *apiutils.APIError) {
+					if id == fmt.Sprint(failedHop+1) {
+						return &models.ReadTaskResponse{Status: &failedStatus}, nil
+					}
+					return &models.ReadTaskResponse{Status: &status}, nil
+				}).Times(failedHop + 1)
+
+			err := updateOrgUnitForConnection(ctx, cr, plan, state)
+			assert.ErrorContains(t, err, wantErr)
+			assert.Equal(t, []string{"b", "a", "c"}[:failedHop+1], patched)
+		})
+	}
+
+	t.Run("fails when the OU chain loops", func(t *testing.T) {
+		mockOrgUnitsClient := sdkclients.NewMockOrganizationalUnitClient(t)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId, ParentId: &parentOuId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(parentOuId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &parentOuId, ParentId: &ouId}, nil)
+
+		_, _, err := getOrgUnitsUpToCommonAncestor(mockOrgUnitsClient, ouId, "target")
+		assert.ErrorContains(t, err, "its own ancestor")
+	})
+
+	// The API key can read only OU x and the OUs below it; t, the parent of x, is unreadable. The
+	// strict mock fails the test on any read of t.
+	t.Run("moves connection inside a scoped key's OU without reading above it", func(t *testing.T) {
+		cr, mockOrgUnitsClient, mockTaskClient := newOrgUnitMoveTestResource(t)
+		tId, xId, pId, qId := "t", "x", "p", "q"
+		plan := &clumioAWSConnectionResourceModel{
+			OrganizationalUnitID: basetypes.NewStringValue(qId),
+		}
+		state := &clumioAWSConnectionResourceModel{
+			AccountNativeID:      basetypes.NewStringValue(accountId),
+			AWSRegion:            basetypes.NewStringValue(region),
+			OrganizationalUnitID: basetypes.NewStringValue(pId),
+		}
+
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(pId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &pId, ParentId: &xId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(xId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{
+				Id: &xId, ParentId: &tId, DescendantIds: []*string{&pId, &qId}}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(qId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &qId, ParentId: &xId}, nil)
+		var patched []string
+		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(mock.Anything, mock.Anything, mock.Anything).
+			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
+				op := "remove"
+				if body.Entities.Add != nil {
+					op = "add"
+				}
+				patched = append(patched, op+":"+id)
+			}).Return(&models.PatchOrganizationalUnitResponseWrapper{
+			StatusCode: 202, Http202: &models.PatchOrganizationalUnitResponse{TaskId: &taskId},
+		}, nil).Times(2)
+		mockTaskClient.EXPECT().ReadTask(taskId).Times(2).Return(
+			&models.ReadTaskResponse{Status: &status}, nil)
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.Nil(t, err)
+		assert.Equal(t, []string{"remove:p", "add:q"}, patched)
+	})
+
+	// The strict mock has no PATCH expectation, so the test fails if any PATCH is sent.
+	t.Run("sends no patch when the target OU cannot be read", func(t *testing.T) {
+		cr, mockOrgUnitsClient, _ := newOrgUnitMoveTestResource(t)
+		plan := &clumioAWSConnectionResourceModel{
+			OrganizationalUnitID: basetypes.NewStringValue(parentOuId),
+		}
+		state := &clumioAWSConnectionResourceModel{
+			AccountNativeID:      basetypes.NewStringValue(accountId),
+			AWSRegion:            basetypes.NewStringValue(region),
+			OrganizationalUnitID: basetypes.NewStringValue(ouId),
+		}
+
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(parentOuId, mock.Anything).Times(1).Return(
+			nil, &apiutils.APIError{ResponseCode: 500, Reason: "test", Response: []byte(testError)})
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.ErrorContains(t, err, "unable to retrieve Organizational Unit")
+	})
+
+	// a lists q as a descendant, but q's parent chain reaches Global without passing a. The walk
+	// must fail instead of looping, and send no PATCH (the strict mock has no PATCH expectation).
+	t.Run("fails when the target is not below the common ancestor", func(t *testing.T) {
+		cr, mockOrgUnitsClient, _ := newOrgUnitMoveTestResource(t)
+		aId, pId, qId := "a", "p", "q"
+		plan := &clumioAWSConnectionResourceModel{
+			OrganizationalUnitID: basetypes.NewStringValue(qId),
+		}
+		state := &clumioAWSConnectionResourceModel{
+			AccountNativeID:      basetypes.NewStringValue(accountId),
+			AWSRegion:            basetypes.NewStringValue(region),
+			OrganizationalUnitID: basetypes.NewStringValue(pId),
+		}
+
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(pId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &pId, ParentId: &aId}, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(aId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &aId, DescendantIds: []*string{nil, &pId, &qId}},
+			nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(qId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &qId}, nil)
+
+		err := updateOrgUnitForConnection(ctx, cr, plan, state)
+		assert.ErrorContains(t, err, "organizational unit q is not below organizational unit a")
 	})
 
 	t.Run("uses global OU client for OU operations when provider context is set", func(t *testing.T) {
@@ -398,11 +716,17 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 			Return(listEnvsResponse, nil)
 		mockGlobalOrgUnitsClient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
 			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
+		mockGlobalOrgUnitsClient.EXPECT().ReadOrganizationalUnit(parentOuId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &parentOuId}, nil)
+		mockGlobalOrgUnitsClient.EXPECT().PatchOrganizationalUnit(ouId, mock.Anything, mock.Anything).
+			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
+				assert.Len(t, body.Entities.Remove, 1)
+			}).Return(patchResponse, nil).Once()
 		mockGlobalOrgUnitsClient.EXPECT().PatchOrganizationalUnit(parentOuId, mock.Anything, mock.Anything).
 			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
 				assert.Len(t, body.Entities.Add, 1)
 			}).Return(patchResponse, nil).Once()
-		mockGlobalTaskClient.EXPECT().ReadTask(taskId).Times(1).Return(taskResponse, nil)
+		mockGlobalTaskClient.EXPECT().ReadTask(taskId).Times(2).Return(taskResponse, nil)
 
 		err := updateOrgUnitForConnection(ctx, cr, plan, state)
 		assert.Nil(t, err)
@@ -500,6 +824,8 @@ func TestUpdateOrgUnitForConnection(t *testing.T) {
 		mockAwsEnvClient.EXPECT().ListAwsEnvironments(
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
 			Return(listEnvsResponse, nil)
+		mockOrgUnitsClient.EXPECT().ReadOrganizationalUnit(ouId, mock.Anything).Times(1).Return(
+			&models.ReadOrganizationalUnitResponse{Id: &ouId}, nil)
 		mockOrgUnitsClient.EXPECT().PatchOrganizationalUnit(ouId, mock.Anything, mock.Anything).
 			Run(func(id string, _ *string, body *models.PatchOrganizationalUnitV2Request) {
 				assert.Len(t, body.Entities.Remove, 1)
@@ -537,4 +863,29 @@ func TestSetDataPlaneAccountId(t *testing.T) {
 
 	setDataPlaneAccountId(state, nil)
 	assert.Equal(t, defaultDataPlaneAccountId, state.DataPlaneAccountID.ValueString())
+}
+
+// newOrgUnitMoveTestResource returns a resource whose environment list finds envId, plus its OU and
+// task mocks.
+func newOrgUnitMoveTestResource(t *testing.T) (*clumioAWSConnectionResource,
+	*sdkclients.MockOrganizationalUnitClient, *sdkclients.MockTaskClient) {
+
+	mockAwsEnvClient := sdkclients.NewMockAWSEnvironmentClient(t)
+	mockOrgUnitsClient := sdkclients.NewMockOrganizationalUnitClient(t)
+	mockTaskClient := sdkclients.NewMockTaskClient(t)
+	mockAwsEnvClient.EXPECT().ListAwsEnvironments(
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Times(1).
+		Return(&models.ListAWSEnvironmentsResponse{
+			Embedded: &models.AWSEnvironmentListEmbedded{
+				Items: []*models.AWSEnvironment{{Id: &envId}},
+			},
+		}, nil)
+	return &clumioAWSConnectionResource{
+		client:          &common.ApiClient{ClumioConfig: sdkconfig.Config{}},
+		sdkEnvironments: mockAwsEnvClient,
+		sdkOrgUnits:     mockOrgUnitsClient,
+		sdkTasks:        mockTaskClient,
+		pollTimeout:     time.Second,
+		pollInterval:    time.Millisecond,
+	}, mockOrgUnitsClient, mockTaskClient
 }

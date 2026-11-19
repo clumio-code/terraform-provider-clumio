@@ -16,7 +16,7 @@ resource "clumio_policy" "example_s3_protection_group" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
         threat_scan = true
       }
     }

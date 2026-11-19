@@ -39,14 +39,22 @@ provider "clumio" {
 
 		Portal: https://canada.portal.clumio.com/
 
-		API Base URL:  https://ca-central-1.ca.api.clumio.com
+		API Base URL: https://ca-central-1.ca.api.clumio.com
 
 		Portal: https://eu1.portal.clumio.com/
 
-		API Base URL:  https://eu-central-1.de.api.clumio.com
+		API Base URL: https://eu-central-1.de.api.clumio.com
 
 		Portal: https://au.portal.clumio.com/
 
-		API Base URL:  https://ap-southeast-2.au.api.clumio.com
+		API Base URL: https://ap-southeast-2.au.api.clumio.com
+
+		Portal: https://jp.portal.clumio.com/
+
+		API Base URL: https://ap-northeast-1.jp.api.clumio.com
+
+		Portal: https://ap3.portal.clumio.com/
+
+		API Base URL: https://ap-southeast-1.ap3.api.clumio.com
 - `clumio_api_token` (String, Sensitive) The API token required to invoke Clumio APIs. Information for generating this token is available here: https://documentation.commvault.com/clumio/api_tokens.html#manage-tokens
 - `clumio_organizational_unit_context` (String) Organizational Unit context in which to create the clumio resources. If not set, the resources will be created in the default Organizational Unit of the API token owner. The value should be the id of the Organizational Unit and not the name.

@@ -35,7 +35,7 @@ resource "clumio_policy" "example_policy_without_timezone" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }
@@ -103,7 +103,7 @@ resource "clumio_policy" "example_policy_without_timezone" {
 
         advanced_settings {
             protection_group_backup {
-                backup_tier = "cold"
+                backup_tier = "standard"
             }
         }
 
@@ -193,7 +193,7 @@ resource "clumio_policy" "test_policy_1" {
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }
@@ -241,7 +241,7 @@ resource "clumio_ou_0_policy" "test_policy_1" { ### context aware clumio provide
     }
     advanced_settings {
       protection_group_backup {
-        backup_tier = "cold"
+        backup_tier = "standard"
       }
     }
   }
